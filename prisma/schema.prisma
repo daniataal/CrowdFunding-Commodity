@@ -1,0 +1,236 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  USER
+  ADMIN
+  AUDITOR
+}
+
+enum KycStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  NOT_STARTED
+}
+
+enum CommodityType {
+  Agriculture
+  Energy
+  Metals
+}
+
+enum RiskLevel {
+  Low
+  Medium
+  High
+}
+
+enum CommodityStatus {
+  FUNDING
+  ACTIVE
+  IN_TRANSIT
+  SETTLED
+  CANCELLED
+}
+
+enum TransactionType {
+  DEPOSIT
+  WITHDRAWAL
+  INVESTMENT
+  DIVIDEND
+  PAYOUT
+  REFUND
+}
+
+enum TransactionStatus {
+  PENDING
+  COMPLETED
+  FAILED
+  CANCELLED
+}
+
+enum DocumentType {
+  BILL_OF_LADING
+  INSURANCE_CERTIFICATE
+  QUALITY_CERTIFICATION
+  COMMODITY_CONTRACT
+  KYC_ID
+  KYC_PROOF_OF_ADDRESS
+  OTHER
+}
+
+model User {
+  id            String    @id @default(cuid())
+  email         String    @unique
+  name          String
+  passwordHash  String    @map("password_hash")
+  role          UserRole  @default(USER)
+  kycStatus     KycStatus @default(NOT_STARTED) @map("kyc_status")
+  walletBalance Decimal   @default(0) @map("wallet_balance") @db.Decimal(12, 2)
+  avatar        String?
+  phone         String?
+  company       String?
+  bio           String?
+  twoFactorEnabled Boolean @default(false) @map("two_factor_enabled")
+  emailNotifications Boolean @default(true) @map("email_notifications")
+  pushNotifications Boolean @default(true) @map("push_notifications")
+  investmentAlerts Boolean @default(true) @map("investment_alerts")
+  marketUpdates Boolean @default(false) @map("market_updates")
+  weeklyReport  Boolean @default(true) @map("weekly_report")
+  currency      String   @default("USD")
+  timezone      String   @default("America/New_York")
+  language      String   @default("en")
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @updatedAt @map("updated_at")
+
+  investments   Investment[]
+  transactions  Transaction[]
+  documents     Document[]
+  auditLogs     AuditLog[]
+
+  @@map("users")
+}
+
+model Commodity {
+  id              String          @id @default(cuid())
+  type            CommodityType
+  name            String
+  icon            String
+  risk            RiskLevel
+  targetApy       Decimal         @map("target_apy") @db.Decimal(5, 2)
+  duration        Int             // days
+  amountRequired  Decimal         @map("amount_required") @db.Decimal(12, 2)
+  currentAmount   Decimal         @default(0) @map("current_amount") @db.Decimal(12, 2)
+  description     String          @db.Text
+  origin          String
+  destination     String
+  status          CommodityStatus @default(FUNDING)
+  shipmentId      String?         @unique @map("shipment_id")
+  insuranceValue  Decimal?        @map("insurance_value") @db.Decimal(12, 2)
+  transportMethod String?         @map("transport_method")
+  maturityDate    DateTime?       @map("maturity_date")
+  riskScore       Decimal?        @map("risk_score") @db.Decimal(3, 2)
+  createdAt       DateTime        @default(now()) @map("created_at")
+  updatedAt       DateTime        @updatedAt @map("updated_at")
+
+  investments     Investment[]
+  documents       Document[]
+  transactions    Transaction[]
+
+  @@map("commodities")
+}
+
+model Investment {
+  id            String    @id @default(cuid())
+  userId        String    @map("user_id")
+  commodityId  String    @map("commodity_id")
+  amount        Decimal   @db.Decimal(12, 2)
+  percentage    Decimal   @db.Decimal(5, 4) // Ownership percentage
+  projectedReturn Decimal? @map("projected_return") @db.Decimal(12, 2)
+  actualReturn  Decimal?  @map("actual_return") @db.Decimal(12, 2)
+  status        String    @default("ACTIVE") // ACTIVE, SETTLED, CANCELLED
+  createdAt     DateTime  @default(now()) @map("created_at")
+  updatedAt     DateTime  @updatedAt @map("updated_at")
+
+  user          User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  commodity     Commodity @relation(fields: [commodityId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([commodityId])
+  @@map("investments")
+}
+
+model Transaction {
+  id            String            @id @default(cuid())
+  userId        String            @map("user_id")
+  commodityId   String?           @map("commodity_id")
+  type          TransactionType
+  amount        Decimal           @db.Decimal(12, 2)
+  status        TransactionStatus  @default(PENDING)
+  description   String?           @db.Text
+  reference     String?           // External payment reference
+  metadata      Json?             // Additional transaction data
+  createdAt     DateTime          @default(now()) @map("created_at")
+  updatedAt     DateTime          @updatedAt @map("updated_at")
+
+  user          User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  commodity     Commodity?        @relation(fields: [commodityId], references: [id], onDelete: SetNull)
+
+  @@index([userId])
+  @@index([commodityId])
+  @@index([type])
+  @@index([status])
+  @@map("transactions")
+}
+
+model Document {
+  id            String        @id @default(cuid())
+  userId        String?       @map("user_id")
+  commodityId   String?       @map("commodity_id")
+  type          DocumentType
+  name          String
+  url           String
+  mimeType      String?       @map("mime_type")
+  size          Int?          // bytes
+  verified      Boolean       @default(false)
+  verifiedAt    DateTime?     @map("verified_at")
+  verifiedBy    String?       @map("verified_by") // Admin user ID
+  createdAt     DateTime      @default(now()) @map("created_at")
+  updatedAt     DateTime      @updatedAt @map("updated_at")
+
+  user          User?         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  commodity     Commodity?    @relation(fields: [commodityId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([commodityId])
+  @@index([type])
+  @@map("documents")
+}
+
+model AuditLog {
+  id            String    @id @default(cuid())
+  userId        String    @map("user_id")
+  action        String    // e.g., "CREATE_COMMODITY", "APPROVE_KYC", "UPDATE_USER"
+  entityType    String    @map("entity_type") // e.g., "Commodity", "User", "Investment"
+  entityId      String?   @map("entity_id")
+  changes       Json?     // Before/after state
+  ipAddress     String?   @map("ip_address")
+  userAgent     String?   @map("user_agent")
+  createdAt     DateTime  @default(now()) @map("created_at")
+
+  user          User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([action])
+  @@index([entityType, entityId])
+  @@index([createdAt])
+  @@map("audit_logs")
+}
+
+model Notification {
+  id            String    @id @default(cuid())
+  userId        String    @map("user_id")
+  type          String    // investment, shipment, dividend, alert, system
+  title         String
+  message       String    @db.Text
+  read          Boolean   @default(false)
+  icon          String?
+  link          String?   // Optional link to related page
+  createdAt     DateTime  @default(now()) @map("created_at")
+
+  @@index([userId])
+  @@index([read])
+  @@index([createdAt])
+  @@map("notifications")
+}
+

@@ -1,0 +1,59 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: commodity-postgres
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: commodity_password
+      POSTGRES_DB: commodity_crowdfunding
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    container_name: commodity-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: commodity-app
+    environment:
+      DATABASE_URL: postgresql://postgres:commodity_password@postgres:5432/commodity_crowdfunding?schema=public
+      AUTH_SECRET: ${AUTH_SECRET:-change-me-in-production}
+      NEXTAUTH_URL: http://localhost:3000
+      # Auth.js v5: allow localhost/compose host headers when running with NODE_ENV=production
+      AUTH_TRUST_HOST: "true"
+      NODE_ENV: production
+    ports:
+      - "3000:3000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    # IMPORTANT: This image uses Next.js "standalone" output (minimal runtime deps).
+    # That output does NOT include the Prisma Client generator code, so running
+    # `prisma generate` at container startup will fail. Generate happens at build time.
+    command: sh -c "/app/node_modules/.bin/prisma migrate deploy && node server.js"
+
+volumes:
+  postgres_data:
+  redis_data:
+

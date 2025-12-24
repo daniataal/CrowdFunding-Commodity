@@ -1,0 +1,281 @@
+"use client"
+
+import { useState, useEffect } from "react"
+import { useSession, signOut } from "next-auth/react"
+import { useRouter } from "next/navigation"
+import { DashboardView } from "@/components/dashboard-view"
+import { MarketplaceView } from "@/components/marketplace-view"
+import { WalletView } from "@/components/wallet-view"
+import { SettingsView } from "@/components/settings-view"
+import { ActivityView } from "@/components/activity-view"
+import { HelpView } from "@/components/help-view"
+import { NotificationPanel } from "@/components/notification-panel"
+import { OnboardingTour } from "@/components/onboarding-tour"
+import { AssetDetailModal } from "@/components/asset-detail-modal"
+import type { Commodity } from "@/lib/mock-data"
+import {
+  LayoutDashboard,
+  Store,
+  Wallet,
+  Settings,
+  Menu,
+  X,
+  LogOut,
+  User,
+  TrendingUp,
+  Activity,
+  HelpCircle,
+} from "lucide-react"
+import { Button } from "@/components/ui/button"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+
+type View = "dashboard" | "marketplace" | "wallet" | "settings" | "activity" | "help"
+
+export default function CommodityPlatform() {
+  const { data: session, status } = useSession()
+  const router = useRouter()
+  const [currentView, setCurrentView] = useState<View>("dashboard")
+  const [selectedAsset, setSelectedAsset] = useState<Commodity | null>(null)
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+  const [showOnboarding, setShowOnboarding] = useState(false)
+
+  const user = session?.user
+
+  const handleLogout = async () => {
+    await signOut({ redirect: false })
+    router.push("/login")
+  }
+
+  // Redirect if not authenticated
+  useEffect(() => {
+    if (status === "unauthenticated") {
+      router.push("/login")
+    }
+  }, [status, router])
+
+  // Check if user is new and should see onboarding
+  useEffect(() => {
+    if (user) {
+      const hasSeenOnboarding = localStorage.getItem("hasSeenOnboarding")
+      if (!hasSeenOnboarding) {
+        setShowOnboarding(true)
+      }
+    }
+  }, [user])
+
+  // Show loading state
+  if (status === "loading") {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-background">
+        <div className="text-center">
+          <div className="mb-4 h-12 w-12 animate-spin rounded-full border-4 border-slate-700 border-t-emerald-500" />
+          <div className="text-muted-foreground">Loading...</div>
+        </div>
+      </div>
+    )
+  }
+
+  if (!user) {
+    return null
+  }
+
+  const handleCompleteOnboarding = () => {
+    localStorage.setItem("hasSeenOnboarding", "true")
+    setShowOnboarding(false)
+  }
+
+  const handleSkipOnboarding = () => {
+    localStorage.setItem("hasSeenOnboarding", "true")
+    setShowOnboarding(false)
+  }
+
+  const navigationItems = [
+    { id: "dashboard" as View, label: "Dashboard", icon: LayoutDashboard },
+    { id: "marketplace" as View, label: "Marketplace", icon: Store },
+    { id: "wallet" as View, label: "Wallet", icon: Wallet },
+    { id: "activity" as View, label: "Activity", icon: Activity },
+  ]
+
+  return (
+    <div className="min-h-screen bg-background">
+        {/* Header */}
+        <header className="sticky top-0 z-40 border-b border-border bg-card/50 backdrop-blur">
+          <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+            <div className="flex h-16 items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-emerald-500 to-emerald-600">
+                  <TrendingUp className="h-5 w-5 text-white" />
+                </div>
+                <div>
+                  <h1 className="text-lg font-bold">CommodityFlow</h1>
+                  <p className="hidden text-xs text-muted-foreground sm:block">Institutional Trading Platform</p>
+                </div>
+              </div>
+
+              {/* Desktop Navigation */}
+              <nav className="hidden items-center gap-1 md:flex">
+                {navigationItems.map((item) => {
+                  const Icon = item.icon
+                  return (
+                    <button
+                      key={item.id}
+                      onClick={() => setCurrentView(item.id)}
+                      className={`flex items-center gap-2 rounded-lg px-4 py-2 transition-colors ${
+                        currentView === item.id ? "bg-primary text-primary-foreground" : "hover:bg-muted"
+                      }`}
+                    >
+                      <Icon className="h-4 w-4" />
+                      <span className="font-medium">{item.label}</span>
+                    </button>
+                  )
+                })}
+              </nav>
+
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => setCurrentView("help")}
+                  className={currentView === "help" ? "bg-muted" : ""}
+                >
+                  <HelpCircle className="h-5 w-5" />
+                </Button>
+                <NotificationPanel />
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="ghost" className="hidden h-10 gap-2 md:flex">
+                      <Avatar className="h-7 w-7">
+                        <AvatarImage src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${user?.email}`} />
+                        <AvatarFallback className="bg-emerald-500/20 text-xs text-emerald-500">
+                          {user?.name?.charAt(0).toUpperCase()}
+                        </AvatarFallback>
+                      </Avatar>
+                      <span className="text-sm">{user?.name}</span>
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="w-56">
+                    <DropdownMenuLabel>
+                      <div className="flex flex-col space-y-1">
+                        <p className="text-sm font-medium">{user?.name}</p>
+                        <p className="text-xs text-muted-foreground">{user?.email}</p>
+                      </div>
+                    </DropdownMenuLabel>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem onClick={() => setCurrentView("settings")}>
+                      <User className="mr-2 h-4 w-4" />
+                      Profile Settings
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => setCurrentView("settings")}>
+                      <Settings className="mr-2 h-4 w-4" />
+                      Account Settings
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => setCurrentView("help")}>
+                      <HelpCircle className="mr-2 h-4 w-4" />
+                      Help & Support
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem onClick={handleLogout} className="text-red-500 focus:text-red-500">
+                      <LogOut className="mr-2 h-4 w-4" />
+                      Logout
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="md:hidden"
+                  onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+                >
+                  {mobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+                </Button>
+              </div>
+            </div>
+
+            {/* Mobile Navigation */}
+            {mobileMenuOpen && (
+              <nav className="space-y-1 pb-4 md:hidden">
+                {navigationItems.map((item) => {
+                  const Icon = item.icon
+                  return (
+                    <button
+                      key={item.id}
+                      onClick={() => {
+                        setCurrentView(item.id)
+                        setMobileMenuOpen(false)
+                      }}
+                      className={`flex w-full items-center gap-2 rounded-lg px-4 py-2 transition-colors ${
+                        currentView === item.id ? "bg-primary text-primary-foreground" : "hover:bg-muted"
+                      }`}
+                    >
+                      <Icon className="h-4 w-4" />
+                      <span className="font-medium">{item.label}</span>
+                    </button>
+                  )
+                })}
+                <div className="border-t border-border pt-2">
+                  <button
+                    onClick={() => {
+                      setCurrentView("help")
+                      setMobileMenuOpen(false)
+                    }}
+                    className="flex w-full items-center gap-2 rounded-lg px-4 py-2 transition-colors hover:bg-muted"
+                  >
+                    <HelpCircle className="h-4 w-4" />
+                    <span className="font-medium">Help & Support</span>
+                  </button>
+                  <button
+                    onClick={() => {
+                      setCurrentView("settings")
+                      setMobileMenuOpen(false)
+                    }}
+                    className="flex w-full items-center gap-2 rounded-lg px-4 py-2 transition-colors hover:bg-muted"
+                  >
+                    <Settings className="h-4 w-4" />
+                    <span className="font-medium">Settings</span>
+                  </button>
+                  <button
+                    onClick={() => {
+                      handleLogout()
+                      setMobileMenuOpen(false)
+                    }}
+                    className="flex w-full items-center gap-2 rounded-lg px-4 py-2 text-red-500 transition-colors hover:bg-muted"
+                  >
+                    <LogOut className="h-4 w-4" />
+                    <span className="font-medium">Logout</span>
+                  </button>
+                </div>
+              </nav>
+            )}
+          </div>
+        </header>
+
+        {/* Main Content */}
+        <main className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+          {currentView === "dashboard" && <DashboardView />}
+          {currentView === "marketplace" && <MarketplaceView onSelectAsset={(asset) => setSelectedAsset(asset)} />}
+          {currentView === "wallet" && <WalletView />}
+          {currentView === "settings" && <SettingsView />}
+          {currentView === "activity" && <ActivityView />}
+          {currentView === "help" && <HelpView />}
+        </main>
+
+        {/* Asset Detail Modal */}
+        <AssetDetailModal
+          commodity={selectedAsset}
+          open={!!selectedAsset}
+          onOpenChange={(open) => !open && setSelectedAsset(null)}
+        />
+
+        {/* Onboarding Tour */}
+        {showOnboarding && <OnboardingTour onComplete={handleCompleteOnboarding} onSkip={handleSkipOnboarding} />}
+      </div>
+  )
+}

@@ -1,0 +1,75 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: commodity-crowdfunding
+  labels:
+    app: commodity-crowdfunding
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: commodity-crowdfunding
+  template:
+    metadata:
+      labels:
+        app: commodity-crowdfunding
+    spec:
+      containers:
+      - name: app
+        image: commodity-crowdfunding:latest
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 3000
+          name: http
+        env:
+        - name: DATABASE_URL
+          valueFrom:
+            secretKeyRef:
+              name: commodity-secrets
+              key: database-url
+        - name: AUTH_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: commodity-secrets
+              key: auth-secret
+        - name: NEXTAUTH_URL
+          value: "https://commodity-crowdfunding.example.com"
+        - name: AUTH_TRUST_HOST
+          value: "true"
+        - name: NODE_ENV
+          value: "production"
+        resources:
+          requests:
+            memory: "512Mi"
+            cpu: "250m"
+          limits:
+            memory: "1Gi"
+            cpu: "500m"
+        livenessProbe:
+          httpGet:
+            path: /api/health
+            port: 3000
+          initialDelaySeconds: 30
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 3
+        readinessProbe:
+          httpGet:
+            path: /api/health
+            port: 3000
+          initialDelaySeconds: 10
+          periodSeconds: 5
+          timeoutSeconds: 3
+          failureThreshold: 3
+      initContainers:
+      - name: migrate
+        image: commodity-crowdfunding:latest
+        # Image does not include pnpm; use locally installed Prisma CLI
+        command: ["sh", "-c", "/app/node_modules/.bin/prisma migrate deploy"]
+        env:
+        - name: DATABASE_URL
+          valueFrom:
+            secretKeyRef:
+              name: commodity-secrets
+              key: database-url
+
