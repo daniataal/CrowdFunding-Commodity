@@ -51,7 +51,9 @@ services:
     # IMPORTANT: This image uses Next.js "standalone" output (minimal runtime deps).
     # That output does NOT include the Prisma Client generator code, so running
     # `prisma generate` at container startup will fail. Generate happens at build time.
-    command: sh -c "/app/node_modules/.bin/prisma migrate deploy && node server.js"
+    # No migrations are committed yet, so `migrate deploy` won't create tables.
+    # For local/dev, ensure schema exists first.
+    command: sh -c "/app/node_modules/.bin/prisma db push --skip-generate && /app/node_modules/.bin/prisma migrate deploy && node server.js"
 
 volumes:
   postgres_data:

@@ -12,6 +12,7 @@ import { HelpView } from "@/components/help-view"
 import { NotificationPanel } from "@/components/notification-panel"
 import { OnboardingTour } from "@/components/onboarding-tour"
 import { AssetDetailModal } from "@/components/asset-detail-modal"
+import { ClientErrorBoundary } from "@/components/client-error-boundary"
 import type { MarketplaceCommodity } from "@/lib/domain"
 import {
   LayoutDashboard,
@@ -301,25 +302,29 @@ export default function CommodityPlatform() {
 
         {/* Main Content */}
         <main className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
-          {currentView === "dashboard" && <DashboardView />}
-          {currentView === "marketplace" && (
-            <MarketplaceView
-              onSelectAsset={(asset) => setSelectedAsset(asset)}
-              canCreateListing={effectiveRole === "ADMIN"}
-            />
-          )}
-          {currentView === "wallet" && <WalletView />}
-          {currentView === "settings" && <SettingsView defaultTab={settingsTab} />}
-          {currentView === "activity" && <ActivityView />}
-          {currentView === "help" && <HelpView />}
+          <ClientErrorBoundary title="App view crashed">
+            {currentView === "dashboard" && <DashboardView />}
+            {currentView === "marketplace" && (
+              <MarketplaceView
+                onSelectAsset={(asset) => setSelectedAsset(asset)}
+                canCreateListing={effectiveRole === "ADMIN"}
+              />
+            )}
+            {currentView === "wallet" && <WalletView />}
+            {currentView === "settings" && <SettingsView defaultTab={settingsTab} />}
+            {currentView === "activity" && <ActivityView />}
+            {currentView === "help" && <HelpView />}
+          </ClientErrorBoundary>
         </main>
 
         {/* Asset Detail Modal */}
-        <AssetDetailModal
-          commodity={selectedAsset}
-          open={!!selectedAsset}
-          onOpenChange={(open) => !open && setSelectedAsset(null)}
-        />
+        <ClientErrorBoundary title="Listing details crashed">
+          <AssetDetailModal
+            commodity={selectedAsset}
+            open={!!selectedAsset}
+            onOpenChange={(open) => !open && setSelectedAsset(null)}
+          />
+        </ClientErrorBoundary>
 
         {/* Onboarding Tour */}
         {showOnboarding && <OnboardingTour onComplete={handleCompleteOnboarding} onSkip={handleSkipOnboarding} />}
