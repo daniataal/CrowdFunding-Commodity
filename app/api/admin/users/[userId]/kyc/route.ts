@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server"
-import { auth } from "@/auth"
 import { prisma } from "@/lib/prisma"
 import { z } from "zod"
+import { requireDbRole } from "@/lib/authz"
 
 const kycActionSchema = z.object({
   action: z.enum(["approve", "reject"]),
@@ -12,10 +12,9 @@ export async function POST(
   { params }: { params: { userId: string } }
 ) {
   try {
-    const session = await auth()
-
-    if (!session?.user || session.user.role !== "ADMIN") {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+    const gate = await requireDbRole(["ADMIN"])
+    if (!gate.ok) {
+      return NextResponse.json({ error: gate.status === 403 ? "Forbidden" : "Unauthorized" }, { status: gate.status })
     }
 
     const body = await request.json()
@@ -46,7 +45,7 @@ export async function POST(
         data: {
           verified: true,
           verifiedAt: new Date(),
-          verifiedBy: session.user.id,
+          verifiedBy: gate.userId,
         },
       })
     }
@@ -54,7 +53,7 @@ export async function POST(
     // Create audit log
     await prisma.auditLog.create({
       data: {
-        userId: session.user.id,
+        userId: gate.userId,
         action: action === "approve" ? "APPROVE_KYC" : "REJECT_KYC",
         entityType: "User",
         entityId: params.userId,

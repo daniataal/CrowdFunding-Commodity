@@ -5,6 +5,7 @@ import { Badge } from "@/components/ui/badge"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { ApproveKycButton, RejectKycButton } from "@/components/admin/kyc-actions"
 import { format } from "date-fns"
+import { auth } from "@/auth"
 
 export const dynamic = "force-dynamic"
 
@@ -13,6 +14,9 @@ export default async function UsersPage({
 }: {
   searchParams: { filter?: string }
 }) {
+  const session = await auth()
+  const isAdmin = session?.user?.role === "ADMIN"
+
   const where: any = {}
 
   if (searchParams.filter === "kyc_pending") {
@@ -87,11 +91,14 @@ export default async function UsersPage({
                   <TableCell>{user._count.investments}</TableCell>
                   <TableCell>{format(new Date(user.createdAt), "MMM d, yyyy")}</TableCell>
                   <TableCell>
-                    {user.kycStatus === "PENDING" && (
+                    {isAdmin && user.kycStatus === "PENDING" && (
                       <div className="flex gap-2">
                         <ApproveKycButton userId={user.id} />
                         <RejectKycButton userId={user.id} />
                       </div>
+                    )}
+                    {!isAdmin && user.kycStatus === "PENDING" && (
+                      <span className="text-xs text-muted-foreground">Pending (admin action required)</span>
                     )}
                   </TableCell>
                 </TableRow>

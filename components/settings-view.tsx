@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { useSession } from "next-auth/react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -12,11 +12,14 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Separator } from "@/components/ui/separator"
 import { User, Lock, Bell, Palette, Shield, CreditCard, Save, Upload } from "lucide-react"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
+import type { UserProfile } from "@/lib/domain"
 
-export function SettingsView() {
+export function SettingsView({ defaultTab = "profile" }: { defaultTab?: "profile" | "security" | "notifications" | "preferences" | "billing" }) {
   const { data: session } = useSession()
   const user = session?.user
   const [isSaving, setIsSaving] = useState(false)
+  const qc = useQueryClient()
 
   // Profile state
   const [name, setName] = useState(user?.name || "")
@@ -43,10 +46,72 @@ export function SettingsView() {
   const [timezone, setTimezone] = useState("America/New_York")
   const [language, setLanguage] = useState("en")
 
+  const profileQuery = useQuery({
+    queryKey: ["user", "profile"],
+    queryFn: async () => {
+      const res = await fetch("/api/user/profile")
+      const json = await res.json()
+      if (!res.ok) throw new Error(json.error || "Failed to load profile")
+      return json.data as UserProfile
+    },
+  })
+
+  useEffect(() => {
+    const p = profileQuery.data
+    if (!p) return
+    setName(p.name ?? "")
+    setEmail(p.email ?? "")
+    setPhone(p.phone ?? "")
+    setCompany(p.company ?? "")
+    setBio(p.bio ?? "")
+    setTwoFactorEnabled(!!p.twoFactorEnabled)
+    setEmailNotifications(!!p.emailNotifications)
+    setPushNotifications(!!p.pushNotifications)
+    setInvestmentAlerts(!!p.investmentAlerts)
+    setMarketUpdates(!!p.marketUpdates)
+    setWeeklyReport(!!p.weeklyReport)
+    setCurrency(p.currency ?? "USD")
+    setTimezone(p.timezone ?? "America/New_York")
+    setLanguage(p.language ?? "en")
+  }, [profileQuery.data])
+
+  const saveMutation = useMutation({
+    mutationFn: async () => {
+      const res = await fetch("/api/user/profile", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name,
+          phone: phone || null,
+          company: company || null,
+          bio: bio || null,
+          twoFactorEnabled,
+          emailNotifications,
+          pushNotifications,
+          investmentAlerts,
+          marketUpdates,
+          weeklyReport,
+          currency,
+          timezone,
+          language,
+        }),
+      })
+      const json = await res.json()
+      if (!res.ok) throw new Error(json.error || "Failed to save profile")
+      return json.data as UserProfile
+    },
+    onSuccess: async () => {
+      await qc.invalidateQueries({ queryKey: ["user", "profile"] })
+    },
+  })
+
   const handleSave = async () => {
     setIsSaving(true)
-    await new Promise((resolve) => setTimeout(resolve, 1000))
-    setIsSaving(false)
+    try {
+      await saveMutation.mutateAsync()
+    } finally {
+      setIsSaving(false)
+    }
   }
 
   return (
@@ -56,7 +121,7 @@ export function SettingsView() {
         <p className="text-muted-foreground">Manage your account settings and preferences</p>
       </div>
 
-      <Tabs defaultValue="profile" className="space-y-6">
+      <Tabs defaultValue={defaultTab} className="space-y-6">
         <TabsList className="grid w-full grid-cols-2 lg:grid-cols-5">
           <TabsTrigger value="profile" className="gap-2">
             <User className="h-4 w-4" />
@@ -113,7 +178,8 @@ export function SettingsView() {
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="email">Email</Label>
-                  <Input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} />
+                  <Input id="email" type="email" value={email} disabled />
+                  <p className="text-xs text-muted-foreground">Email changes are not supported yet.</p>
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="phone">Phone Number</Label>

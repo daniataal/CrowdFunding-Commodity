@@ -10,14 +10,17 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Loader2 } from "lucide-react"
+import { COMMODITY_TEMPLATES, ICON_TO_IMAGE } from "@/lib/commodity-catalog"
 
 export function CreateDealForm() {
   const router = useRouter()
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState("")
   const [formData, setFormData] = useState({
+    templateKey: "",
     name: "",
     type: "",
+    icon: "",
     risk: "",
     targetApy: "",
     duration: "",
@@ -75,15 +78,50 @@ export function CreateDealForm() {
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="name">Commodity Name *</Label>
-              <Input
-                id="name"
-                value={formData.name}
-                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                required
+              <Label>Commodity *</Label>
+              <Select
+                value={formData.templateKey}
+                onValueChange={(value) => {
+                  const t = COMMODITY_TEMPLATES.find((x) => x.key === value)
+                  if (!t) return
+                  setFormData({
+                    ...formData,
+                    templateKey: value,
+                    name: t.name,
+                    type: t.type,
+                    icon: t.icon,
+                    risk: t.risk ?? formData.risk,
+                    targetApy: t.targetApy !== undefined ? String(t.targetApy) : formData.targetApy,
+                    duration: t.duration !== undefined ? String(t.duration) : formData.duration,
+                    insuranceValue: t.insuranceValue !== undefined ? String(t.insuranceValue) : formData.insuranceValue,
+                    transportMethod: t.transportMethod ?? formData.transportMethod,
+                  })
+                }}
                 disabled={isLoading}
-                placeholder="e.g., Brazilian Coffee Beans"
-              />
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select commodity" />
+                </SelectTrigger>
+                <SelectContent>
+                  {COMMODITY_TEMPLATES.map((t) => (
+                    <SelectItem key={t.key} value={t.key}>
+                      {t.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              {formData.icon && (
+                <div className="mt-2 flex items-center gap-3 rounded-lg border bg-muted/30 p-2">
+                  <img
+                    src={ICON_TO_IMAGE[formData.icon as keyof typeof ICON_TO_IMAGE]}
+                    alt={formData.name}
+                    className="h-10 w-10 rounded-md border bg-background p-1"
+                  />
+                  <div className="text-xs text-muted-foreground">
+                    Listing image is auto-assigned for this commodity.
+                  </div>
+                </div>
+              )}
             </div>
 
             <div className="space-y-2">

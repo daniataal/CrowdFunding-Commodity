@@ -5,10 +5,14 @@ import { Badge } from "@/components/ui/badge"
 import Link from "next/link"
 import { Plus, Edit, Eye } from "lucide-react"
 import { format } from "date-fns"
+import { auth } from "@/auth"
 
 export const dynamic = "force-dynamic"
 
 export default async function DealsPage() {
+  const session = await auth()
+  const isAdmin = session?.user?.role === "ADMIN"
+
   const commodities = await prisma.commodity.findMany({
     orderBy: { createdAt: "desc" },
     include: {
@@ -25,12 +29,14 @@ export default async function DealsPage() {
           <h2 className="text-2xl font-bold">Deal Management</h2>
           <p className="text-muted-foreground">Create and manage commodity listings</p>
         </div>
-        <Link href="/admin/deals/new">
-          <Button className="bg-emerald-600 hover:bg-emerald-700">
-            <Plus className="mr-2 h-4 w-4" />
-            Create New Deal
-          </Button>
-        </Link>
+        {isAdmin && (
+          <Link href="/admin/deals/new">
+            <Button className="bg-emerald-600 hover:bg-emerald-700">
+              <Plus className="mr-2 h-4 w-4" />
+              Create New Deal
+            </Button>
+          </Link>
+        )}
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -91,12 +97,14 @@ export default async function DealsPage() {
                 </div>
 
                 <div className="flex gap-2 pt-2">
-                  <Link href={`/admin/deals/${commodity.id}/edit`} className="flex-1">
-                    <Button variant="outline" className="w-full" size="sm">
-                      <Edit className="mr-2 h-3 w-3" />
-                      Edit
-                    </Button>
-                  </Link>
+                  {isAdmin && (
+                    <Link href={`/admin/deals/${commodity.id}/edit`} className="flex-1">
+                      <Button variant="outline" className="w-full" size="sm">
+                        <Edit className="mr-2 h-3 w-3" />
+                        Edit
+                      </Button>
+                    </Link>
+                  )}
                   <Link href={`/admin/deals/${commodity.id}`} className="flex-1">
                     <Button variant="outline" className="w-full" size="sm">
                       <Eye className="mr-2 h-3 w-3" />

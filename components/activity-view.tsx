@@ -1,10 +1,11 @@
 "use client"
 
-import { mockActivity, type ActivityItem } from "@/lib/mock-data"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { TrendingUp, DollarSign, Package, ArrowDownToLine, ArrowUpFromLine } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
+import { useQuery } from "@tanstack/react-query"
+import type { ActivityItem } from "@/lib/domain"
 
 export function ActivityView() {
   const getIcon = (type: ActivityItem["type"]) => {
@@ -72,7 +73,41 @@ export function ActivityView() {
               {/* Timeline line */}
               <div className="absolute left-[22px] top-4 bottom-4 w-0.5 bg-border" />
 
-              {mockActivity.map((item, index) => (
+              <ActivityItems getIcon={getIcon} getStatusBadge={getStatusBadge} formatTimestamp={formatTimestamp} formatAmount={formatAmount} />
+            </div>
+          </ScrollArea>
+        </CardContent>
+      </Card>
+    </div>
+  )
+}
+
+function ActivityItems({
+  getIcon,
+  getStatusBadge,
+  formatTimestamp,
+  formatAmount,
+}: {
+  getIcon: (type: ActivityItem["type"]) => React.ReactNode
+  getStatusBadge: (status: ActivityItem["status"]) => React.ReactNode
+  formatTimestamp: (timestamp: string) => string
+  formatAmount: (amount?: number) => React.ReactNode
+}) {
+  const activityQuery = useQuery({
+    queryKey: ["activity"],
+    queryFn: async () => {
+      const res = await fetch("/api/activity")
+      const json = await res.json()
+      if (!res.ok) throw new Error(json.error || "Failed to load activity")
+      return json.data as ActivityItem[]
+    },
+  })
+
+  const items = activityQuery.data ?? []
+
+  return (
+    <>
+      {items.map((item) => (
                 <div key={item.id} className="relative flex gap-4 pb-8 last:pb-0">
                   {/* Icon circle */}
                   <div className="relative z-10 flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-full border-2 border-border bg-card">
@@ -95,10 +130,6 @@ export function ActivityView() {
                   </div>
                 </div>
               ))}
-            </div>
-          </ScrollArea>
-        </CardContent>
-      </Card>
-    </div>
+    </>
   )
 }

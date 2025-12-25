@@ -1,11 +1,27 @@
 import { NextRequest, NextResponse } from "next/server"
-import { auth } from "@/auth"
 import { prisma } from "@/lib/prisma"
 import { z } from "zod"
+import { requireDbRole } from "@/lib/authz"
 
 const createDealSchema = z.object({
+  templateKey: z.string().optional(),
   name: z.string().min(1),
   type: z.enum(["Agriculture", "Energy", "Metals"]),
+  icon: z
+    .enum([
+      "coffee",
+      "wheat",
+      "fuel",
+      "boxes",
+      "leaf",
+      "gold",
+      "silver",
+      "diesel",
+      "titanium",
+      "palladium",
+      "copper",
+    ])
+    .optional(),
   risk: z.enum(["Low", "Medium", "High"]),
   targetApy: z.string().transform((val) => Number.parseFloat(val)),
   duration: z.string().transform((val) => Number.parseInt(val)),
@@ -21,10 +37,9 @@ const createDealSchema = z.object({
 
 export async function POST(request: NextRequest) {
   try {
-    const session = await auth()
-
-    if (!session?.user || session.user.role !== "ADMIN") {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+    const gate = await requireDbRole(["ADMIN"])
+    if (!gate.ok) {
+      return NextResponse.json({ error: gate.status === 403 ? "Forbidden" : "Unauthorized" }, { status: gate.status })
     }
 
     const body = await request.json()
@@ -34,7 +49,7 @@ export async function POST(request: NextRequest) {
       data: {
         name: validatedData.name,
         type: validatedData.type,
-        icon: "boxes", // Default icon, can be enhanced later
+        icon: validatedData.icon ?? "boxes",
         risk: validatedData.risk,
         targetApy: validatedData.targetApy,
         duration: validatedData.duration,
@@ -53,7 +68,7 @@ export async function POST(request: NextRequest) {
     // Create audit log
     await prisma.auditLog.create({
       data: {
-        userId: session.user.id,
+        userId: gate.userId,
         action: "CREATE_COMMODITY",
         entityType: "Commodity",
         entityId: commodity.id,

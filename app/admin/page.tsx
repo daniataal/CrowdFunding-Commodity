@@ -8,9 +8,20 @@ export const dynamic = "force-dynamic"
 export default async function AdminDashboard() {
   const session = await auth()
 
-  if (!session?.user || session.user.role !== "ADMIN") {
+  if (!session?.user) {
     return null
   }
+
+  const dbUser = await prisma.user.findUnique({
+    where: { id: session.user.id },
+    select: { role: true },
+  })
+
+  if (!dbUser || (dbUser.role !== "ADMIN" && dbUser.role !== "AUDITOR")) {
+    return null
+  }
+
+  const isAdmin = dbUser.role === "ADMIN"
 
   // Get platform statistics
   const [
@@ -104,12 +115,19 @@ export default async function AdminDashboard() {
           </CardHeader>
           <CardContent>
             <div className="space-y-2">
-              <a href="/admin/deals/new">
-                <Card className="p-4 hover:bg-muted cursor-pointer transition-colors">
-                  <div className="font-medium">Create New Deal</div>
-                  <p className="text-sm text-muted-foreground">Add a new commodity listing</p>
+              {isAdmin ? (
+                <a href="/admin/deals/new">
+                  <Card className="p-4 hover:bg-muted cursor-pointer transition-colors">
+                    <div className="font-medium">Create New Deal</div>
+                    <p className="text-sm text-muted-foreground">Add a new commodity listing</p>
+                  </Card>
+                </a>
+              ) : (
+                <Card className="p-4 bg-muted/30">
+                  <div className="font-medium">Read-only mode</div>
+                  <p className="text-sm text-muted-foreground">Auditors cannot create or edit deals.</p>
                 </Card>
-              </a>
+              )}
               <a href="/admin/users?filter=kyc_pending">
                 <Card className="p-4 hover:bg-muted cursor-pointer transition-colors">
                   <div className="font-medium">Review KYC Applications</div>
