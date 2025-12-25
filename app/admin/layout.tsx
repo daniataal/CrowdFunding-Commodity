@@ -4,6 +4,7 @@ import Link from "next/link"
 import { LayoutDashboard, Package, Users, BarChart3, Settings, LogOut } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { signOut } from "@/auth"
+import { prisma } from "@/lib/prisma"
 
 export default async function AdminLayout({
   children,
@@ -16,9 +17,16 @@ export default async function AdminLayout({
     redirect("/login")
   }
 
-  if (session.user.role !== "ADMIN") {
+  const dbUser = await prisma.user.findUnique({
+    where: { id: session.user.id },
+    select: { role: true },
+  })
+
+  if (!dbUser || (dbUser.role !== "ADMIN" && dbUser.role !== "AUDITOR")) {
     redirect("/")
   }
+
+  const isAdmin = dbUser.role === "ADMIN"
 
   return (
     <div className="min-h-screen bg-background">
@@ -30,7 +38,7 @@ export default async function AdminLayout({
               <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-emerald-500 to-emerald-600">
                 <BarChart3 className="h-5 w-5 text-white" />
               </div>
-              <span className="font-bold">Admin Portal</span>
+              <span className="font-bold">{isAdmin ? "Admin Portal" : "Audit Portal"}</span>
             </Link>
           </div>
           <nav className="p-4 space-y-2">
@@ -86,8 +94,10 @@ export default async function AdminLayout({
             <div className="px-6 py-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <h1 className="text-2xl font-bold">Admin Dashboard</h1>
-                  <p className="text-sm text-muted-foreground">Platform management and oversight</p>
+                  <h1 className="text-2xl font-bold">{isAdmin ? "Admin Dashboard" : "Audit Dashboard"}</h1>
+                  <p className="text-sm text-muted-foreground">
+                    {isAdmin ? "Platform management and oversight" : "Read-only oversight and monitoring"}
+                  </p>
                 </div>
                 <div className="flex items-center gap-4">
                   <span className="text-sm text-muted-foreground">{session.user.email}</span>

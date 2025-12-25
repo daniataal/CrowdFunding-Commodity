@@ -1,13 +1,55 @@
 "use client"
 
 import { Card } from "@/components/ui/card"
-import { mockPortfolio, mockPerformanceData, mockCommodities } from "@/lib/mock-data"
 import { ArrowUpRight, TrendingUp, Wallet, DollarSign } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from "recharts"
+import { useQuery } from "@tanstack/react-query"
+import type { DashboardSummary, PerformancePoint } from "@/lib/domain"
 
 export function DashboardView() {
-  const activeShipments = mockCommodities.filter((c) => c.status === "In Transit")
+  const summaryQuery = useQuery({
+    queryKey: ["dashboard", "summary"],
+    queryFn: async () => {
+      const res = await fetch("/api/dashboard/summary")
+      const json = await res.json()
+      if (!res.ok) throw new Error(json.error || "Failed to load summary")
+      return json.data as DashboardSummary
+    },
+  })
+
+  const performanceQuery = useQuery({
+    queryKey: ["dashboard", "performance"],
+    queryFn: async () => {
+      const res = await fetch("/api/dashboard/performance")
+      const json = await res.json()
+      if (!res.ok) throw new Error(json.error || "Failed to load performance")
+      return json.data as PerformancePoint[]
+    },
+  })
+
+  const shipmentsQuery = useQuery({
+    queryKey: ["dashboard", "shipments"],
+    queryFn: async () => {
+      const res = await fetch("/api/dashboard/shipments")
+      const json = await res.json()
+      if (!res.ok) throw new Error(json.error || "Failed to load shipments")
+      return json.data as Array<{
+        id: string
+        type: string
+        name: string
+        status: string
+        origin: string
+        destination: string
+        shipmentId: string | null
+        amountRequired: number
+      }>
+    },
+  })
+
+  const summary = summaryQuery.data
+  const performance = performanceQuery.data ?? []
+  const activeShipments = shipmentsQuery.data ?? []
 
   return (
     <div className="space-y-6">
@@ -17,10 +59,10 @@ export function DashboardView() {
           <div className="flex items-start justify-between">
             <div>
               <p className="text-sm text-muted-foreground font-medium">Total Portfolio Value</p>
-              <h3 className="text-3xl font-bold mt-2">${mockPortfolio.totalValue.toLocaleString()}</h3>
+              <h3 className="text-3xl font-bold mt-2">${(summary?.totalValue ?? 0).toLocaleString()}</h3>
               <div className="flex items-center mt-2 text-emerald-500">
                 <ArrowUpRight className="h-4 w-4 mr-1" />
-                <span className="text-sm font-semibold">+{mockPortfolio.roi}%</span>
+                <span className="text-sm font-semibold">+{(summary?.roi ?? 0).toFixed(1)}%</span>
               </div>
             </div>
             <div className="h-12 w-12 rounded-lg bg-emerald-500/10 flex items-center justify-center">
@@ -33,7 +75,7 @@ export function DashboardView() {
           <div className="flex items-start justify-between">
             <div>
               <p className="text-sm text-muted-foreground font-medium">Total Profit</p>
-              <h3 className="text-3xl font-bold mt-2">${mockPortfolio.totalProfit.toLocaleString()}</h3>
+              <h3 className="text-3xl font-bold mt-2">${(summary?.totalProfit ?? 0).toLocaleString()}</h3>
               <div className="flex items-center mt-2 text-emerald-500">
                 <ArrowUpRight className="h-4 w-4 mr-1" />
                 <span className="text-sm font-semibold">+15.2%</span>
@@ -49,7 +91,7 @@ export function DashboardView() {
           <div className="flex items-start justify-between">
             <div>
               <p className="text-sm text-muted-foreground font-medium">Cash in Wallet</p>
-              <h3 className="text-3xl font-bold mt-2">${mockPortfolio.cashInWallet.toLocaleString()}</h3>
+              <h3 className="text-3xl font-bold mt-2">${(summary?.cashInWallet ?? 0).toLocaleString()}</h3>
               <p className="text-sm text-muted-foreground mt-2">Available to invest</p>
             </div>
             <div className="h-12 w-12 rounded-lg bg-amber-500/10 flex items-center justify-center">
@@ -64,7 +106,7 @@ export function DashboardView() {
         <h3 className="text-lg font-semibold mb-4">Portfolio Performance</h3>
         <div className="h-[300px] w-full">
           <ResponsiveContainer width="100%" height="100%">
-            <LineChart data={mockPerformanceData}>
+            <LineChart data={performance}>
               <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
               <XAxis dataKey="date" stroke="hsl(var(--muted-foreground))" fontSize={12} />
               <YAxis
@@ -125,7 +167,7 @@ export function DashboardView() {
                     <div className="text-sm text-muted-foreground">{shipment.type}</div>
                   </td>
                   <td className="py-4 px-4">
-                    <code className="text-sm bg-muted px-2 py-1 rounded">{shipment.shipmentId}</code>
+                    <code className="text-sm bg-muted px-2 py-1 rounded">{shipment.shipmentId ?? "-"}</code>
                   </td>
                   <td className="py-4 px-4 text-sm">
                     <div>{shipment.origin}</div>

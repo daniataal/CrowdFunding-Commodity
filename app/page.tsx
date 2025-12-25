@@ -12,7 +12,8 @@ import { HelpView } from "@/components/help-view"
 import { NotificationPanel } from "@/components/notification-panel"
 import { OnboardingTour } from "@/components/onboarding-tour"
 import { AssetDetailModal } from "@/components/asset-detail-modal"
-import type { Commodity } from "@/lib/mock-data"
+import { ClientErrorBoundary } from "@/components/client-error-boundary"
+import type { MarketplaceCommodity } from "@/lib/domain"
 import {
   LayoutDashboard,
   Store,
@@ -36,6 +37,10 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import Link from "next/link"
+import { Shield as ShieldIcon } from "lucide-react"
+import { useQuery } from "@tanstack/react-query"
+import type { UserRole } from "@/lib/domain"
 
 type View = "dashboard" | "marketplace" | "wallet" | "settings" | "activity" | "help"
 
@@ -43,11 +48,28 @@ export default function CommodityPlatform() {
   const { data: session, status } = useSession()
   const router = useRouter()
   const [currentView, setCurrentView] = useState<View>("dashboard")
-  const [selectedAsset, setSelectedAsset] = useState<Commodity | null>(null)
+  const [selectedAsset, setSelectedAsset] = useState<MarketplaceCommodity | null>(null)
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [showOnboarding, setShowOnboarding] = useState(false)
+  const [settingsTab, setSettingsTab] = useState<"profile" | "security" | "notifications" | "preferences" | "billing">(
+    "profile",
+  )
 
   const user = session?.user
+
+  // Don't rely solely on JWT session for role checks (it can be stale after DB changes).
+  const profileRoleQuery = useQuery({
+    queryKey: ["user", "profile", "role"],
+    enabled: !!user,
+    queryFn: async () => {
+      const res = await fetch("/api/user/profile")
+      if (!res.ok) return null
+      const json = await res.json()
+      return (json?.data?.role as UserRole | undefined) ?? null
+    },
+  })
+
+  const effectiveRole = (profileRoleQuery.data ?? (user as any)?.role) as UserRole | null
 
   const handleLogout = async () => {
     await signOut({ redirect: false })
@@ -169,18 +191,39 @@ export default function CommodityPlatform() {
                       </div>
                     </DropdownMenuLabel>
                     <DropdownMenuSeparator />
-                    <DropdownMenuItem onClick={() => setCurrentView("settings")}>
+                    <DropdownMenuItem
+                      onClick={() => {
+                        setSettingsTab("profile")
+                        setCurrentView("settings")
+                      }}
+                    >
                       <User className="mr-2 h-4 w-4" />
                       Profile Settings
                     </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => setCurrentView("settings")}>
+                    <DropdownMenuItem
+                      onClick={() => {
+                        setSettingsTab("security")
+                        setCurrentView("settings")
+                      }}
+                    >
                       <Settings className="mr-2 h-4 w-4" />
-                      Account Settings
+                      Security Settings
                     </DropdownMenuItem>
                     <DropdownMenuItem onClick={() => setCurrentView("help")}>
                       <HelpCircle className="mr-2 h-4 w-4" />
                       Help & Support
                     </DropdownMenuItem>
+                  {(effectiveRole === "ADMIN" || effectiveRole === "AUDITOR") && (
+                    <>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem asChild>
+                        <Link href="/admin">
+                          <ShieldIcon className="mr-2 h-4 w-4" />
+                          {effectiveRole === "ADMIN" ? "Admin Portal" : "Audit Portal"}
+                        </Link>
+                      </DropdownMenuItem>
+                    </>
+                  )}
                     <DropdownMenuSeparator />
                     <DropdownMenuItem onClick={handleLogout} className="text-red-500 focus:text-red-500">
                       <LogOut className="mr-2 h-4 w-4" />
@@ -259,20 +302,29 @@ export default function CommodityPlatform() {
 
         {/* Main Content */}
         <main className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
-          {currentView === "dashboard" && <DashboardView />}
-          {currentView === "marketplace" && <MarketplaceView onSelectAsset={(asset) => setSelectedAsset(asset)} />}
-          {currentView === "wallet" && <WalletView />}
-          {currentView === "settings" && <SettingsView />}
-          {currentView === "activity" && <ActivityView />}
-          {currentView === "help" && <HelpView />}
+          <ClientErrorBoundary title="App view crashed">
+            {currentView === "dashboard" && <DashboardView />}
+            {currentView === "marketplace" && (
+              <MarketplaceView
+                onSelectAsset={(asset) => setSelectedAsset(asset)}
+                canCreateListing={effectiveRole === "ADMIN"}
+              />
+            )}
+            {currentView === "wallet" && <WalletView />}
+            {currentView === "settings" && <SettingsView defaultTab={settingsTab} />}
+            {currentView === "activity" && <ActivityView />}
+            {currentView === "help" && <HelpView />}
+          </ClientErrorBoundary>
         </main>
 
         {/* Asset Detail Modal */}
-        <AssetDetailModal
-          commodity={selectedAsset}
-          open={!!selectedAsset}
-          onOpenChange={(open) => !open && setSelectedAsset(null)}
-        />
+        <ClientErrorBoundary title="Listing details crashed">
+          <AssetDetailModal
+            commodity={selectedAsset}
+            open={!!selectedAsset}
+            onOpenChange={(open) => !open && setSelectedAsset(null)}
+          />
+        </ClientErrorBoundary>
 
         {/* Onboarding Tour */}
         {showOnboarding && <OnboardingTour onComplete={handleCompleteOnboarding} onSkip={handleSkipOnboarding} />}

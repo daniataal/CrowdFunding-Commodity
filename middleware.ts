@@ -4,16 +4,14 @@ import { NextResponse } from "next/server"
 export default auth((req) => {
   const { pathname } = req.nextUrl
   const isLoggedIn = !!req.auth
-  const userRole = req.auth?.user?.role
 
   // Admin routes protection
   if (pathname.startsWith("/admin")) {
     if (!isLoggedIn) {
       return NextResponse.redirect(new URL("/login", req.url))
     }
-    if (userRole !== "ADMIN") {
-      return NextResponse.redirect(new URL("/", req.url))
-    }
+    // Role enforcement is done server-side (DB-backed) in layouts/routes so role changes take effect immediately.
+    return NextResponse.next()
   }
 
   // Redirect authenticated users away from auth pages

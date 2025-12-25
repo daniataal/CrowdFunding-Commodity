@@ -5,8 +5,11 @@ import { Card } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Progress } from "@/components/ui/progress"
-import { mockCommodities, type Commodity } from "@/lib/mock-data"
 import { Coffee, Boxes, Wheat, Fuel, Leaf, TrendingUp, Clock, Shield } from "lucide-react"
+import { useQuery } from "@tanstack/react-query"
+import type { MarketplaceCommodity } from "@/lib/domain"
+import Link from "next/link"
+import { Plus } from "lucide-react"
 
 const commodityIcons = {
   coffee: Coffee,
@@ -15,22 +18,80 @@ const commodityIcons = {
   fuel: Fuel,
   leaf: Leaf,
   blocks: Boxes,
+  gold: Boxes,
+  silver: Boxes,
+  diesel: Fuel,
+  titanium: Boxes,
+  palladium: Boxes,
+  copper: Boxes,
 }
 
-export function MarketplaceView({ onSelectAsset }: { onSelectAsset: (commodity: Commodity) => void }) {
+export function MarketplaceView({
+  onSelectAsset,
+  canCreateListing = false,
+}: {
+  onSelectAsset: (commodity: MarketplaceCommodity) => void
+  canCreateListing?: boolean
+}) {
   const [filterType, setFilterType] = useState<string>("All")
   const [filterRisk, setFilterRisk] = useState<string>("All")
 
-  const filteredCommodities = mockCommodities.filter((c) => {
-    if (filterType !== "All" && c.type !== filterType) return false
-    if (filterRisk !== "All" && c.risk !== filterRisk) return false
-    return c.status === "Funding"
+  const commoditiesQuery = useQuery({
+    queryKey: ["marketplace", "commodities", filterType, filterRisk],
+    queryFn: async () => {
+      const params = new URLSearchParams()
+      params.set("type", filterType)
+      params.set("risk", filterRisk)
+      const res = await fetch(`/api/marketplace/commodities?${params.toString()}`)
+      const json = await res.json()
+      if (!res.ok) throw new Error(json.error || "Failed to load commodities")
+      return json.data as MarketplaceCommodity[]
+    },
   })
+
+  const filteredCommodities = commoditiesQuery.data ?? []
+
+  const isEmpty = !commoditiesQuery.isLoading && filteredCommodities.length === 0
+
+  const fundedPct = (current: number, required: number) => (required > 0 ? (current / required) * 100 : 0)
+
+  const getStatusLabel = (status: MarketplaceCommodity["status"]) => {
+    switch (status) {
+      case "FUNDING":
+        return "Funding"
+      case "IN_TRANSIT":
+        return "In Transit"
+      case "SETTLED":
+        return "Settled"
+      case "ACTIVE":
+        return "Active"
+      case "CANCELLED":
+        return "Cancelled"
+      default:
+        return status
+    }
+  }
 
   return (
     <div className="flex flex-col lg:flex-row gap-6">
       {/* Filters Sidebar */}
       <aside className="lg:w-64 space-y-4">
+        {canCreateListing && (
+          <Card className="p-4 border-2 bg-card/50 backdrop-blur">
+            <div className="flex items-center justify-between">
+              <div>
+                <div className="font-semibold">Admin</div>
+                <div className="text-xs text-muted-foreground">Create a new marketplace listing</div>
+              </div>
+              <Button asChild className="bg-emerald-600 hover:bg-emerald-700 text-white">
+                <Link href="/admin/deals/new">
+                  <Plus className="h-4 w-4 mr-2" />
+                  Create
+                </Link>
+              </Button>
+            </div>
+          </Card>
+        )}
         <Card className="p-4 border-2 bg-card/50 backdrop-blur">
           <h3 className="font-semibold mb-3">Commodity Type</h3>
           <div className="space-y-2">
@@ -69,9 +130,14 @@ export function MarketplaceView({ onSelectAsset }: { onSelectAsset: (commodity: 
       {/* Investment Cards Grid */}
       <div className="flex-1">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {isEmpty && (
+            <Card className="p-6 border-2 bg-card/50 backdrop-blur md:col-span-2">
+              <div className="text-muted-foreground">No deals match your filters.</div>
+            </Card>
+          )}
           {filteredCommodities.map((commodity) => {
             const Icon = commodityIcons[commodity.icon as keyof typeof commodityIcons] || Boxes
-            const fundedPercentage = (commodity.amountFunded / commodity.amountRequired) * 100
+            const fundedPercentage = fundedPct(commodity.currentAmount, commodity.amountRequired)
 
             return (
               <Card
@@ -122,7 +188,7 @@ export function MarketplaceView({ onSelectAsset }: { onSelectAsset: (commodity: 
                       <Shield className="h-3 w-3 mr-1" />
                       <span className="text-xs font-medium">Insured</span>
                     </div>
-                    <p className="text-lg font-bold">Yes</p>
+                    <p className="text-lg font-bold">{commodity.insuranceValue ? "Yes" : "No"}</p>
                   </div>
                 </div>
 
@@ -133,12 +199,14 @@ export function MarketplaceView({ onSelectAsset }: { onSelectAsset: (commodity: 
                   </div>
                   <Progress value={fundedPercentage} className="h-2" />
                   <div className="flex justify-between text-xs text-muted-foreground">
-                    <span>${commodity.amountFunded.toLocaleString()}</span>
+                    <span>${commodity.currentAmount.toLocaleString()}</span>
                     <span>of ${commodity.amountRequired.toLocaleString()}</span>
                   </div>
                 </div>
 
-                <Button className="w-full mt-4 bg-emerald-600 hover:bg-emerald-700 text-white">View Details</Button>
+                <Button className="w-full mt-4 bg-emerald-600 hover:bg-emerald-700 text-white">
+                  View Details
+                </Button>
               </Card>
             )
           })}

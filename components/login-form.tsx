@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { useAuth } from "@/lib/auth-context"
 import { TrendingUp, Loader2 } from "lucide-react"
+import Link from "next/link"
 
 interface LoginFormProps {
   onSwitchToSignup: () => void
@@ -66,9 +67,9 @@ export function LoginForm({ onSwitchToSignup }: LoginFormProps) {
             <div className="space-y-2">
               <div className="flex items-center justify-between">
                 <Label htmlFor="password">Password</Label>
-                <button type="button" className="text-sm text-emerald-500 hover:text-emerald-400">
+                <Link href="/forgot-password" className="text-sm text-emerald-500 hover:text-emerald-400">
                   Forgot password?
-                </button>
+                </Link>
               </div>
               <Input
                 id="password"

@@ -65,7 +65,9 @@ spec:
       - name: migrate
         image: commodity-crowdfunding:latest
         # Image does not include pnpm; use locally installed Prisma CLI
-        command: ["sh", "-c", "/app/node_modules/.bin/prisma migrate deploy"]
+        # NOTE: no migrations are committed yet; `migrate deploy` alone won't create tables.
+        # This ensures schema exists in cluster too.
+        command: ["sh", "-c", "/app/node_modules/.bin/prisma db push --skip-generate && /app/node_modules/.bin/prisma migrate deploy"]
         env:
         - name: DATABASE_URL
           valueFrom:

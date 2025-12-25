@@ -96,26 +96,19 @@ export async function getActiveShipments() {
       return { error: "Unauthorized" }
     }
 
-    // Get commodities where user has investments and status is IN_TRANSIT or ACTIVE
-    const investments = await prisma.investment.findMany({
+    // Get commodities where the user has active investments and the commodity is active/in-transit
+    const activeShipments = await prisma.commodity.findMany({
       where: {
-        userId: session.user.id,
-        status: "ACTIVE",
-      },
-      include: {
-        commodity: {
-          where: {
-            status: {
-              in: ["ACTIVE", "IN_TRANSIT"],
-            },
+        status: { in: ["ACTIVE", "IN_TRANSIT"] },
+        investments: {
+          some: {
+            userId: session.user.id,
+            status: "ACTIVE",
           },
         },
       },
+      orderBy: { updatedAt: "desc" },
     })
-
-    const activeShipments = investments
-      .map((inv) => inv.commodity)
-      .filter((c) => c !== null)
 
     return { success: true, data: activeShipments }
   } catch (error) {

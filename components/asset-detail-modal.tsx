@@ -9,25 +9,54 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Progress } from "@/components/ui/progress"
-import type { Commodity } from "@/lib/mock-data"
 import { MapPin, FileText, DollarSign, TrendingUp, Shield, Truck, Calendar } from "lucide-react"
+import type { MarketplaceCommodity } from "@/lib/domain"
+import { useMutation, useQueryClient } from "@tanstack/react-query"
 
 interface AssetDetailModalProps {
-  commodity: Commodity | null
+  commodity: MarketplaceCommodity | null
   open: boolean
   onOpenChange: (open: boolean) => void
 }
 
 export function AssetDetailModal({ commodity, open, onOpenChange }: AssetDetailModalProps) {
   const [investAmount, setInvestAmount] = useState("")
+  const qc = useQueryClient()
 
   if (!commodity) return null
 
-  const fundedPercentage = (commodity.amountFunded / commodity.amountRequired) * 100
-  const remainingAmount = commodity.amountRequired - commodity.amountFunded
+  const fundedPercentage = commodity.amountRequired > 0 ? (commodity.currentAmount / commodity.amountRequired) * 100 : 0
+  const remainingAmount = commodity.amountRequired - commodity.currentAmount
   const projectedReturn = investAmount
     ? (Number.parseFloat(investAmount) * (commodity.targetApy / 100) * (commodity.duration / 365)).toFixed(2)
     : "0.00"
+
+  const investMutation = useMutation({
+    mutationFn: async () => {
+      const amount = Number.parseFloat(investAmount)
+      if (!Number.isFinite(amount) || amount <= 0) throw new Error("Enter a valid amount")
+      const res = await fetch("/api/invest", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ commodityId: commodity.id, amount }),
+      })
+      const json = await res.json()
+      if (!res.ok) throw new Error(json.error || "Investment failed")
+      return json
+    },
+    onSuccess: async () => {
+      setInvestAmount("")
+      onOpenChange(false)
+      await Promise.all([
+        qc.invalidateQueries({ queryKey: ["marketplace", "commodities"] }),
+        qc.invalidateQueries({ queryKey: ["wallet", "balance"] }),
+        qc.invalidateQueries({ queryKey: ["wallet", "transactions"] }),
+        qc.invalidateQueries({ queryKey: ["dashboard", "summary"] }),
+        qc.invalidateQueries({ queryKey: ["dashboard", "shipments"] }),
+        qc.invalidateQueries({ queryKey: ["activity"] }),
+      ])
+    },
+  })
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -71,7 +100,7 @@ export function AssetDetailModal({ commodity, open, onOpenChange }: AssetDetailM
                 </div>
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Already Funded</span>
-                  <span className="font-semibold text-emerald-500">${commodity.amountFunded.toLocaleString()}</span>
+                  <span className="font-semibold text-emerald-500">${commodity.currentAmount.toLocaleString()}</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Remaining</span>
@@ -125,8 +154,16 @@ export function AssetDetailModal({ commodity, open, onOpenChange }: AssetDetailM
                     </p>
                   </div>
                 </div>
-                <Button className="w-full bg-emerald-600 hover:bg-emerald-700 text-white" size="lg">
-                  Invest Now
+                {investMutation.error && (
+                  <div className="text-sm text-red-500">{(investMutation.error as Error).message}</div>
+                )}
+                <Button
+                  className="w-full bg-emerald-600 hover:bg-emerald-700 text-white"
+                  size="lg"
+                  onClick={() => investMutation.mutate()}
+                  disabled={investMutation.isPending}
+                >
+                  {investMutation.isPending ? "Investing..." : "Invest Now"}
                 </Button>
               </div>
             </Card>
