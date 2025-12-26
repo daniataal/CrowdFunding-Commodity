@@ -99,6 +99,8 @@ export type UserProfile = {
   name: string
   role: UserRole
   kycStatus: KycStatus
+  disabled?: boolean
+  disabledAt?: string | null
   avatar?: string | null
   phone?: string | null
   company?: string | null
@@ -112,6 +114,39 @@ export type UserProfile = {
   currency: string
   timezone: string
   language: string
+}
+
+export type AdminUserSummary = {
+  id: string
+  email: string
+  name: string
+  role: UserRole
+  kycStatus: KycStatus
+  walletBalance: number
+  disabled: boolean
+  disabledAt: string | null
+  createdAt: string
+  _count: { investments: number; transactions: number; documents: number }
+}
+
+export type AdminUserDetail = AdminUserSummary & {
+  updatedAt: string
+  avatar?: string | null
+  phone?: string | null
+  company?: string | null
+  kycDocuments: CommodityDocument[]
+}
+
+export type AuditLogItem = {
+  id: string
+  action: string
+  entityType: string
+  entityId?: string | null
+  changes?: any
+  ipAddress?: string | null
+  userAgent?: string | null
+  createdAt: string
+  actor?: { id: string; email: string; name: string; role: UserRole } | null
 }
 
 

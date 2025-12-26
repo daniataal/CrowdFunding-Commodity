@@ -77,6 +77,8 @@ model User {
   role          UserRole  @default(USER)
   kycStatus     KycStatus @default(NOT_STARTED) @map("kyc_status")
   walletBalance Decimal   @default(0) @map("wallet_balance") @db.Decimal(12, 2)
+  disabled      Boolean   @default(false)
+  disabledAt    DateTime? @map("disabled_at")
   avatar        String?
   phone         String?
   company       String?

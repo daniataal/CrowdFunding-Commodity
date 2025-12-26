@@ -35,6 +35,11 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           return null
         }
 
+        // Soft-disabled users cannot sign in.
+        if ((user as any).disabled) {
+          return null
+        }
+
         const passwordsMatch = await bcrypt.compare(password, user.passwordHash)
 
         if (!passwordsMatch) {
