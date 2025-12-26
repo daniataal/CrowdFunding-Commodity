@@ -197,17 +197,8 @@ export default function CommodityPlatform() {
                         setCurrentView("settings")
                       }}
                     >
-                      <User className="mr-2 h-4 w-4" />
-                      Profile Settings
-                    </DropdownMenuItem>
-                    <DropdownMenuItem
-                      onClick={() => {
-                        setSettingsTab("security")
-                        setCurrentView("settings")
-                      }}
-                    >
                       <Settings className="mr-2 h-4 w-4" />
-                      Security Settings
+                      Settings
                     </DropdownMenuItem>
                     <DropdownMenuItem onClick={() => setCurrentView("help")}>
                       <HelpCircle className="mr-2 h-4 w-4" />
