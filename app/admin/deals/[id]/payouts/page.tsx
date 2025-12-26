@@ -42,7 +42,13 @@ export default async function DealPayoutsPage({ params }: { params: Promise<{ id
         </Button>
       </div>
 
-      <PayoutsForm dealId={id} dealName={commodity.name} totalInvested={totalInvested} investorCount={investorCount} />
+      <PayoutsForm
+        dealId={id}
+        dealName={commodity.name}
+        totalInvested={totalInvested}
+        investorCount={investorCount}
+        dealStatus={commodity.status}
+      />
     </div>
   )
 }

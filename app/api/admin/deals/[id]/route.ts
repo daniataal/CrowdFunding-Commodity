@@ -26,7 +26,7 @@ const updateSchema = z.object({
   transportMethod: z.string().nullable().optional(),
   riskScore: z.union([z.string(), z.number()]).nullable().optional(),
   maturityDate: z.union([z.string(), z.date()]).nullable().optional(),
-  status: z.enum(["FUNDING", "ACTIVE", "IN_TRANSIT", "SETTLED", "CANCELLED"]).optional(),
+  status: z.enum(["FUNDING", "ACTIVE", "IN_TRANSIT", "ARRIVED", "SETTLED", "CANCELLED"]).optional(),
 })
 
 export async function GET(_request: NextRequest, context: { params: Promise<{ id: string }> }) {

@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useMemo, useState } from "react"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Card } from "@/components/ui/card"
@@ -17,6 +17,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert"
 import Link from "next/link"
 import { useSession } from "next-auth/react"
 import { ShipmentMap } from "@/components/shipment-map"
+import type { ShipmentEvent } from "@/lib/domain"
 
 interface AssetDetailModalProps {
   commodity: MarketplaceCommodity | null
@@ -54,6 +55,13 @@ export function AssetDetailModal({ commodity, open, onOpenChange }: AssetDetailM
   const { data: session } = useSession()
   const commodityId = commodity?.id
 
+  const arrivalDate = commodity?.maturityDate
+    ? new Date(commodity.maturityDate)
+    : new Date(Date.now() + (commodity?.duration ?? 0) * 24 * 60 * 60 * 1000)
+  const departureDate = commodity?.maturityDate
+    ? new Date(new Date(commodity.maturityDate).getTime() - (commodity?.duration ?? 0) * 24 * 60 * 60 * 1000)
+    : new Date(Date.now() - 2 * 24 * 60 * 60 * 1000)
+
   const docsQuery = useQuery({
     queryKey: ["commodities", commodityId, "documents"],
     enabled: !!commodityId && open,
@@ -64,6 +72,27 @@ export function AssetDetailModal({ commodity, open, onOpenChange }: AssetDetailM
       return json.data as CommodityDocument[]
     },
   })
+
+  const shipmentEventsQuery = useQuery({
+    queryKey: ["commodities", commodityId, "shipment-events"],
+    enabled: !!commodityId && open,
+    queryFn: async () => {
+      const res = await fetch(`/api/commodities/${commodityId}/shipment-events`)
+      const json = await res.json()
+      if (!res.ok) throw new Error(json.error || "Failed to load shipment events")
+      return json.data as ShipmentEvent[]
+    },
+  })
+
+  const { effectiveDepartureDate, effectiveArrivalDate } = useMemo(() => {
+    const events = shipmentEventsQuery.data ?? []
+    const departed = events.find((e) => e.type === "DEPARTED")
+    const arrived = [...events].reverse().find((e) => e.type === "ARRIVED")
+    return {
+      effectiveDepartureDate: departed ? new Date(departed.occurredAt) : departureDate,
+      effectiveArrivalDate: arrived ? new Date(arrived.occurredAt) : arrivalDate,
+    }
+  }, [shipmentEventsQuery.data, departureDate, arrivalDate])
 
   const fundedPercentage =
     commodity && commodity.amountRequired > 0 ? (commodity.currentAmount / commodity.amountRequired) * 100 : 0
@@ -126,10 +155,6 @@ export function AssetDetailModal({ commodity, open, onOpenChange }: AssetDetailM
   })
 
   const kycApproved = (session?.user as any)?.kycStatus === "APPROVED"
-  const arrivalDate = commodity?.maturityDate ? new Date(commodity.maturityDate) : new Date(Date.now() + (commodity?.duration ?? 0) * 24 * 60 * 60 * 1000)
-  const departureDate = commodity?.maturityDate
-    ? new Date(new Date(commodity.maturityDate).getTime() - (commodity?.duration ?? 0) * 24 * 60 * 60 * 1000)
-    : new Date(Date.now() - 2 * 24 * 60 * 60 * 1000)
   const transport = String(commodity?.transportMethod ?? "").toLowerCase()
   const vehicleType =
     commodity?.type === "Metals" && (transport.includes("brink") || transport.includes("armored"))
@@ -370,8 +395,8 @@ export function AssetDetailModal({ commodity, open, onOpenChange }: AssetDetailM
                 <ShipmentMap
                   originCoordinates={{ lat: commodity.originLat as number, lng: commodity.originLng as number }}
                   destinationCoordinates={{ lat: commodity.destLat as number, lng: commodity.destLng as number }}
-                  departureDate={departureDate}
-                  arrivalDate={arrivalDate}
+                  departureDate={effectiveDepartureDate}
+                  arrivalDate={effectiveArrivalDate}
                   vesselName={vesselName}
                   vehicleType={vehicleType}
                 />
@@ -380,20 +405,51 @@ export function AssetDetailModal({ commodity, open, onOpenChange }: AssetDetailM
               )}
               {commodity && (
                 <div className="mt-4 space-y-2">
-                  <div className="flex items-center justify-between text-sm">
-                    <div className="font-medium">Departed {commodity.origin}</div>
-                    <div className="text-muted-foreground">{departureDate.toLocaleDateString()}</div>
-                  </div>
-                  <div className="flex items-center justify-between text-sm">
-                    <div className="font-medium">Currently in transit</div>
-                    <div className="text-muted-foreground">
-                      {new Date() < departureDate ? "Pending" : new Date() > arrivalDate ? "Completed" : "Active"}
+                  {shipmentEventsQuery.isError ? (
+                    <div className="text-sm text-muted-foreground">
+                      {(shipmentEventsQuery.error as Error).message === "Unauthorized" ? (
+                        <span>
+                          Please <Link className="underline" href="/login">log in</Link> to view shipment tracking.
+                        </span>
+                      ) : (shipmentEventsQuery.error as Error).message === "KYC approval required" ? (
+                        <span>
+                          KYC approval is required to view shipment tracking.{" "}
+                          <Link className="underline" href="/kyc-verification">Complete verification</Link>.
+                        </span>
+                      ) : (
+                        <span>Shipment events unavailable.</span>
+                      )}
                     </div>
-                  </div>
-                  <div className="flex items-center justify-between text-sm">
-                    <div className="font-medium">Estimated arrival {commodity.destination}</div>
-                    <div className="text-muted-foreground">{arrivalDate.toLocaleDateString()}</div>
-                  </div>
+                  ) : null}
+
+                  {(() => {
+                    const events = shipmentEventsQuery.data ?? []
+                    const departed = events.find((e) => e.type === "DEPARTED")
+                    const arrived = [...events].reverse().find((e) => e.type === "ARRIVED")
+                    const now = new Date()
+                    const departedAt = departed ? new Date(departed.occurredAt) : departureDate
+                    const arrivedAt = arrived ? new Date(arrived.occurredAt) : arrivalDate
+                    const arrivedPast = Boolean(arrived && arrivedAt <= now)
+                    const inTransitState = now < departedAt ? "Pending" : arrivedPast ? "Completed" : "Active"
+                    return (
+                      <>
+                        <div className="flex items-center justify-between text-sm">
+                          <div className="font-medium">Departed {commodity.origin}</div>
+                          <div className="text-muted-foreground">{departedAt.toLocaleDateString()}</div>
+                        </div>
+                        <div className="flex items-center justify-between text-sm">
+                          <div className="font-medium">Currently in transit</div>
+                          <div className="text-muted-foreground">{inTransitState}</div>
+                        </div>
+                        <div className="flex items-center justify-between text-sm">
+                          <div className="font-medium">
+                            {arrivedPast ? "Arrived" : "Estimated arrival"} {commodity.destination}
+                          </div>
+                          <div className="text-muted-foreground">{arrivedAt.toLocaleDateString()}</div>
+                        </div>
+                      </>
+                    )
+                  })()}
                 </div>
               )}
             </Card>

@@ -3,7 +3,7 @@ export type KycStatus = "PENDING" | "APPROVED" | "REJECTED" | "NOT_STARTED"
 
 export type CommodityType = "Agriculture" | "Energy" | "Metals"
 export type RiskLevel = "Low" | "Medium" | "High"
-export type CommodityStatus = "FUNDING" | "ACTIVE" | "IN_TRANSIT" | "SETTLED" | "CANCELLED"
+export type CommodityStatus = "FUNDING" | "ACTIVE" | "IN_TRANSIT" | "ARRIVED" | "SETTLED" | "CANCELLED"
 
 export type DocumentType =
   | "BILL_OF_LADING"
@@ -88,6 +88,16 @@ export type ActivityItem = {
   amount?: number
   timestamp: string
   status: "success" | "pending" | "info"
+}
+
+export type ShipmentEvent = {
+  id: string
+  commodityId: string
+  type: "DEPARTED" | "IN_TRANSIT" | "ARRIVED"
+  occurredAt: string
+  description: string
+  source: string
+  createdAt: string
 }
 
 export type NotificationItem = {

@@ -16,6 +16,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import type { CommodityDocument, DocumentType, MarketplaceCommodity } from "@/lib/domain"
 import { DollarSign, TrendingUp, MapPin, Truck, FileText, Shield, Calendar, Link as LinkIcon } from "lucide-react"
 import { ShipmentMap } from "@/components/shipment-map"
+import type { ShipmentEvent } from "@/lib/domain"
 
 const typeLabels: Record<DocumentType, string> = {
   BILL_OF_LADING: "Bill of Lading",
@@ -99,6 +100,29 @@ export function DealDetailView({ commodity }: { commodity: MarketplaceCommodity 
       return json.data as CommodityDocument[]
     },
   })
+
+  const shipmentEventsQuery = useQuery({
+    queryKey: ["commodities", commodityId, "shipment-events"],
+    queryFn: async () => {
+      const res = await fetch(`/api/commodities/${commodityId}/shipment-events`)
+      const json = await res.json()
+      if (!res.ok) throw new Error(json.error || "Failed to load shipment events")
+      return json.data as ShipmentEvent[]
+    },
+  })
+
+  const { effectiveDepartureDate, effectiveArrivalDate } = useMemo(() => {
+    const events = shipmentEventsQuery.data ?? []
+    const departed = events.find((e) => e.type === "DEPARTED")
+    const arrived = [...events].reverse().find((e) => e.type === "ARRIVED")
+    const now = new Date()
+    const arrivedAt = arrived ? new Date(arrived.occurredAt) : null
+    const arrivedPast = Boolean(arrivedAt && arrivedAt <= now)
+    return {
+      effectiveDepartureDate: departed ? new Date(departed.occurredAt) : departureDate,
+      effectiveArrivalDate: arrived ? new Date(arrived.occurredAt) : arrivalDate,
+    }
+  }, [shipmentEventsQuery.data, departureDate, arrivalDate])
 
   const projectedReturn = useMemo(() => {
     const amount = Number.parseFloat(investAmount)
@@ -262,8 +286,8 @@ export function DealDetailView({ commodity }: { commodity: MarketplaceCommodity 
                   <ShipmentMap
                     originCoordinates={{ lat: commodity.originLat as number, lng: commodity.originLng as number }}
                     destinationCoordinates={{ lat: commodity.destLat as number, lng: commodity.destLng as number }}
-                    departureDate={departureDate}
-                    arrivalDate={arrivalDate}
+                    departureDate={effectiveDepartureDate}
+                    arrivalDate={effectiveArrivalDate}
                     vesselName={vesselName}
                     vehicleType={vehicleType}
                   />
@@ -274,20 +298,51 @@ export function DealDetailView({ commodity }: { commodity: MarketplaceCommodity 
                   </div>
                 )}
                 <div className="mt-4 space-y-2">
-                  <div className="flex items-center justify-between text-sm">
-                    <div className="font-medium">Departed {commodity.origin}</div>
-                    <div className="text-muted-foreground">{departureDate.toLocaleDateString()}</div>
-                  </div>
-                  <div className="flex items-center justify-between text-sm">
-                    <div className="font-medium">Currently in transit</div>
-                    <div className="text-muted-foreground">
-                      {new Date() < departureDate ? "Pending" : new Date() > arrivalDate ? "Completed" : "Active"}
+                  {shipmentEventsQuery.isError ? (
+                    <div className="text-sm text-muted-foreground">
+                      {(shipmentEventsQuery.error as Error).message === "Unauthorized" ? (
+                        <span>
+                          Please <Link className="underline" href="/login">log in</Link> to view shipment tracking.
+                        </span>
+                      ) : (shipmentEventsQuery.error as Error).message === "KYC approval required" ? (
+                        <span>
+                          KYC approval is required to view shipment tracking.{" "}
+                          <Link className="underline" href="/kyc-verification">Complete verification</Link>.
+                        </span>
+                      ) : (
+                        <span>Shipment events unavailable.</span>
+                      )}
                     </div>
-                  </div>
-                  <div className="flex items-center justify-between text-sm">
-                    <div className="font-medium">Estimated arrival {commodity.destination}</div>
-                    <div className="text-muted-foreground">{arrivalDate.toLocaleDateString()}</div>
-                  </div>
+                  ) : null}
+
+                  {(() => {
+                    const events = shipmentEventsQuery.data ?? []
+                    const departed = events.find((e) => e.type === "DEPARTED")
+                    const arrived = [...events].reverse().find((e) => e.type === "ARRIVED")
+                    const now = new Date()
+                    const departedAt = departed ? new Date(departed.occurredAt) : departureDate
+                    const arrivedAt = arrived ? new Date(arrived.occurredAt) : arrivalDate
+                    const arrivedPast = Boolean(arrived && arrivedAt <= now)
+                    const inTransitState = now < departedAt ? "Pending" : arrivedPast ? "Completed" : "Active"
+                    return (
+                      <>
+                        <div className="flex items-center justify-between text-sm">
+                          <div className="font-medium">Departed {commodity.origin}</div>
+                          <div className="text-muted-foreground">{departedAt.toLocaleDateString()}</div>
+                        </div>
+                        <div className="flex items-center justify-between text-sm">
+                          <div className="font-medium">Currently in transit</div>
+                          <div className="text-muted-foreground">{inTransitState}</div>
+                        </div>
+                        <div className="flex items-center justify-between text-sm">
+                          <div className="font-medium">
+                            {arrivedPast ? "Arrived" : "Estimated arrival"} {commodity.destination}
+                          </div>
+                          <div className="text-muted-foreground">{arrivedAt.toLocaleDateString()}</div>
+                        </div>
+                      </>
+                    )
+                  })()}
                 </div>
               </Card>
 

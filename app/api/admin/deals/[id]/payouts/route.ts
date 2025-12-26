@@ -6,6 +6,7 @@ import { z } from "zod"
 const schema = z.object({
   totalPayout: z.number().positive(),
   markSettled: z.boolean().optional().default(true),
+  force: z.boolean().optional().default(false),
 })
 
 export async function POST(request: NextRequest, context: { params: Promise<{ id: string }> }) {
@@ -31,6 +32,11 @@ export async function POST(request: NextRequest, context: { params: Promise<{ id
 
   const commodity = await prisma.commodity.findUnique({ where: { id } })
   if (!commodity) return NextResponse.json({ error: "Deal not found" }, { status: 404 })
+
+  // By default, only allow payouts after ARRIVED (ops-confirmed delivery). Admin can override with force.
+  if (!validated.force && commodity.status !== "ARRIVED") {
+    return NextResponse.json({ error: "Deal must be ARRIVED before distributing payouts (or use force)" }, { status: 400 })
+  }
 
   const investments = await prisma.investment.findMany({
     where: { commodityId: id },

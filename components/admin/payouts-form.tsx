@@ -14,14 +14,17 @@ export function PayoutsForm({
   dealName,
   totalInvested,
   investorCount,
+  dealStatus,
 }: {
   dealId: string
   dealName: string
   totalInvested: number
   investorCount: number
+  dealStatus: string
 }) {
   const [totalPayout, setTotalPayout] = useState("")
   const [markSettled, setMarkSettled] = useState(true)
+  const [force, setForce] = useState(false)
 
   const mutation = useMutation({
     mutationFn: async () => {
@@ -30,7 +33,7 @@ export function PayoutsForm({
       const res = await fetch(`/api/admin/deals/${dealId}/payouts`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ totalPayout: n, markSettled }),
+        body: JSON.stringify({ totalPayout: n, markSettled, force }),
       })
       const json = await res.json()
       if (!res.ok) throw new Error(json.error || "Payout distribution failed")
@@ -46,6 +49,15 @@ export function PayoutsForm({
           Pro-rata distribution across {investorCount.toLocaleString()} investors. Executed atomically in one DB
           transaction.
         </div>
+
+        {dealStatus !== "ARRIVED" && (
+          <Alert className="mt-4 border-amber-500/20 bg-amber-500/10">
+            <AlertDescription className="text-amber-500">
+              Deal status is <span className="font-medium">{dealStatus}</span>. Payouts are normally distributed after{" "}
+              <span className="font-medium">ARRIVED</span>.
+            </AlertDescription>
+          </Alert>
+        )}
 
         <div className="mt-4 grid gap-4 md:grid-cols-2">
           <div className="space-y-2">
@@ -74,6 +86,12 @@ export function PayoutsForm({
               Mark deal as <span className="font-medium">SETTLED</span> after distribution.
             </div>
           </div>
+          <div className="flex items-start gap-3 pt-2">
+            <Checkbox checked={force} onCheckedChange={(v) => setForce(Boolean(v))} />
+            <div className="text-sm">
+              Force payout even if deal is not <span className="font-medium">ARRIVED</span> (admin override).
+            </div>
+          </div>
         </div>
 
         {mutation.error && (
@@ -95,7 +113,7 @@ export function PayoutsForm({
           <Button
             className="bg-emerald-600 hover:bg-emerald-700 text-white"
             onClick={() => mutation.mutate()}
-            disabled={mutation.isPending}
+            disabled={mutation.isPending || (dealStatus !== "ARRIVED" && !force)}
           >
             {mutation.isPending ? "Distributing..." : "Distribute Payouts"}
           </Button>

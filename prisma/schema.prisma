@@ -39,6 +39,7 @@ enum CommodityStatus {
   FUNDING
   ACTIVE
   IN_TRANSIT
+  ARRIVED
   SETTLED
   CANCELLED
 }
@@ -57,6 +58,12 @@ enum TransactionStatus {
   COMPLETED
   FAILED
   CANCELLED
+}
+
+enum ShipmentEventType {
+  DEPARTED
+  IN_TRANSIT
+  ARRIVED
 }
 
 enum DocumentType {
@@ -105,6 +112,23 @@ model User {
   @@map("users")
 }
 
+model ShipmentEvent {
+  id          String           @id @default(cuid())
+  commodityId String           @map("commodity_id")
+  type        ShipmentEventType
+  occurredAt  DateTime         @map("occurred_at")
+  description String
+  source      String           @default("SIMULATED")
+  raw         Json?
+  createdAt   DateTime         @default(now()) @map("created_at")
+
+  commodity   Commodity        @relation(fields: [commodityId], references: [id], onDelete: Cascade)
+
+  @@index([commodityId, occurredAt])
+  @@unique([commodityId, type, occurredAt])
+  @@map("shipment_events")
+}
+
 model Commodity {
   id              String          @id @default(cuid())
   type            CommodityType
@@ -137,6 +161,7 @@ model Commodity {
   investments     Investment[]
   documents       Document[]
   transactions    Transaction[]
+  shipmentEvents  ShipmentEvent[]
 
   @@map("commodities")
 }
