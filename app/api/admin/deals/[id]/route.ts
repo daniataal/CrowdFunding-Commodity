@@ -9,6 +9,9 @@ const updateSchema = z.object({
   risk: z.enum(["Low", "Medium", "High"]).optional(),
   targetApy: z.union([z.string(), z.number()]).optional(),
   duration: z.union([z.string(), z.number()]).optional(),
+  minInvestment: z.union([z.string(), z.number()]).optional(),
+  maxInvestment: z.union([z.string(), z.number()]).nullable().optional(),
+  platformFeeBps: z.union([z.string(), z.number()]).optional(),
   amountRequired: z.union([z.string(), z.number()]).optional(),
   description: z.string().min(1).optional(),
   origin: z.string().min(1).optional(),
@@ -17,6 +20,7 @@ const updateSchema = z.object({
   insuranceValue: z.union([z.string(), z.number()]).nullable().optional(),
   transportMethod: z.string().nullable().optional(),
   riskScore: z.union([z.string(), z.number()]).nullable().optional(),
+  maturityDate: z.union([z.string(), z.date()]).nullable().optional(),
   status: z.enum(["FUNDING", "ACTIVE", "IN_TRANSIT", "SETTLED", "CANCELLED"]).optional(),
 })
 
@@ -36,6 +40,9 @@ export async function GET(_request: NextRequest, context: { params: Promise<{ id
     data: {
       ...commodity,
       targetApy: Number(commodity.targetApy),
+      minInvestment: Number((commodity as any).minInvestment),
+      maxInvestment: (commodity as any).maxInvestment === null ? null : Number((commodity as any).maxInvestment),
+      platformFeeBps: (commodity as any).platformFeeBps,
       amountRequired: Number(commodity.amountRequired),
       currentAmount: Number(commodity.currentAmount),
       insuranceValue: commodity.insuranceValue === null ? null : Number(commodity.insuranceValue),
@@ -63,6 +70,11 @@ export async function PATCH(request: NextRequest, context: { params: Promise<{ i
       ...(validated.risk !== undefined ? { risk: validated.risk } : {}),
       ...(validated.targetApy !== undefined ? { targetApy: Number(validated.targetApy) } : {}),
       ...(validated.duration !== undefined ? { duration: Number(validated.duration) } : {}),
+      ...(validated.minInvestment !== undefined ? { minInvestment: Number(validated.minInvestment) } : {}),
+      ...(validated.maxInvestment !== undefined
+        ? { maxInvestment: validated.maxInvestment === null ? null : Number(validated.maxInvestment) }
+        : {}),
+      ...(validated.platformFeeBps !== undefined ? { platformFeeBps: Number(validated.platformFeeBps) } : {}),
       ...(validated.amountRequired !== undefined ? { amountRequired: Number(validated.amountRequired) } : {}),
       ...(validated.description !== undefined ? { description: validated.description } : {}),
       ...(validated.origin !== undefined ? { origin: validated.origin } : {}),
@@ -73,6 +85,9 @@ export async function PATCH(request: NextRequest, context: { params: Promise<{ i
         : {}),
       ...(validated.transportMethod !== undefined ? { transportMethod: validated.transportMethod } : {}),
       ...(validated.riskScore !== undefined ? { riskScore: validated.riskScore === null ? null : Number(validated.riskScore) } : {}),
+      ...(validated.maturityDate !== undefined
+        ? { maturityDate: validated.maturityDate === null ? null : new Date(validated.maturityDate as any) }
+        : {}),
       ...(validated.status !== undefined ? { status: validated.status } : {}),
     },
   })

@@ -111,6 +111,9 @@ model Commodity {
   risk            RiskLevel
   targetApy       Decimal         @map("target_apy") @db.Decimal(5, 2)
   duration        Int             // days
+  minInvestment   Decimal         @default(1000) @map("min_investment") @db.Decimal(12, 2)
+  maxInvestment   Decimal?        @map("max_investment") @db.Decimal(12, 2)
+  platformFeeBps  Int             @default(150) @map("platform_fee_bps") // 150 = 1.50%
   amountRequired  Decimal         @map("amount_required") @db.Decimal(12, 2)
   currentAmount   Decimal         @default(0) @map("current_amount") @db.Decimal(12, 2)
   description     String          @db.Text

@@ -13,8 +13,11 @@ export const authConfig = {
                           nextUrl.pathname.startsWith("/register") ||
                           nextUrl.pathname.startsWith("/forgot-password")
       const isOnAdminPage = nextUrl.pathname.startsWith("/admin")
-      const isOnPublicPage = nextUrl.pathname === "/" || 
-                            nextUrl.pathname.startsWith("/api")
+      const isOnPublicPage =
+        nextUrl.pathname === "/" ||
+        nextUrl.pathname.startsWith("/api") ||
+        nextUrl.pathname.startsWith("/marketplace") ||
+        nextUrl.pathname.startsWith("/legal")
 
       // Allow public API routes
       if (isOnPublicPage && nextUrl.pathname.startsWith("/api")) {
@@ -36,7 +39,7 @@ export const authConfig = {
       }
 
       // Protect all other routes
-      if (!isLoggedIn && !isOnAuthPage) {
+      if (!isLoggedIn && !isOnAuthPage && !isOnPublicPage) {
         return Response.redirect(new URL("/login", nextUrl))
       }
 

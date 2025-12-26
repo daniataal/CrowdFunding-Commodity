@@ -25,6 +25,12 @@ const createDealSchema = z.object({
   risk: z.enum(["Low", "Medium", "High"]),
   targetApy: z.string().transform((val) => Number.parseFloat(val)),
   duration: z.string().transform((val) => Number.parseInt(val)),
+  minInvestment: z.string().optional().transform((val) => (val ? Number.parseFloat(val) : 1000)),
+  maxInvestment: z.string().optional().transform((val) => (val && val.trim() !== "" ? Number.parseFloat(val) : null)),
+  platformFeeBps: z
+    .union([z.string(), z.number()])
+    .optional()
+    .transform((val) => (val === undefined || val === null || val === "" ? 150 : Number(val))),
   amountRequired: z.string().transform((val) => Number.parseFloat(val)),
   description: z.string().min(1),
   origin: z.string().min(1),
@@ -33,6 +39,7 @@ const createDealSchema = z.object({
   insuranceValue: z.string().optional().transform((val) => val ? Number.parseFloat(val) : null),
   transportMethod: z.string().optional(),
   riskScore: z.string().optional().transform((val) => val ? Number.parseFloat(val) : null),
+  maturityDate: z.string().optional().transform((val) => (val ? new Date(val) : null)),
 })
 
 export async function POST(request: NextRequest) {
@@ -53,6 +60,9 @@ export async function POST(request: NextRequest) {
         risk: validatedData.risk,
         targetApy: validatedData.targetApy,
         duration: validatedData.duration,
+        minInvestment: validatedData.minInvestment,
+        maxInvestment: validatedData.maxInvestment,
+        platformFeeBps: validatedData.platformFeeBps,
         amountRequired: validatedData.amountRequired,
         description: validatedData.description,
         origin: validatedData.origin,
@@ -61,6 +71,7 @@ export async function POST(request: NextRequest) {
         insuranceValue: validatedData.insuranceValue,
         transportMethod: validatedData.transportMethod,
         riskScore: validatedData.riskScore,
+        maturityDate: validatedData.maturityDate,
         status: "FUNDING",
       },
     })

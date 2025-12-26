@@ -24,6 +24,9 @@ export async function GET(request: NextRequest) {
     risk: c.risk,
     targetApy: Number(c.targetApy),
     duration: c.duration,
+    minInvestment: Number(c.minInvestment),
+    maxInvestment: c.maxInvestment === null ? null : Number(c.maxInvestment),
+    platformFeeBps: c.platformFeeBps,
     amountRequired: Number(c.amountRequired),
     currentAmount: Number(c.currentAmount),
     description: c.description,
@@ -34,6 +37,7 @@ export async function GET(request: NextRequest) {
     insuranceValue: c.insuranceValue === null ? null : Number(c.insuranceValue),
     transportMethod: c.transportMethod,
     riskScore: c.riskScore === null ? null : Number(c.riskScore),
+    maturityDate: c.maturityDate ? c.maturityDate.toISOString() : null,
   }))
 
   return NextResponse.json({ success: true, data })

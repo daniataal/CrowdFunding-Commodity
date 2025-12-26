@@ -22,6 +22,9 @@ export type MarketplaceCommodity = {
   risk: RiskLevel
   targetApy: number
   duration: number
+  minInvestment?: number | null
+  maxInvestment?: number | null
+  platformFeeBps?: number | null
   amountRequired: number
   currentAmount: number
   description: string
@@ -32,6 +35,7 @@ export type MarketplaceCommodity = {
   insuranceValue?: number | null
   transportMethod?: string | null
   riskScore?: number | null
+  maturityDate?: string | null
 }
 
 export type CommodityDocument = {

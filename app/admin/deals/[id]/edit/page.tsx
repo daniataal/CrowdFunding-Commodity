@@ -34,6 +34,9 @@ export default async function EditDealPage({ params }: { params: Promise<{ id: s
           risk: commodity.risk,
           targetApy: Number(commodity.targetApy),
           duration: commodity.duration,
+          minInvestment: Number((commodity as any).minInvestment),
+          maxInvestment: (commodity as any).maxInvestment === null ? null : Number((commodity as any).maxInvestment),
+          platformFeeBps: (commodity as any).platformFeeBps,
           amountRequired: Number(commodity.amountRequired),
           description: commodity.description,
           origin: commodity.origin,
@@ -42,6 +45,7 @@ export default async function EditDealPage({ params }: { params: Promise<{ id: s
           insuranceValue: commodity.insuranceValue === null ? null : Number(commodity.insuranceValue),
           transportMethod: commodity.transportMethod,
           riskScore: commodity.riskScore === null ? null : Number(commodity.riskScore),
+          maturityDate: commodity.maturityDate ? commodity.maturityDate.toISOString() : null,
         }}
       />
     </div>

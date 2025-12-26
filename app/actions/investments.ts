@@ -8,6 +8,8 @@ import { revalidatePath } from "next/cache"
 const investSchema = z.object({
   commodityId: z.string(),
   amount: z.number().positive("Amount must be positive"),
+  ackRisk: z.boolean(),
+  ackTerms: z.boolean(),
 })
 
 export async function investInCommodity(formData: FormData) {
@@ -20,6 +22,8 @@ export async function investInCommodity(formData: FormData) {
     const rawData = {
       commodityId: formData.get("commodityId") as string,
       amount: Number.parseFloat(formData.get("amount") as string),
+      ackRisk: String(formData.get("ackRisk")) === "true",
+      ackTerms: String(formData.get("ackTerms")) === "true",
     }
 
     const validatedData = investSchema.parse(rawData)
@@ -27,16 +31,19 @@ export async function investInCommodity(formData: FormData) {
     // Get user with current balance
     const user = await prisma.user.findUnique({
       where: { id: session.user.id },
-      select: { walletBalance: true },
+      select: { walletBalance: true, kycStatus: true },
     })
 
     if (!user) {
       return { error: "User not found" }
     }
 
-    // Check if user has sufficient balance
-    if (Number(user.walletBalance) < validatedData.amount) {
-      return { error: "Insufficient balance" }
+    // Compliance gating
+    if (user.kycStatus !== "APPROVED") {
+      return { error: "KYC approval is required before investing" }
+    }
+    if (!validatedData.ackRisk || !validatedData.ackTerms) {
+      return { error: "Risk Disclosure and Terms acceptance are required" }
     }
 
     // Get commodity
@@ -52,6 +59,20 @@ export async function investInCommodity(formData: FormData) {
       return { error: "Commodity is not accepting investments" }
     }
 
+    const minInvestment = Number((commodity as any).minInvestment ?? 1000)
+    const maxInvestment = (commodity as any).maxInvestment === null ? null : Number((commodity as any).maxInvestment)
+    const platformFeeBps = Number((commodity as any).platformFeeBps ?? 150)
+
+    if (validatedData.amount < minInvestment) {
+      return { error: `Minimum investment is $${minInvestment.toLocaleString()}` }
+    }
+    if (maxInvestment !== null && validatedData.amount > maxInvestment) {
+      return { error: `Maximum investment is $${maxInvestment.toLocaleString()}` }
+    }
+
+    const fee = (Number(validatedData.amount) * platformFeeBps) / 10000
+    const totalDebit = Number(validatedData.amount) + fee
+
     // Check if investment would exceed required amount
     const newCurrentAmount = Number(commodity.currentAmount) + validatedData.amount
     if (newCurrentAmount > Number(commodity.amountRequired)) {
@@ -61,11 +82,15 @@ export async function investInCommodity(formData: FormData) {
     // Start transaction
     const result = await prisma.$transaction(async (tx) => {
       // Deduct from wallet
+      if (Number(user.walletBalance) < totalDebit) {
+        return { error: "Insufficient balance" } as any
+      }
+
       const updatedUser = await tx.user.update({
         where: { id: session.user.id },
         data: {
           walletBalance: {
-            decrement: validatedData.amount,
+            decrement: totalDebit,
           },
         },
       })
@@ -109,9 +134,14 @@ export async function investInCommodity(formData: FormData) {
           userId: session.user.id,
           commodityId: validatedData.commodityId,
           type: "INVESTMENT",
-          amount: -validatedData.amount, // Negative for outflow
+          amount: -totalDebit, // Negative for outflow (principal + fee)
           status: "COMPLETED",
           description: `Investment in ${commodity.name}`,
+          metadata: {
+            principal: validatedData.amount,
+            fee,
+            feeBps: platformFeeBps,
+          },
         },
       })
 
@@ -125,12 +155,22 @@ export async function investInCommodity(formData: FormData) {
           changes: {
             commodityId: validatedData.commodityId,
             amount: validatedData.amount,
+            ackRisk: validatedData.ackRisk,
+            ackTerms: validatedData.ackTerms,
+            minInvestment,
+            maxInvestment,
+            fee,
+            feeBps: platformFeeBps,
           },
         },
       })
 
       return { investment, updatedCommodity }
     })
+
+    if (result && "error" in (result as any)) {
+      return { error: (result as any).error }
+    }
 
     revalidatePath("/")
     revalidatePath("/marketplace")

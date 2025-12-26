@@ -12,6 +12,10 @@ import { Progress } from "@/components/ui/progress"
 import { MapPin, FileText, DollarSign, TrendingUp, Shield, Truck, Calendar, Link as LinkIcon } from "lucide-react"
 import type { CommodityDocument, DocumentType, MarketplaceCommodity } from "@/lib/domain"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
+import { Checkbox } from "@/components/ui/checkbox"
+import { Alert, AlertDescription } from "@/components/ui/alert"
+import Link from "next/link"
+import { useSession } from "next-auth/react"
 
 interface AssetDetailModalProps {
   commodity: MarketplaceCommodity | null
@@ -42,7 +46,10 @@ function docIcon(type: DocumentType) {
 
 export function AssetDetailModal({ commodity, open, onOpenChange }: AssetDetailModalProps) {
   const [investAmount, setInvestAmount] = useState("")
+  const [ackRisk, setAckRisk] = useState(false)
+  const [ackTerms, setAckTerms] = useState(false)
   const qc = useQueryClient()
+  const { data: session } = useSession()
   const commodityId = commodity?.id
 
   const docsQuery = useQuery({
@@ -59,6 +66,9 @@ export function AssetDetailModal({ commodity, open, onOpenChange }: AssetDetailM
   const fundedPercentage =
     commodity && commodity.amountRequired > 0 ? (commodity.currentAmount / commodity.amountRequired) * 100 : 0
   const remainingAmount = commodity ? commodity.amountRequired - commodity.currentAmount : 0
+  const minInvestment = commodity?.minInvestment ?? 1000
+  const maxInvestment = commodity?.maxInvestment ?? null
+  const platformFeeBps = commodity?.platformFeeBps ?? 150
   const projectedReturn = investAmount
     ? (
         Number.parseFloat(investAmount) *
@@ -67,15 +77,29 @@ export function AssetDetailModal({ commodity, open, onOpenChange }: AssetDetailM
       ).toFixed(2)
     : "0.00"
 
+  const amountNum = Number.parseFloat(investAmount)
+  const isAmountValid = Number.isFinite(amountNum) && amountNum > 0
+  const fee = isAmountValid ? (amountNum * platformFeeBps) / 10000 : 0
+  const totalDebit = isAmountValid ? amountNum + fee : 0
+  const minViolation = isAmountValid && amountNum < minInvestment
+  const maxViolation = isAmountValid && maxInvestment !== null && amountNum > maxInvestment
+  const remainingViolation = isAmountValid && amountNum > remainingAmount
+
   const investMutation = useMutation({
     mutationFn: async () => {
       if (!commodityId) throw new Error("No commodity selected")
       const amount = Number.parseFloat(investAmount)
       if (!Number.isFinite(amount) || amount <= 0) throw new Error("Enter a valid amount")
+      if (amount < minInvestment) throw new Error(`Minimum investment is $${minInvestment.toLocaleString()}`)
+      if (maxInvestment !== null && amount > maxInvestment) throw new Error(`Maximum investment is $${maxInvestment.toLocaleString()}`)
+      if (amount > remainingAmount) throw new Error("Investment exceeds remaining funding amount")
+      const kycStatus = (session?.user as any)?.kycStatus as string | undefined
+      if (kycStatus !== "APPROVED") throw new Error("KYC approval is required before investing")
+      if (!ackRisk || !ackTerms) throw new Error("Please accept the Risk Disclosure and Terms to continue")
       const res = await fetch("/api/invest", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ commodityId, amount }),
+        body: JSON.stringify({ commodityId, amount, ackRisk: true, ackTerms: true }),
       })
       const json = await res.json()
       if (!res.ok) throw new Error(json.error || "Investment failed")
@@ -83,6 +107,8 @@ export function AssetDetailModal({ commodity, open, onOpenChange }: AssetDetailM
     },
     onSuccess: async () => {
       setInvestAmount("")
+      setAckRisk(false)
+      setAckTerms(false)
       onOpenChange(false)
       await Promise.all([
         qc.invalidateQueries({ queryKey: ["marketplace", "commodities"] }),
@@ -94,6 +120,8 @@ export function AssetDetailModal({ commodity, open, onOpenChange }: AssetDetailM
       ])
     },
   })
+
+  const kycApproved = (session?.user as any)?.kycStatus === "APPROVED"
 
   return (
     <Dialog open={open && !!commodity} onOpenChange={onOpenChange}>
@@ -169,6 +197,17 @@ export function AssetDetailModal({ commodity, open, onOpenChange }: AssetDetailM
                 Investment Calculator
               </h3>
               <div className="space-y-4">
+                {!kycApproved && (
+                  <Alert className="border-amber-500/20 bg-amber-500/10">
+                    <AlertDescription className="text-amber-500">
+                      KYC approval is required before investing.{" "}
+                      <Link className="underline" href="/kyc-verification">
+                        Complete verification
+                      </Link>
+                      .
+                    </AlertDescription>
+                  </Alert>
+                )}
                 <div>
                   <Label htmlFor="amount">Investment Amount ($)</Label>
                   <Input
@@ -178,7 +217,13 @@ export function AssetDetailModal({ commodity, open, onOpenChange }: AssetDetailM
                     value={investAmount}
                     onChange={(e) => setInvestAmount(e.target.value)}
                     className="mt-2"
+                    disabled={!kycApproved}
                   />
+                  <div className="mt-2 text-xs text-muted-foreground">
+                    Min ${minInvestment.toLocaleString()}
+                    {maxInvestment !== null ? ` • Max $${maxInvestment.toLocaleString()}` : ""} • Remaining $
+                    {remainingAmount.toLocaleString()}
+                  </div>
                 </div>
                 <div className="grid grid-cols-2 gap-4 p-4 bg-background rounded-lg">
                   <div>
@@ -195,6 +240,65 @@ export function AssetDetailModal({ commodity, open, onOpenChange }: AssetDetailM
                     </p>
                   </div>
                 </div>
+                <div className="rounded-lg border p-4 bg-background/50">
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="text-muted-foreground">Platform fee</span>
+                    <span className="font-medium">{(platformFeeBps / 100).toFixed(2)}%</span>
+                  </div>
+                  <div className="mt-2 space-y-1 text-sm">
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Principal</span>
+                      <span className="font-medium">${isAmountValid ? amountNum.toFixed(2) : "0.00"}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Fee</span>
+                      <span className="font-medium">${fee.toFixed(2)}</span>
+                    </div>
+                    <div className="flex justify-between border-t pt-2">
+                      <span className="text-muted-foreground">Total wallet debit</span>
+                      <span className="font-semibold">${totalDebit.toFixed(2)}</span>
+                    </div>
+                  </div>
+                  {(minViolation || maxViolation || remainingViolation) && (
+                    <div className="mt-2 text-xs text-red-500">
+                      {minViolation && `Below minimum ($${minInvestment.toLocaleString()}). `}
+                      {maxViolation && maxInvestment !== null && `Above maximum ($${maxInvestment.toLocaleString()}). `}
+                      {remainingViolation && "Exceeds remaining funding."}
+                    </div>
+                  )}
+                </div>
+                <div className="space-y-3 rounded-lg border p-4 bg-background/50">
+                  <div className="flex items-start gap-3">
+                    <Checkbox
+                      checked={ackRisk}
+                      onCheckedChange={(v) => setAckRisk(Boolean(v))}
+                      disabled={!kycApproved}
+                      aria-label="Acknowledge risk disclosure"
+                    />
+                    <div className="text-sm">
+                      I have read and understand the{" "}
+                      <Link className="underline" href="/legal/risk-disclosure" target="_blank">
+                        Risk Disclosure
+                      </Link>
+                      .
+                    </div>
+                  </div>
+                  <div className="flex items-start gap-3">
+                    <Checkbox
+                      checked={ackTerms}
+                      onCheckedChange={(v) => setAckTerms(Boolean(v))}
+                      disabled={!kycApproved}
+                      aria-label="Accept terms of service"
+                    />
+                    <div className="text-sm">
+                      I agree to the{" "}
+                      <Link className="underline" href="/legal/terms" target="_blank">
+                        Terms of Service
+                      </Link>
+                      .
+                    </div>
+                  </div>
+                </div>
                 {investMutation.error && (
                   <div className="text-sm text-red-500">{(investMutation.error as Error).message}</div>
                 )}
@@ -202,7 +306,16 @@ export function AssetDetailModal({ commodity, open, onOpenChange }: AssetDetailM
                   className="w-full bg-emerald-600 hover:bg-emerald-700 text-white"
                   size="lg"
                   onClick={() => investMutation.mutate()}
-                  disabled={investMutation.isPending}
+                  disabled={
+                    investMutation.isPending ||
+                    !kycApproved ||
+                    !ackRisk ||
+                    !ackTerms ||
+                    !isAmountValid ||
+                    minViolation ||
+                    maxViolation ||
+                    remainingViolation
+                  }
                 >
                   {investMutation.isPending ? "Investing..." : "Invest Now"}
                 </Button>

@@ -76,6 +76,17 @@ export default async function DealDetailsPage({ params }: { params: Promise<{ id
             <div className="font-semibold">{Number(commodity.targetApy)}% • {commodity.duration} days</div>
           </div>
           <div>
+            <div className="text-sm text-muted-foreground">Investor limits</div>
+            <div className="font-semibold">
+              Min ${Number((commodity as any).minInvestment).toLocaleString()}
+              {(commodity as any).maxInvestment ? ` • Max $${Number((commodity as any).maxInvestment).toLocaleString()}` : ""}
+            </div>
+          </div>
+          <div>
+            <div className="text-sm text-muted-foreground">Platform fee</div>
+            <div className="font-semibold">{(Number((commodity as any).platformFeeBps ?? 150) / 100).toFixed(2)}%</div>
+          </div>
+          <div>
             <div className="text-sm text-muted-foreground">Route</div>
             <div className="font-semibold">{commodity.origin} → {commodity.destination}</div>
           </div>

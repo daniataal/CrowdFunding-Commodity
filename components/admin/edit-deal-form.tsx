@@ -22,6 +22,9 @@ export function EditDealForm({
     risk: string
     targetApy: number
     duration: number
+    minInvestment?: number | null
+    maxInvestment?: number | null
+    platformFeeBps?: number | null
     amountRequired: number
     description: string
     origin: string
@@ -30,6 +33,7 @@ export function EditDealForm({
     insuranceValue?: number | null
     transportMethod?: string | null
     riskScore?: number | null
+    maturityDate?: string | null
   }
 }) {
   const router = useRouter()
@@ -41,6 +45,9 @@ export function EditDealForm({
     risk: initial.risk,
     targetApy: String(initial.targetApy ?? ""),
     duration: String(initial.duration ?? ""),
+    minInvestment: String(initial.minInvestment ?? 1000),
+    maxInvestment: initial.maxInvestment === null || initial.maxInvestment === undefined ? "" : String(initial.maxInvestment),
+    platformFeeBps: String(initial.platformFeeBps ?? 150),
     amountRequired: String(initial.amountRequired ?? ""),
     description: initial.description,
     origin: initial.origin,
@@ -49,6 +56,7 @@ export function EditDealForm({
     insuranceValue: initial.insuranceValue ?? "",
     transportMethod: initial.transportMethod ?? "",
     riskScore: initial.riskScore ?? "",
+    maturityDate: initial.maturityDate ? String(initial.maturityDate).slice(0, 10) : "",
   })
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -153,6 +161,51 @@ export function EditDealForm({
                 type="number"
                 value={formData.amountRequired}
                 onChange={(e) => setFormData({ ...formData, amountRequired: e.target.value })}
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="minInvestment">Minimum Investment ($)</Label>
+              <Input
+                id="minInvestment"
+                type="number"
+                step="0.01"
+                value={formData.minInvestment}
+                onChange={(e) => setFormData({ ...formData, minInvestment: e.target.value })}
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="maxInvestment">Maximum Investment ($)</Label>
+              <Input
+                id="maxInvestment"
+                type="number"
+                step="0.01"
+                value={formData.maxInvestment as any}
+                onChange={(e) => setFormData({ ...formData, maxInvestment: e.target.value })}
+                placeholder="(optional)"
+              />
+              <div className="text-xs text-muted-foreground">Leave blank for no maximum per investor.</div>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="platformFeeBps">Platform Fee (bps)</Label>
+              <Input
+                id="platformFeeBps"
+                type="number"
+                value={formData.platformFeeBps}
+                onChange={(e) => setFormData({ ...formData, platformFeeBps: e.target.value })}
+              />
+              <div className="text-xs text-muted-foreground">Basis points. 150 = 1.50%.</div>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="maturityDate">Maturity Date</Label>
+              <Input
+                id="maturityDate"
+                type="date"
+                value={formData.maturityDate as any}
+                onChange={(e) => setFormData({ ...formData, maturityDate: e.target.value })}
               />
             </div>
           </div>

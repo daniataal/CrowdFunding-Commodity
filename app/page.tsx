@@ -3,6 +3,8 @@
 import { useState, useEffect } from "react"
 import { useSession, signOut } from "next-auth/react"
 import { useRouter } from "next/navigation"
+import { PublicLanding } from "@/components/public-landing"
+import { PublicFooter } from "@/components/public-footer"
 import { DashboardView } from "@/components/dashboard-view"
 import { MarketplaceView } from "@/components/marketplace-view"
 import { WalletView } from "@/components/wallet-view"
@@ -76,13 +78,6 @@ export default function CommodityPlatform() {
     router.push("/login")
   }
 
-  // Redirect if not authenticated
-  useEffect(() => {
-    if (status === "unauthenticated") {
-      router.push("/login")
-    }
-  }, [status, router])
-
   // Check if user is new and should see onboarding
   useEffect(() => {
     if (user) {
@@ -105,8 +100,14 @@ export default function CommodityPlatform() {
     )
   }
 
+  // Public landing experience for unauthenticated users (crowdfunding discovery).
   if (!user) {
-    return null
+    return (
+      <>
+        <PublicLanding />
+        <PublicFooter />
+      </>
+    )
   }
 
   const handleCompleteOnboarding = () => {

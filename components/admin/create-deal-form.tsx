@@ -24,6 +24,9 @@ export function CreateDealForm() {
     risk: "",
     targetApy: "",
     duration: "",
+    minInvestment: "1000",
+    maxInvestment: "",
+    platformFeeBps: "150",
     amountRequired: "",
     description: "",
     origin: "",
@@ -32,6 +35,7 @@ export function CreateDealForm() {
     insuranceValue: "",
     transportMethod: "",
     riskScore: "",
+    maturityDate: "",
   })
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -200,6 +204,57 @@ export function CreateDealForm() {
                 required
                 disabled={isLoading}
                 placeholder="250000"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="minInvestment">Minimum Investment ($)</Label>
+              <Input
+                id="minInvestment"
+                type="number"
+                step="0.01"
+                value={formData.minInvestment}
+                onChange={(e) => setFormData({ ...formData, minInvestment: e.target.value })}
+                disabled={isLoading}
+                placeholder="1000"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="maxInvestment">Maximum Investment ($)</Label>
+              <Input
+                id="maxInvestment"
+                type="number"
+                step="0.01"
+                value={formData.maxInvestment}
+                onChange={(e) => setFormData({ ...formData, maxInvestment: e.target.value })}
+                disabled={isLoading}
+                placeholder="(optional)"
+              />
+              <div className="text-xs text-muted-foreground">Leave blank for no maximum per investor.</div>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="platformFeeBps">Platform Fee (bps)</Label>
+              <Input
+                id="platformFeeBps"
+                type="number"
+                value={formData.platformFeeBps}
+                onChange={(e) => setFormData({ ...formData, platformFeeBps: e.target.value })}
+                disabled={isLoading}
+                placeholder="150"
+              />
+              <div className="text-xs text-muted-foreground">Basis points. 150 = 1.50%.</div>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="maturityDate">Maturity Date</Label>
+              <Input
+                id="maturityDate"
+                type="date"
+                value={formData.maturityDate}
+                onChange={(e) => setFormData({ ...formData, maturityDate: e.target.value })}
+                disabled={isLoading}
               />
             </div>
 
