@@ -9,9 +9,9 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Progress } from "@/components/ui/progress"
-import { MapPin, FileText, DollarSign, TrendingUp, Shield, Truck, Calendar } from "lucide-react"
-import type { MarketplaceCommodity } from "@/lib/domain"
-import { useMutation, useQueryClient } from "@tanstack/react-query"
+import { MapPin, FileText, DollarSign, TrendingUp, Shield, Truck, Calendar, Link as LinkIcon } from "lucide-react"
+import type { CommodityDocument, DocumentType, MarketplaceCommodity } from "@/lib/domain"
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 
 interface AssetDetailModalProps {
   commodity: MarketplaceCommodity | null
@@ -19,26 +19,63 @@ interface AssetDetailModalProps {
   onOpenChange: (open: boolean) => void
 }
 
+const typeLabels: Record<DocumentType, string> = {
+  BILL_OF_LADING: "Bill of Lading",
+  INSURANCE_CERTIFICATE: "Insurance Certificate",
+  QUALITY_CERTIFICATION: "Quality Certification",
+  COMMODITY_CONTRACT: "Commodity Contract",
+  KYC_ID: "KYC ID",
+  KYC_PROOF_OF_ADDRESS: "KYC Proof of Address",
+  OTHER: "Other",
+}
+
+function docIcon(type: DocumentType) {
+  switch (type) {
+    case "INSURANCE_CERTIFICATE":
+      return Shield
+    case "COMMODITY_CONTRACT":
+      return Calendar
+    default:
+      return FileText
+  }
+}
+
 export function AssetDetailModal({ commodity, open, onOpenChange }: AssetDetailModalProps) {
   const [investAmount, setInvestAmount] = useState("")
   const qc = useQueryClient()
+  const commodityId = commodity?.id
 
-  if (!commodity) return null
+  const docsQuery = useQuery({
+    queryKey: ["commodities", commodityId, "documents"],
+    enabled: !!commodityId && open,
+    queryFn: async () => {
+      const res = await fetch(`/api/commodities/${commodityId}/documents`)
+      const json = await res.json()
+      if (!res.ok) throw new Error(json.error || "Failed to load documents")
+      return json.data as CommodityDocument[]
+    },
+  })
 
-  const fundedPercentage = commodity.amountRequired > 0 ? (commodity.currentAmount / commodity.amountRequired) * 100 : 0
-  const remainingAmount = commodity.amountRequired - commodity.currentAmount
+  const fundedPercentage =
+    commodity && commodity.amountRequired > 0 ? (commodity.currentAmount / commodity.amountRequired) * 100 : 0
+  const remainingAmount = commodity ? commodity.amountRequired - commodity.currentAmount : 0
   const projectedReturn = investAmount
-    ? (Number.parseFloat(investAmount) * (commodity.targetApy / 100) * (commodity.duration / 365)).toFixed(2)
+    ? (
+        Number.parseFloat(investAmount) *
+        (Number(commodity?.targetApy ?? 0) / 100) *
+        (Number(commodity?.duration ?? 0) / 365)
+      ).toFixed(2)
     : "0.00"
 
   const investMutation = useMutation({
     mutationFn: async () => {
+      if (!commodityId) throw new Error("No commodity selected")
       const amount = Number.parseFloat(investAmount)
       if (!Number.isFinite(amount) || amount <= 0) throw new Error("Enter a valid amount")
       const res = await fetch("/api/invest", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ commodityId: commodity.id, amount }),
+        body: JSON.stringify({ commodityId, amount }),
       })
       const json = await res.json()
       if (!res.ok) throw new Error(json.error || "Investment failed")
@@ -59,28 +96,32 @@ export function AssetDetailModal({ commodity, open, onOpenChange }: AssetDetailM
   })
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={open && !!commodity} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle className="text-2xl">{commodity.name}</DialogTitle>
-          <div className="flex gap-2 mt-2">
-            <Badge variant="outline">{commodity.type}</Badge>
-            <Badge
-              variant="outline"
-              className={
-                commodity.risk === "Low"
-                  ? "border-emerald-500/50 text-emerald-500"
-                  : commodity.risk === "Medium"
-                    ? "border-amber-500/50 text-amber-500"
-                    : "border-red-500/50 text-red-500"
-              }
-            >
-              {commodity.risk} Risk
-            </Badge>
-          </div>
-        </DialogHeader>
+        {!commodity ? (
+          <div className="py-8 text-sm text-muted-foreground">Select a marketplace deal to view details.</div>
+        ) : (
+          <>
+            <DialogHeader>
+              <DialogTitle className="text-2xl">{commodity.name}</DialogTitle>
+              <div className="flex gap-2 mt-2">
+                <Badge variant="outline">{commodity.type}</Badge>
+                <Badge
+                  variant="outline"
+                  className={
+                    commodity.risk === "Low"
+                      ? "border-emerald-500/50 text-emerald-500"
+                      : commodity.risk === "Medium"
+                        ? "border-amber-500/50 text-amber-500"
+                        : "border-red-500/50 text-red-500"
+                  }
+                >
+                  {commodity.risk} Risk
+                </Badge>
+              </div>
+            </DialogHeader>
 
-        <Tabs defaultValue="financials" className="mt-4">
+            <Tabs defaultValue="financials" className="mt-4">
           <TabsList className="grid w-full grid-cols-3">
             <TabsTrigger value="financials">Financials</TabsTrigger>
             <TabsTrigger value="logistics">Logistics</TabsTrigger>
@@ -232,61 +273,43 @@ export function AssetDetailModal({ commodity, open, onOpenChange }: AssetDetailM
           </TabsContent>
 
           <TabsContent value="documents" className="space-y-4 mt-4">
-            <Card className="p-6 border-2 hover:border-primary/50 transition-colors cursor-pointer">
-              <div className="flex items-center gap-4">
-                <div className="h-12 w-12 rounded-lg bg-primary/10 flex items-center justify-center">
-                  <FileText className="h-6 w-6 text-primary" />
-                </div>
-                <div className="flex-1">
-                  <h4 className="font-semibold">Bill of Lading</h4>
-                  <p className="text-sm text-muted-foreground">Legal document between shipper and carrier</p>
-                </div>
-                <Badge>Verified</Badge>
+            {docsQuery.isLoading ? (
+              <Card className="p-6 border-2 text-sm text-muted-foreground">Loading documents…</Card>
+            ) : (docsQuery.data?.length ?? 0) === 0 ? (
+              <Card className="p-6 border-2 text-sm text-muted-foreground">No verified documents available yet.</Card>
+            ) : (
+              <div className="space-y-3">
+                {(docsQuery.data ?? []).map((d) => {
+                  const Icon = docIcon(d.type)
+                  return (
+                    <a key={d.id} href={d.url} target="_blank" rel="noreferrer">
+                      <Card className="p-6 border-2 hover:border-primary/50 transition-colors cursor-pointer">
+                        <div className="flex items-center gap-4">
+                          <div className="h-12 w-12 rounded-lg bg-primary/10 flex items-center justify-center">
+                            <Icon className="h-6 w-6 text-primary" />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <h4 className="font-semibold truncate">{d.name}</h4>
+                            <p className="text-sm text-muted-foreground flex items-center gap-2">
+                              {typeLabels[d.type]}
+                              <span className="inline-flex items-center gap-1">
+                                <LinkIcon className="h-4 w-4" />
+                                Open
+                              </span>
+                            </p>
+                          </div>
+                          <Badge className="bg-emerald-600">Verified</Badge>
+                        </div>
+                      </Card>
+                    </a>
+                  )
+                })}
               </div>
-            </Card>
-
-            <Card className="p-6 border-2 hover:border-primary/50 transition-colors cursor-pointer">
-              <div className="flex items-center gap-4">
-                <div className="h-12 w-12 rounded-lg bg-primary/10 flex items-center justify-center">
-                  <Shield className="h-6 w-6 text-primary" />
-                </div>
-                <div className="flex-1">
-                  <h4 className="font-semibold">Insurance Certificate</h4>
-                  <p className="text-sm text-muted-foreground">
-                    Coverage up to ${commodity.insuranceValue?.toLocaleString()}
-                  </p>
-                </div>
-                <Badge>Active</Badge>
-              </div>
-            </Card>
-
-            <Card className="p-6 border-2 hover:border-primary/50 transition-colors cursor-pointer">
-              <div className="flex items-center gap-4">
-                <div className="h-12 w-12 rounded-lg bg-primary/10 flex items-center justify-center">
-                  <FileText className="h-6 w-6 text-primary" />
-                </div>
-                <div className="flex-1">
-                  <h4 className="font-semibold">Quality Certification</h4>
-                  <p className="text-sm text-muted-foreground">Independent quality inspection report</p>
-                </div>
-                <Badge>Verified</Badge>
-              </div>
-            </Card>
-
-            <Card className="p-6 border-2 hover:border-primary/50 transition-colors cursor-pointer">
-              <div className="flex items-center gap-4">
-                <div className="h-12 w-12 rounded-lg bg-primary/10 flex items-center justify-center">
-                  <Calendar className="h-6 w-6 text-primary" />
-                </div>
-                <div className="flex-1">
-                  <h4 className="font-semibold">Commodity Contract</h4>
-                  <p className="text-sm text-muted-foreground">Terms and conditions of the investment</p>
-                </div>
-                <Badge>Signed</Badge>
-              </div>
-            </Card>
+            )}
           </TabsContent>
-        </Tabs>
+            </Tabs>
+          </>
+        )}
       </DialogContent>
     </Dialog>
   )

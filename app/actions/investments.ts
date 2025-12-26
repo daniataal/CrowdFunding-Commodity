@@ -35,7 +35,7 @@ export async function investInCommodity(formData: FormData) {
     }
 
     // Check if user has sufficient balance
-    if (user.walletBalance < validatedData.amount) {
+    if (Number(user.walletBalance) < validatedData.amount) {
       return { error: "Insufficient balance" }
     }
 
@@ -53,8 +53,8 @@ export async function investInCommodity(formData: FormData) {
     }
 
     // Check if investment would exceed required amount
-    const newCurrentAmount = commodity.currentAmount + validatedData.amount
-    if (newCurrentAmount > commodity.amountRequired) {
+    const newCurrentAmount = Number(commodity.currentAmount) + validatedData.amount
+    if (newCurrentAmount > Number(commodity.amountRequired)) {
       return { error: "Investment would exceed required funding amount" }
     }
 
@@ -79,7 +79,7 @@ export async function investInCommodity(formData: FormData) {
           },
           // Update status if fully funded
           status:
-            newCurrentAmount >= commodity.amountRequired ? "ACTIVE" : commodity.status,
+            newCurrentAmount >= Number(commodity.amountRequired) ? "ACTIVE" : commodity.status,
         },
       })
 

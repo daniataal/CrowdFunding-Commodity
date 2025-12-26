@@ -67,7 +67,7 @@ export default async function AdminDashboard() {
     },
     {
       title: "Platform Volume",
-      value: `$${((totalVolume._sum.amount || 0) / 1000).toFixed(0)}k`,
+      value: `$${(Math.abs(Number(totalVolume._sum.amount ?? 0)) / 1000).toFixed(0)}k`,
       description: "Total investment volume",
       icon: DollarSign,
       color: "text-purple-500",

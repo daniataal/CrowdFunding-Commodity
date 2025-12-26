@@ -9,7 +9,7 @@ const kycActionSchema = z.object({
 
 export async function POST(
   request: NextRequest,
-  { params }: { params: { userId: string } }
+  context: { params: Promise<{ userId: string }> }
 ) {
   try {
     const gate = await requireDbRole(["ADMIN"])
@@ -17,11 +17,16 @@ export async function POST(
       return NextResponse.json({ error: gate.status === 403 ? "Forbidden" : "Unauthorized" }, { status: gate.status })
     }
 
+    const { userId } = await context.params
+    if (!userId) {
+      return NextResponse.json({ error: "Missing userId" }, { status: 400 })
+    }
+
     const body = await request.json()
     const { action } = kycActionSchema.parse(body)
 
     const user = await prisma.user.findUnique({
-      where: { id: params.userId },
+      where: { id: userId },
     })
 
     if (!user) {
@@ -31,7 +36,7 @@ export async function POST(
     const newStatus = action === "approve" ? "APPROVED" : "REJECTED"
 
     await prisma.user.update({
-      where: { id: params.userId },
+      where: { id: userId },
       data: { kycStatus: newStatus },
     })
 
@@ -39,7 +44,7 @@ export async function POST(
     if (action === "approve") {
       await prisma.document.updateMany({
         where: {
-          userId: params.userId,
+          userId,
           type: { in: ["KYC_ID", "KYC_PROOF_OF_ADDRESS"] },
         },
         data: {
@@ -56,7 +61,7 @@ export async function POST(
         userId: gate.userId,
         action: action === "approve" ? "APPROVE_KYC" : "REJECT_KYC",
         entityType: "User",
-        entityId: params.userId,
+        entityId: userId,
         changes: {
           previousStatus: user.kycStatus,
           newStatus,
