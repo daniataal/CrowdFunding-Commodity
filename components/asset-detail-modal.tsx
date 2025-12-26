@@ -49,6 +49,7 @@ export function AssetDetailModal({ commodity, open, onOpenChange }: AssetDetailM
   const [investAmount, setInvestAmount] = useState("")
   const [ackRisk, setAckRisk] = useState(false)
   const [ackTerms, setAckTerms] = useState(false)
+  const [detailsTab, setDetailsTab] = useState<"financials" | "logistics" | "documents">("financials")
   const qc = useQueryClient()
   const { data: session } = useSession()
   const commodityId = commodity?.id
@@ -158,7 +159,27 @@ export function AssetDetailModal({ commodity, open, onOpenChange }: AssetDetailM
               </div>
             </DialogHeader>
 
-            <Tabs defaultValue="financials" className="mt-4">
+            <div className="mt-4 flex items-center justify-between gap-2">
+              <div className="text-sm text-muted-foreground">
+                {commodity.status !== "FUNDING" ? "Shipment tracking is available for funded deals." : "Funding in progress."}
+              </div>
+              {commodity.status !== "FUNDING" && (
+                <Button
+                  variant="outline"
+                  className="bg-transparent"
+                  onClick={() => {
+                    setDetailsTab("logistics")
+                    setTimeout(() => {
+                      document.getElementById("modal-logistics-map")?.scrollIntoView({ behavior: "smooth", block: "start" })
+                    }, 0)
+                  }}
+                >
+                  Track Shipment
+                </Button>
+              )}
+            </div>
+
+            <Tabs value={detailsTab} onValueChange={(v) => setDetailsTab(v as any)} className="mt-4">
           <TabsList className="grid w-full grid-cols-3">
             <TabsTrigger value="financials">Financials</TabsTrigger>
             <TabsTrigger value="logistics">Logistics</TabsTrigger>
@@ -333,7 +354,7 @@ export function AssetDetailModal({ commodity, open, onOpenChange }: AssetDetailM
           </TabsContent>
 
           <TabsContent value="logistics" className="space-y-4 mt-4">
-            <Card className="p-6 border-2">
+            <Card id="modal-logistics-map" className="p-6 border-2">
               <h3 className="font-semibold mb-4">Logistics Map</h3>
               {hasCoords && commodity ? (
                 <ShipmentMap

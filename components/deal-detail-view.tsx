@@ -48,6 +48,7 @@ export function DealDetailView({ commodity }: { commodity: MarketplaceCommodity 
   const [investAmount, setInvestAmount] = useState("")
   const [ackRisk, setAckRisk] = useState(false)
   const [ackTerms, setAckTerms] = useState(false)
+  const [detailsTab, setDetailsTab] = useState<"financials" | "logistics" | "documents">("financials")
 
   const commodityId = commodity.id
   const fundedPercentage = fundedPct(commodity.currentAmount, commodity.amountRequired)
@@ -155,6 +156,22 @@ export function DealDetailView({ commodity }: { commodity: MarketplaceCommodity 
             <Badge variant="outline">{commodity.status}</Badge>
           </div>
         </div>
+        {commodity.status !== "FUNDING" && (
+          <div className="flex gap-2">
+            <Button
+              variant="outline"
+              className="bg-transparent"
+              onClick={() => {
+                setDetailsTab("logistics")
+                setTimeout(() => {
+                  document.getElementById("logistics-map")?.scrollIntoView({ behavior: "smooth", block: "start" })
+                }, 0)
+              }}
+            >
+              Track Shipment
+            </Button>
+          </div>
+        )}
         {!isAuthed && (
           <div className="flex gap-2">
             <Button asChild variant="outline" className="bg-transparent">
@@ -184,7 +201,7 @@ export function DealDetailView({ commodity }: { commodity: MarketplaceCommodity 
             </div>
           </Card>
 
-          <Tabs defaultValue="financials">
+          <Tabs value={detailsTab} onValueChange={(v) => setDetailsTab(v as any)}>
             <TabsList className="grid w-full grid-cols-3">
               <TabsTrigger value="financials">Financials</TabsTrigger>
               <TabsTrigger value="logistics">Logistics</TabsTrigger>
@@ -229,7 +246,7 @@ export function DealDetailView({ commodity }: { commodity: MarketplaceCommodity 
             </TabsContent>
 
             <TabsContent value="logistics" className="space-y-4 mt-4">
-              <Card className="p-6 border-2">
+              <Card id="logistics-map" className="p-6 border-2">
                 <h3 className="font-semibold mb-4">Logistics Map</h3>
                 {hasCoords ? (
                   <ShipmentMap
