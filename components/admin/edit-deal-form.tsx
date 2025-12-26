@@ -22,33 +22,50 @@ export function EditDealForm({
     risk: string
     targetApy: number
     duration: number
+    minInvestment?: number | null
+    maxInvestment?: number | null
+    platformFeeBps?: number | null
     amountRequired: number
     description: string
     origin: string
     destination: string
+    originLat?: number | null
+    originLng?: number | null
+    destLat?: number | null
+    destLng?: number | null
     shipmentId?: string | null
     insuranceValue?: number | null
     transportMethod?: string | null
     riskScore?: number | null
+    maturityDate?: string | null
   }
 }) {
   const router = useRouter()
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState("")
+  const [isGeocoding, setIsGeocoding] = useState(false)
   const [formData, setFormData] = useState({
     name: initial.name,
     type: initial.type,
     risk: initial.risk,
     targetApy: String(initial.targetApy ?? ""),
     duration: String(initial.duration ?? ""),
+    minInvestment: String(initial.minInvestment ?? 1000),
+    maxInvestment: initial.maxInvestment === null || initial.maxInvestment === undefined ? "" : String(initial.maxInvestment),
+    platformFeeBps: String(initial.platformFeeBps ?? 150),
     amountRequired: String(initial.amountRequired ?? ""),
     description: initial.description,
     origin: initial.origin,
     destination: initial.destination,
+    originLat: initial.originLat === null || initial.originLat === undefined ? "" : String(initial.originLat),
+    originLng: initial.originLng === null || initial.originLng === undefined ? "" : String(initial.originLng),
+    destLat: initial.destLat === null || initial.destLat === undefined ? "" : String(initial.destLat),
+    destLng: initial.destLng === null || initial.destLng === undefined ? "" : String(initial.destLng),
     shipmentId: initial.shipmentId ?? "",
     insuranceValue: initial.insuranceValue ?? "",
     transportMethod: initial.transportMethod ?? "",
     riskScore: initial.riskScore ?? "",
+    maturityDate: initial.maturityDate ? String(initial.maturityDate).slice(0, 10) : "",
   })
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -155,6 +172,51 @@ export function EditDealForm({
                 onChange={(e) => setFormData({ ...formData, amountRequired: e.target.value })}
               />
             </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="minInvestment">Minimum Investment ($)</Label>
+              <Input
+                id="minInvestment"
+                type="number"
+                step="0.01"
+                value={formData.minInvestment}
+                onChange={(e) => setFormData({ ...formData, minInvestment: e.target.value })}
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="maxInvestment">Maximum Investment ($)</Label>
+              <Input
+                id="maxInvestment"
+                type="number"
+                step="0.01"
+                value={formData.maxInvestment as any}
+                onChange={(e) => setFormData({ ...formData, maxInvestment: e.target.value })}
+                placeholder="(optional)"
+              />
+              <div className="text-xs text-muted-foreground">Leave blank for no maximum per investor.</div>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="platformFeeBps">Platform Fee (bps)</Label>
+              <Input
+                id="platformFeeBps"
+                type="number"
+                value={formData.platformFeeBps}
+                onChange={(e) => setFormData({ ...formData, platformFeeBps: e.target.value })}
+              />
+              <div className="text-xs text-muted-foreground">Basis points. 150 = 1.50%.</div>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="maturityDate">Maturity Date</Label>
+              <Input
+                id="maturityDate"
+                type="date"
+                value={formData.maturityDate as any}
+                onChange={(e) => setFormData({ ...formData, maturityDate: e.target.value })}
+              />
+            </div>
           </div>
 
           <div className="space-y-2">
@@ -178,6 +240,89 @@ export function EditDealForm({
                 id="destination"
                 value={formData.destination}
                 onChange={(e) => setFormData({ ...formData, destination: e.target.value })}
+              />
+            </div>
+          </div>
+
+          <div className="rounded-lg border bg-muted/20 p-3 flex items-center justify-between gap-3">
+            <div className="text-sm">
+              <div className="font-medium">Coordinates</div>
+              <div className="text-xs text-muted-foreground">Auto-fill from origin/destination names.</div>
+            </div>
+            <Button
+              type="button"
+              variant="outline"
+              className="bg-transparent"
+              disabled={isLoading || isGeocoding || !formData.origin.trim() || !formData.destination.trim()}
+              onClick={async () => {
+                setIsGeocoding(true)
+                setError("")
+                try {
+                  const [oRes, dRes] = await Promise.all([
+                    fetch(`/api/geocode?query=${encodeURIComponent(formData.origin.trim())}`),
+                    fetch(`/api/geocode?query=${encodeURIComponent(formData.destination.trim())}`),
+                  ])
+                  const oJson = await oRes.json()
+                  const dJson = await dRes.json()
+                  if (!oRes.ok) throw new Error(oJson.error || "Failed to geocode origin")
+                  if (!dRes.ok) throw new Error(dJson.error || "Failed to geocode destination")
+                  setFormData((prev) => ({
+                    ...prev,
+                    originLat: String(oJson.data.lat),
+                    originLng: String(oJson.data.lng),
+                    destLat: String(dJson.data.lat),
+                    destLng: String(dJson.data.lng),
+                  }))
+                } catch (e) {
+                  setError((e as Error).message)
+                } finally {
+                  setIsGeocoding(false)
+                }
+              }}
+            >
+              {isGeocoding ? "Geocoding..." : "Auto-fill coordinates"}
+            </Button>
+          </div>
+
+          <div className="grid gap-4 md:grid-cols-2">
+            <div className="space-y-2">
+              <Label htmlFor="originLat">Origin Lat</Label>
+              <Input
+                id="originLat"
+                type="number"
+                step="0.0001"
+                value={formData.originLat as any}
+                onChange={(e) => setFormData({ ...formData, originLat: e.target.value })}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="originLng">Origin Lng</Label>
+              <Input
+                id="originLng"
+                type="number"
+                step="0.0001"
+                value={formData.originLng as any}
+                onChange={(e) => setFormData({ ...formData, originLng: e.target.value })}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="destLat">Destination Lat</Label>
+              <Input
+                id="destLat"
+                type="number"
+                step="0.0001"
+                value={formData.destLat as any}
+                onChange={(e) => setFormData({ ...formData, destLat: e.target.value })}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="destLng">Destination Lng</Label>
+              <Input
+                id="destLng"
+                type="number"
+                step="0.0001"
+                value={formData.destLng as any}
+                onChange={(e) => setFormData({ ...formData, destLng: e.target.value })}
               />
             </div>
           </div>

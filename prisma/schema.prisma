@@ -39,6 +39,7 @@ enum CommodityStatus {
   FUNDING
   ACTIVE
   IN_TRANSIT
+  ARRIVED
   SETTLED
   CANCELLED
 }
@@ -59,6 +60,12 @@ enum TransactionStatus {
   CANCELLED
 }
 
+enum ShipmentEventType {
+  DEPARTED
+  IN_TRANSIT
+  ARRIVED
+}
+
 enum DocumentType {
   BILL_OF_LADING
   INSURANCE_CERTIFICATE
@@ -77,6 +84,10 @@ model User {
   role          UserRole  @default(USER)
   kycStatus     KycStatus @default(NOT_STARTED) @map("kyc_status")
   walletBalance Decimal   @default(0) @map("wallet_balance") @db.Decimal(12, 2)
+  walletFrozen  Boolean   @default(false) @map("wallet_frozen")
+  walletFrozenAt DateTime? @map("wallet_frozen_at")
+  disabled      Boolean   @default(false)
+  disabledAt    DateTime? @map("disabled_at")
   avatar        String?
   phone         String?
   company       String?
@@ -101,6 +112,23 @@ model User {
   @@map("users")
 }
 
+model ShipmentEvent {
+  id          String           @id @default(cuid())
+  commodityId String           @map("commodity_id")
+  type        ShipmentEventType
+  occurredAt  DateTime         @map("occurred_at")
+  description String
+  source      String           @default("SIMULATED")
+  raw         Json?
+  createdAt   DateTime         @default(now()) @map("created_at")
+
+  commodity   Commodity        @relation(fields: [commodityId], references: [id], onDelete: Cascade)
+
+  @@index([commodityId, occurredAt])
+  @@unique([commodityId, type, occurredAt])
+  @@map("shipment_events")
+}
+
 model Commodity {
   id              String          @id @default(cuid())
   type            CommodityType
@@ -109,6 +137,13 @@ model Commodity {
   risk            RiskLevel
   targetApy       Decimal         @map("target_apy") @db.Decimal(5, 2)
   duration        Int             // days
+  minInvestment   Decimal         @default(1000) @map("min_investment") @db.Decimal(12, 2)
+  maxInvestment   Decimal?        @map("max_investment") @db.Decimal(12, 2)
+  platformFeeBps  Int             @default(150) @map("platform_fee_bps") // 150 = 1.50%
+  originLat       Float?          @map("origin_lat")
+  originLng       Float?          @map("origin_lng")
+  destLat         Float?          @map("dest_lat")
+  destLng         Float?          @map("dest_lng")
   amountRequired  Decimal         @map("amount_required") @db.Decimal(12, 2)
   currentAmount   Decimal         @default(0) @map("current_amount") @db.Decimal(12, 2)
   description     String          @db.Text
@@ -126,6 +161,7 @@ model Commodity {
   investments     Investment[]
   documents       Document[]
   transactions    Transaction[]
+  shipmentEvents  ShipmentEvent[]
 
   @@map("commodities")
 }

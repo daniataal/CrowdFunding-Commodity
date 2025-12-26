@@ -1,6 +1,12 @@
 import { NextRequest, NextResponse } from "next/server"
 import { auth } from "@/auth"
 import { prisma } from "@/lib/prisma"
+import path from "path"
+import fs from "fs/promises"
+
+function sanitizeFilename(name: string) {
+  return name.replace(/[^\w.\-() ]+/g, "_").replace(/\s+/g, " ").trim()
+}
 
 export async function POST(request: NextRequest) {
   try {
@@ -18,24 +24,33 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Both documents are required" }, { status: 400 })
     }
 
-    // In production, upload files to S3 or similar storage
-    // For now, we'll just store metadata and update KYC status
-    // TODO: Implement actual file upload to cloud storage
+    // Dev-friendly local storage under /public/uploads/kyc/<userId>/...
+    // In production you'd upload to S3 (or similar) and store the resulting URLs.
+    const userDir = path.join(process.cwd(), "public", "uploads", "kyc", session.user.id)
+    await fs.mkdir(userDir, { recursive: true })
 
-    // Convert files to base64 or upload to storage service
-    // For mock implementation, we'll just update the database
+    const ts = Date.now()
+    const idSafe = sanitizeFilename(idDocument.name || "id-document")
+    const addressSafe = sanitizeFilename(addressDocument.name || "address-document")
 
-    const idBuffer = await idDocument.arrayBuffer()
-    const addressBuffer = await addressDocument.arrayBuffer()
+    const idStored = `${ts}-id-${idSafe}`
+    const addressStored = `${ts}-address-${addressSafe}`
 
-    // In production, upload to S3 and get URLs
-    // For now, we'll create document records with placeholder URLs
+    const idBytes = await idDocument.arrayBuffer()
+    await fs.writeFile(path.join(userDir, idStored), Buffer.from(idBytes))
+
+    const addressBytes = await addressDocument.arrayBuffer()
+    await fs.writeFile(path.join(userDir, addressStored), Buffer.from(addressBytes))
+
+    const idUrl = `/uploads/kyc/${session.user.id}/${idStored}`
+    const addressUrl = `/uploads/kyc/${session.user.id}/${addressStored}`
+
     const idDocumentRecord = await prisma.document.create({
       data: {
         userId: session.user.id,
         type: "KYC_ID",
         name: idDocument.name,
-        url: `/uploads/kyc/${session.user.id}/id-${Date.now()}.${idDocument.name.split('.').pop()}`,
+        url: idUrl,
         mimeType: idDocument.type,
         size: idDocument.size,
         verified: false,
@@ -47,7 +62,7 @@ export async function POST(request: NextRequest) {
         userId: session.user.id,
         type: "KYC_PROOF_OF_ADDRESS",
         name: addressDocument.name,
-        url: `/uploads/kyc/${session.user.id}/address-${Date.now()}.${addressDocument.name.split('.').pop()}`,
+        url: addressUrl,
         mimeType: addressDocument.type,
         size: addressDocument.size,
         verified: false,
@@ -68,7 +83,10 @@ export async function POST(request: NextRequest) {
         entityType: "User",
         entityId: session.user.id,
         changes: {
-          documents: [idDocumentRecord.id, addressDocumentRecord.id],
+          documents: [
+            { id: idDocumentRecord.id, type: idDocumentRecord.type, url: idDocumentRecord.url },
+            { id: addressDocumentRecord.id, type: addressDocumentRecord.type, url: addressDocumentRecord.url },
+          ],
         },
       },
     })

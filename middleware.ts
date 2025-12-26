@@ -20,7 +20,16 @@ export default auth((req) => {
   }
 
   // Protect main app routes (except auth pages)
-  if (!isLoggedIn && !pathname.startsWith("/login") && !pathname.startsWith("/register") && !pathname.startsWith("/forgot-password") && !pathname.startsWith("/api") && pathname !== "/") {
+  if (
+    !isLoggedIn &&
+    !pathname.startsWith("/login") &&
+    !pathname.startsWith("/register") &&
+    !pathname.startsWith("/forgot-password") &&
+    !pathname.startsWith("/api") &&
+    !pathname.startsWith("/marketplace") &&
+    !pathname.startsWith("/legal") &&
+    pathname !== "/"
+  ) {
     return NextResponse.redirect(new URL("/login", req.url))
   }
 

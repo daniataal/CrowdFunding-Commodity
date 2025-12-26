@@ -6,6 +6,8 @@ import { z } from "zod"
 const schema = z.object({
   commodityId: z.string().min(1),
   amount: z.number().positive(),
+  ackRisk: z.boolean().optional(),
+  ackTerms: z.boolean().optional(),
 })
 
 export async function POST(request: NextRequest) {
@@ -20,6 +22,8 @@ export async function POST(request: NextRequest) {
   const fd = new FormData()
   fd.set("commodityId", validated.commodityId)
   fd.set("amount", String(validated.amount))
+  fd.set("ackRisk", String(Boolean(validated.ackRisk)))
+  fd.set("ackTerms", String(Boolean(validated.ackTerms)))
 
   const result = await investInCommodity(fd)
   if ("error" in result) {

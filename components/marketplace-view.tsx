@@ -61,6 +61,8 @@ export function MarketplaceView({
         return "Funding"
       case "IN_TRANSIT":
         return "In Transit"
+      case "ARRIVED":
+        return "Arrived"
       case "SETTLED":
         return "Settled"
       case "ACTIVE":

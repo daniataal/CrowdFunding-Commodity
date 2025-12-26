@@ -12,8 +12,9 @@ export async function getAuthedUserId() {
 export async function getDbUserRole(userId: string): Promise<DbRole | null> {
   const user = await prisma.user.findUnique({
     where: { id: userId },
-    select: { role: true },
+    select: { role: true, disabled: true },
   })
+  if (!user || user.disabled) return null
   return (user?.role as DbRole | undefined) ?? null
 }
 
