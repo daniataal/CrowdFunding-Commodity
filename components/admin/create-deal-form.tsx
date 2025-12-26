@@ -31,6 +31,10 @@ export function CreateDealForm() {
     description: "",
     origin: "",
     destination: "",
+    originLat: "",
+    originLng: "",
+    destLat: "",
+    destLng: "",
     shipmentId: "",
     insuranceValue: "",
     transportMethod: "",
@@ -279,6 +283,58 @@ export function CreateDealForm() {
                 required
                 disabled={isLoading}
                 placeholder="Rotterdam, Netherlands"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="originLat">Origin Lat</Label>
+              <Input
+                id="originLat"
+                type="number"
+                step="0.0001"
+                value={formData.originLat}
+                onChange={(e) => setFormData({ ...formData, originLat: e.target.value })}
+                disabled={isLoading}
+                placeholder="-23.5505"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="originLng">Origin Lng</Label>
+              <Input
+                id="originLng"
+                type="number"
+                step="0.0001"
+                value={formData.originLng}
+                onChange={(e) => setFormData({ ...formData, originLng: e.target.value })}
+                disabled={isLoading}
+                placeholder="-46.6333"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="destLat">Destination Lat</Label>
+              <Input
+                id="destLat"
+                type="number"
+                step="0.0001"
+                value={formData.destLat}
+                onChange={(e) => setFormData({ ...formData, destLat: e.target.value })}
+                disabled={isLoading}
+                placeholder="51.9225"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="destLng">Destination Lng</Label>
+              <Input
+                id="destLng"
+                type="number"
+                step="0.0001"
+                value={formData.destLng}
+                onChange={(e) => setFormData({ ...formData, destLng: e.target.value })}
+                disabled={isLoading}
+                placeholder="4.4792"
               />
             </div>
 

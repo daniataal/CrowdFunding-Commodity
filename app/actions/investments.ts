@@ -31,7 +31,7 @@ export async function investInCommodity(formData: FormData) {
     // Get user with current balance
     const user = await prisma.user.findUnique({
       where: { id: session.user.id },
-      select: { walletBalance: true, kycStatus: true },
+      select: { walletBalance: true, kycStatus: true, walletFrozen: true },
     })
 
     if (!user) {
@@ -41,6 +41,9 @@ export async function investInCommodity(formData: FormData) {
     // Compliance gating
     if (user.kycStatus !== "APPROVED") {
       return { error: "KYC approval is required before investing" }
+    }
+    if ((user as any).walletFrozen) {
+      return { error: "Wallet is frozen. Please contact support." }
     }
     if (!validatedData.ackRisk || !validatedData.ackTerms) {
       return { error: "Risk Disclosure and Terms acceptance are required" }

@@ -11,6 +11,7 @@ const updateUserSchema = z.object({
   phone: z.string().trim().min(1).nullable().optional(),
   company: z.string().trim().min(1).nullable().optional(),
   disabled: z.boolean().optional(),
+  walletFrozen: z.boolean().optional(),
 })
 
 export async function GET(_request: NextRequest, context: { params: Promise<{ userId: string }> }) {
@@ -44,6 +45,8 @@ export async function GET(_request: NextRequest, context: { params: Promise<{ us
       role: user.role,
       kycStatus: user.kycStatus,
       walletBalance: Number(user.walletBalance),
+      walletFrozen: (user as any).walletFrozen ?? false,
+      walletFrozenAt: (user as any).walletFrozenAt ? new Date((user as any).walletFrozenAt).toISOString() : null,
       disabled: (user as any).disabled ?? false,
       disabledAt: (user as any).disabledAt ? new Date((user as any).disabledAt).toISOString() : null,
       avatar: user.avatar,
@@ -107,6 +110,9 @@ export async function PATCH(request: NextRequest, context: { params: Promise<{ u
         ...(validated.disabled !== undefined
           ? { disabled: validated.disabled, disabledAt: validated.disabled ? new Date() : null }
           : {}),
+        ...(validated.walletFrozen !== undefined
+          ? { walletFrozen: validated.walletFrozen, walletFrozenAt: validated.walletFrozen ? new Date() : null }
+          : {}),
       },
       include: {
         _count: { select: { investments: true, transactions: true, documents: true } },
@@ -132,6 +138,8 @@ export async function PATCH(request: NextRequest, context: { params: Promise<{ u
         role: updated.role,
         kycStatus: updated.kycStatus,
         walletBalance: Number(updated.walletBalance),
+        walletFrozen: (updated as any).walletFrozen ?? false,
+        walletFrozenAt: (updated as any).walletFrozenAt ? new Date((updated as any).walletFrozenAt).toISOString() : null,
         disabled: (updated as any).disabled ?? false,
         disabledAt: (updated as any).disabledAt ? new Date((updated as any).disabledAt).toISOString() : null,
         createdAt: updated.createdAt.toISOString(),

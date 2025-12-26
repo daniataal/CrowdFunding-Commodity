@@ -29,6 +29,10 @@ export function EditDealForm({
     description: string
     origin: string
     destination: string
+    originLat?: number | null
+    originLng?: number | null
+    destLat?: number | null
+    destLng?: number | null
     shipmentId?: string | null
     insuranceValue?: number | null
     transportMethod?: string | null
@@ -52,6 +56,10 @@ export function EditDealForm({
     description: initial.description,
     origin: initial.origin,
     destination: initial.destination,
+    originLat: initial.originLat === null || initial.originLat === undefined ? "" : String(initial.originLat),
+    originLng: initial.originLng === null || initial.originLng === undefined ? "" : String(initial.originLng),
+    destLat: initial.destLat === null || initial.destLat === undefined ? "" : String(initial.destLat),
+    destLng: initial.destLng === null || initial.destLng === undefined ? "" : String(initial.destLng),
     shipmentId: initial.shipmentId ?? "",
     insuranceValue: initial.insuranceValue ?? "",
     transportMethod: initial.transportMethod ?? "",
@@ -231,6 +239,49 @@ export function EditDealForm({
                 id="destination"
                 value={formData.destination}
                 onChange={(e) => setFormData({ ...formData, destination: e.target.value })}
+              />
+            </div>
+          </div>
+
+          <div className="grid gap-4 md:grid-cols-2">
+            <div className="space-y-2">
+              <Label htmlFor="originLat">Origin Lat</Label>
+              <Input
+                id="originLat"
+                type="number"
+                step="0.0001"
+                value={formData.originLat as any}
+                onChange={(e) => setFormData({ ...formData, originLat: e.target.value })}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="originLng">Origin Lng</Label>
+              <Input
+                id="originLng"
+                type="number"
+                step="0.0001"
+                value={formData.originLng as any}
+                onChange={(e) => setFormData({ ...formData, originLng: e.target.value })}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="destLat">Destination Lat</Label>
+              <Input
+                id="destLat"
+                type="number"
+                step="0.0001"
+                value={formData.destLat as any}
+                onChange={(e) => setFormData({ ...formData, destLat: e.target.value })}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="destLng">Destination Lng</Label>
+              <Input
+                id="destLng"
+                type="number"
+                step="0.0001"
+                value={formData.destLng as any}
+                onChange={(e) => setFormData({ ...formData, destLng: e.target.value })}
               />
             </div>
           </div>

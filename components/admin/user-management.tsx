@@ -175,7 +175,11 @@ export function UserManagement({ isAdmin }: { isAdmin: boolean }) {
       patch,
     }: {
       userId: string
-      patch: Partial<Pick<AdminUserDetail, "email" | "name" | "role" | "kycStatus" | "phone" | "company" | "disabled">>
+      patch: Partial<
+        Pick<AdminUserDetail, "email" | "name" | "role" | "kycStatus" | "phone" | "company" | "disabled"> & {
+          walletFrozen: boolean
+        }
+      >
     }) => {
       const res = await fetch(`/api/admin/users/${userId}`, {
         method: "PATCH",
@@ -239,6 +243,38 @@ export function UserManagement({ isAdmin }: { isAdmin: boolean }) {
       toast({ title: "Password reset failed", description: (e as Error).message, variant: "destructive" }),
   })
 
+  const walletAdjustMutation = useMutation({
+    mutationFn: async ({
+      userId,
+      amount,
+      type,
+      reason,
+    }: {
+      userId: string
+      amount: number
+      type: "REFUND" | "PAYOUT" | "DIVIDEND" | "DEPOSIT" | "WITHDRAWAL" | "INVESTMENT"
+      reason: string
+    }) => {
+      const res = await fetch(`/api/admin/users/${userId}/wallet-adjustment`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ amount, type, reason }),
+      })
+      const json = await res.json()
+      if (!res.ok) throw new Error(json.error || "Wallet adjustment failed")
+      return json.data as { transactionId: string; newBalance: number }
+    },
+    onSuccess: async (data) => {
+      await Promise.all([
+        qc.invalidateQueries({ queryKey: ["admin", "users"] }),
+        qc.invalidateQueries({ queryKey: ["admin", "users", selectedId, "detail"] }),
+        qc.invalidateQueries({ queryKey: ["admin", "users", selectedId, "audit-logs"] }),
+      ])
+      toast({ title: "Wallet adjusted", description: `New balance: ${money(data.newBalance)}` })
+    },
+    onError: (e) => toast({ title: "Wallet adjustment failed", description: (e as Error).message, variant: "destructive" }),
+  })
+
   const kycActionMutation = useMutation({
     mutationFn: async ({ userId, action, reason }: { userId: string; action: "approve" | "reject"; reason?: string }) => {
       const res = await fetch(`/api/admin/users/${userId}/kyc`, {
@@ -284,6 +320,10 @@ export function UserManagement({ isAdmin }: { isAdmin: boolean }) {
   const [docViewer, setDocViewer] = useState<{ url: string; name: string } | null>(null)
   const [rejectOpen, setRejectOpen] = useState(false)
   const [rejectReason, setRejectReason] = useState("")
+  const [walletAdjustOpen, setWalletAdjustOpen] = useState(false)
+  const [walletAdjustAmount, setWalletAdjustAmount] = useState("")
+  const [walletAdjustType, setWalletAdjustType] = useState<"REFUND" | "PAYOUT" | "DIVIDEND" | "DEPOSIT" | "WITHDRAWAL" | "INVESTMENT">("REFUND")
+  const [walletAdjustReason, setWalletAdjustReason] = useState("")
 
   const summary = useMemo(() => {
     const disabledCount = users.filter((u) => u.disabled).length
@@ -608,6 +648,16 @@ export function UserManagement({ isAdmin }: { isAdmin: boolean }) {
                         <div className="text-muted-foreground">Wallet</div>
                         <div className="font-medium">{money(detailQuery.data.walletBalance)}</div>
                       </div>
+                    <div>
+                      <div className="text-muted-foreground">Wallet status</div>
+                      <div className="font-medium">
+                        {(detailQuery.data as any).walletFrozen ? (
+                          <span className="text-red-500">Frozen</span>
+                        ) : (
+                          <span className="text-emerald-500">Active</span>
+                        )}
+                      </div>
+                    </div>
                       <div>
                         <div className="text-muted-foreground">Investments</div>
                         <div className="font-medium">{detailQuery.data._count.investments}</div>
@@ -627,6 +677,34 @@ export function UserManagement({ isAdmin }: { isAdmin: boolean }) {
                     <div className="flex flex-col gap-2 shrink-0">
                       <Button variant="outline" onClick={() => setEditingUser(detailQuery.data)}>
                         Edit
+                      </Button>
+
+                    <Button
+                      variant="outline"
+                      className={(detailQuery.data as any).walletFrozen ? "text-emerald-500" : "text-red-500"}
+                      onClick={() => {
+                        if (!selectedId) return
+                        updateMutation.mutate({
+                          userId: selectedId,
+                          patch: { walletFrozen: !(detailQuery.data as any).walletFrozen } as any,
+                        })
+                      }}
+                      disabled={updateMutation.isPending}
+                    >
+                      {(detailQuery.data as any).walletFrozen ? "Unfreeze wallet" : "Freeze wallet"}
+                    </Button>
+
+                      <Button
+                        variant="outline"
+                        onClick={() => {
+                          setWalletAdjustOpen(true)
+                          setWalletAdjustAmount("")
+                          setWalletAdjustType("REFUND")
+                          setWalletAdjustReason("")
+                        }}
+                        disabled={walletAdjustMutation.isPending}
+                      >
+                        Adjust wallet
                       </Button>
 
                       <Button
@@ -827,6 +905,82 @@ export function UserManagement({ isAdmin }: { isAdmin: boolean }) {
               disabled={kycActionMutation.isPending}
             >
               Reject
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={walletAdjustOpen} onOpenChange={setWalletAdjustOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Wallet adjustment</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="text-sm text-muted-foreground">
+              Creates a correction transaction and updates the user wallet balance immediately.
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              <div className="space-y-2">
+                <Label>Type</Label>
+                <Select value={walletAdjustType} onValueChange={(v) => setWalletAdjustType(v as any)}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select type" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="REFUND">REFUND</SelectItem>
+                    <SelectItem value="PAYOUT">PAYOUT</SelectItem>
+                    <SelectItem value="DIVIDEND">DIVIDEND</SelectItem>
+                    <SelectItem value="DEPOSIT">DEPOSIT</SelectItem>
+                    <SelectItem value="WITHDRAWAL">WITHDRAWAL</SelectItem>
+                    <SelectItem value="INVESTMENT">INVESTMENT</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <Label>Amount</Label>
+                <Input
+                  type="number"
+                  step="0.01"
+                  value={walletAdjustAmount}
+                  onChange={(e) => setWalletAdjustAmount(e.target.value)}
+                  placeholder="Use negative to debit"
+                />
+              </div>
+            </div>
+            <div className="space-y-2">
+              <Label>Reason</Label>
+              <Input value={walletAdjustReason} onChange={(e) => setWalletAdjustReason(e.target.value)} placeholder="e.g. Bank transfer failed; reversing deposit" />
+              <div className="text-xs text-muted-foreground">This will be recorded in the audit log.</div>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setWalletAdjustOpen(false)}>
+              Cancel
+            </Button>
+            <Button
+              className="bg-emerald-600 hover:bg-emerald-700"
+              onClick={() => {
+                if (!selectedId) return
+                const amt = Number.parseFloat(walletAdjustAmount)
+                if (!Number.isFinite(amt) || amt === 0) {
+                  toast({ title: "Invalid amount", description: "Enter a non-zero amount.", variant: "destructive" })
+                  return
+                }
+                if (!walletAdjustReason.trim()) {
+                  toast({ title: "Reason required", description: "Enter a reason for the adjustment.", variant: "destructive" })
+                  return
+                }
+                walletAdjustMutation.mutate({
+                  userId: selectedId,
+                  amount: amt,
+                  type: walletAdjustType,
+                  reason: walletAdjustReason.trim(),
+                })
+                setWalletAdjustOpen(false)
+              }}
+              disabled={walletAdjustMutation.isPending}
+            >
+              Apply
             </Button>
           </DialogFooter>
         </DialogContent>

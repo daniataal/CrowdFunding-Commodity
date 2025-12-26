@@ -25,6 +25,10 @@ export type MarketplaceCommodity = {
   minInvestment?: number | null
   maxInvestment?: number | null
   platformFeeBps?: number | null
+  originLat?: number | null
+  originLng?: number | null
+  destLat?: number | null
+  destLng?: number | null
   amountRequired: number
   currentAmount: number
   description: string
@@ -105,6 +109,8 @@ export type UserProfile = {
   kycStatus: KycStatus
   disabled?: boolean
   disabledAt?: string | null
+  walletFrozen?: boolean
+  walletFrozenAt?: string | null
   avatar?: string | null
   phone?: string | null
   company?: string | null
@@ -127,6 +133,8 @@ export type AdminUserSummary = {
   role: UserRole
   kycStatus: KycStatus
   walletBalance: number
+  walletFrozen?: boolean
+  walletFrozenAt?: string | null
   disabled: boolean
   disabledAt: string | null
   createdAt: string

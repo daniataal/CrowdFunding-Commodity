@@ -31,6 +31,10 @@ const createDealSchema = z.object({
     .union([z.string(), z.number()])
     .optional()
     .transform((val) => (val === undefined || val === null || val === "" ? 150 : Number(val))),
+  originLat: z.union([z.string(), z.number()]).optional().transform((val) => (val === undefined || val === "" ? null : Number(val))),
+  originLng: z.union([z.string(), z.number()]).optional().transform((val) => (val === undefined || val === "" ? null : Number(val))),
+  destLat: z.union([z.string(), z.number()]).optional().transform((val) => (val === undefined || val === "" ? null : Number(val))),
+  destLng: z.union([z.string(), z.number()]).optional().transform((val) => (val === undefined || val === "" ? null : Number(val))),
   amountRequired: z.string().transform((val) => Number.parseFloat(val)),
   description: z.string().min(1),
   origin: z.string().min(1),
@@ -63,6 +67,10 @@ export async function POST(request: NextRequest) {
         minInvestment: validatedData.minInvestment,
         maxInvestment: validatedData.maxInvestment,
         platformFeeBps: validatedData.platformFeeBps,
+        originLat: validatedData.originLat,
+        originLng: validatedData.originLng,
+        destLat: validatedData.destLat,
+        destLng: validatedData.destLng,
         amountRequired: validatedData.amountRequired,
         description: validatedData.description,
         origin: validatedData.origin,

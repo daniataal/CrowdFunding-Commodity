@@ -16,6 +16,7 @@ import { Checkbox } from "@/components/ui/checkbox"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import Link from "next/link"
 import { useSession } from "next-auth/react"
+import { ShipmentMap } from "@/components/shipment-map"
 
 interface AssetDetailModalProps {
   commodity: MarketplaceCommodity | null
@@ -69,6 +70,8 @@ export function AssetDetailModal({ commodity, open, onOpenChange }: AssetDetailM
   const minInvestment = commodity?.minInvestment ?? 1000
   const maxInvestment = commodity?.maxInvestment ?? null
   const platformFeeBps = commodity?.platformFeeBps ?? 150
+  const hasCoords =
+    commodity?.originLat != null && commodity?.originLng != null && commodity?.destLat != null && commodity?.destLng != null
   const projectedReturn = investAmount
     ? (
         Number.parseFloat(investAmount) *
@@ -122,6 +125,12 @@ export function AssetDetailModal({ commodity, open, onOpenChange }: AssetDetailM
   })
 
   const kycApproved = (session?.user as any)?.kycStatus === "APPROVED"
+  const arrivalDate = commodity?.maturityDate ? new Date(commodity.maturityDate) : new Date(Date.now() + (commodity?.duration ?? 0) * 24 * 60 * 60 * 1000)
+  const departureDate = commodity?.maturityDate
+    ? new Date(new Date(commodity.maturityDate).getTime() - (commodity?.duration ?? 0) * 24 * 60 * 60 * 1000)
+    : new Date(Date.now() - 2 * 24 * 60 * 60 * 1000)
+  const vehicleType = commodity?.type === "Metals" ? "plane" : "ship"
+  const vesselName = commodity?.shipmentId ?? `${commodity?.name ?? "Shipment"} ${vehicleType === "plane" ? "Jet" : "Vessel"}`
 
   return (
     <Dialog open={open && !!commodity} onOpenChange={onOpenChange}>
@@ -325,6 +334,40 @@ export function AssetDetailModal({ commodity, open, onOpenChange }: AssetDetailM
 
           <TabsContent value="logistics" className="space-y-4 mt-4">
             <Card className="p-6 border-2">
+              <h3 className="font-semibold mb-4">Logistics Map</h3>
+              {hasCoords && commodity ? (
+                <ShipmentMap
+                  originCoordinates={{ lat: commodity.originLat as number, lng: commodity.originLng as number }}
+                  destinationCoordinates={{ lat: commodity.destLat as number, lng: commodity.destLng as number }}
+                  departureDate={departureDate}
+                  arrivalDate={arrivalDate}
+                  vesselName={vesselName}
+                  vehicleType={vehicleType}
+                />
+              ) : (
+                <div className="text-sm text-muted-foreground">No coordinates available for this deal yet.</div>
+              )}
+              {commodity && (
+                <div className="mt-4 space-y-2">
+                  <div className="flex items-center justify-between text-sm">
+                    <div className="font-medium">Departed {commodity.origin}</div>
+                    <div className="text-muted-foreground">{departureDate.toLocaleDateString()}</div>
+                  </div>
+                  <div className="flex items-center justify-between text-sm">
+                    <div className="font-medium">Currently in transit</div>
+                    <div className="text-muted-foreground">
+                      {new Date() < departureDate ? "Pending" : new Date() > arrivalDate ? "Completed" : "Active"}
+                    </div>
+                  </div>
+                  <div className="flex items-center justify-between text-sm">
+                    <div className="font-medium">Estimated arrival {commodity.destination}</div>
+                    <div className="text-muted-foreground">{arrivalDate.toLocaleDateString()}</div>
+                  </div>
+                </div>
+              )}
+            </Card>
+
+            <Card className="p-6 border-2">
               <h3 className="font-semibold mb-4 flex items-center">
                 <MapPin className="h-5 w-5 mr-2 text-amber-500" />
                 Shipping Route
@@ -388,6 +431,21 @@ export function AssetDetailModal({ commodity, open, onOpenChange }: AssetDetailM
           <TabsContent value="documents" className="space-y-4 mt-4">
             {docsQuery.isLoading ? (
               <Card className="p-6 border-2 text-sm text-muted-foreground">Loading documents…</Card>
+            ) : docsQuery.isError ? (
+              <Card className="p-6 border-2 text-sm text-muted-foreground">
+                {(docsQuery.error as Error).message === "Unauthorized" ? (
+                  <span>
+                    Please <Link className="underline" href="/login">log in</Link> to view verified deal documents.
+                  </span>
+                ) : (docsQuery.error as Error).message === "KYC approval required" ? (
+                  <span>
+                    KYC approval is required to view verified deal documents.{" "}
+                    <Link className="underline" href="/kyc-verification">Complete verification</Link>.
+                  </span>
+                ) : (
+                  <span>Failed to load documents.</span>
+                )}
+              </Card>
             ) : (docsQuery.data?.length ?? 0) === 0 ? (
               <Card className="p-6 border-2 text-sm text-muted-foreground">No verified documents available yet.</Card>
             ) : (

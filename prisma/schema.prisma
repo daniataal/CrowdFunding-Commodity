@@ -77,6 +77,8 @@ model User {
   role          UserRole  @default(USER)
   kycStatus     KycStatus @default(NOT_STARTED) @map("kyc_status")
   walletBalance Decimal   @default(0) @map("wallet_balance") @db.Decimal(12, 2)
+  walletFrozen  Boolean   @default(false) @map("wallet_frozen")
+  walletFrozenAt DateTime? @map("wallet_frozen_at")
   disabled      Boolean   @default(false)
   disabledAt    DateTime? @map("disabled_at")
   avatar        String?
@@ -114,6 +116,10 @@ model Commodity {
   minInvestment   Decimal         @default(1000) @map("min_investment") @db.Decimal(12, 2)
   maxInvestment   Decimal?        @map("max_investment") @db.Decimal(12, 2)
   platformFeeBps  Int             @default(150) @map("platform_fee_bps") // 150 = 1.50%
+  originLat       Float?          @map("origin_lat")
+  originLng       Float?          @map("origin_lng")
+  destLat         Float?          @map("dest_lat")
+  destLng         Float?          @map("dest_lng")
   amountRequired  Decimal         @map("amount_required") @db.Decimal(12, 2)
   currentAmount   Decimal         @default(0) @map("current_amount") @db.Decimal(12, 2)
   description     String          @db.Text

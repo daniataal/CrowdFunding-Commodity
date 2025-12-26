@@ -29,6 +29,15 @@ export async function depositFunds(formData: FormData) {
 
     const validatedData = depositSchema.parse(rawData)
 
+    // Block wallet operations when frozen.
+    const walletState = await prisma.user.findUnique({
+      where: { id: session.user.id },
+      select: { walletFrozen: true },
+    })
+    if ((walletState as any)?.walletFrozen) {
+      return { error: "Wallet is frozen. Please contact support." }
+    }
+
     // In production, verify payment with payment gateway (Stripe, etc.)
     // For now, we'll create a pending transaction that needs admin approval
 
@@ -107,11 +116,15 @@ export async function withdrawFunds(formData: FormData) {
     // Get user with current balance
     const user = await prisma.user.findUnique({
       where: { id: session.user.id },
-      select: { walletBalance: true },
+      select: { walletBalance: true, walletFrozen: true },
     })
 
     if (!user) {
       return { error: "User not found" }
+    }
+
+    if ((user as any).walletFrozen) {
+      return { error: "Wallet is frozen. Please contact support." }
     }
 
     // Check if user has sufficient balance

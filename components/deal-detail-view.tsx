@@ -15,6 +15,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import type { CommodityDocument, DocumentType, MarketplaceCommodity } from "@/lib/domain"
 import { DollarSign, TrendingUp, MapPin, Truck, FileText, Shield, Calendar, Link as LinkIcon } from "lucide-react"
+import { ShipmentMap } from "@/components/shipment-map"
 
 const typeLabels: Record<DocumentType, string> = {
   BILL_OF_LADING: "Bill of Lading",
@@ -54,6 +55,25 @@ export function DealDetailView({ commodity }: { commodity: MarketplaceCommodity 
   const minInvestment = commodity.minInvestment ?? 1000
   const maxInvestment = commodity.maxInvestment ?? null
   const platformFeeBps = commodity.platformFeeBps ?? 150
+  const hasCoords =
+    commodity.originLat != null && commodity.originLng != null && commodity.destLat != null && commodity.destLng != null
+
+  const arrivalDate = useMemo(() => {
+    if (commodity.maturityDate) return new Date(commodity.maturityDate)
+    return new Date(Date.now() + commodity.duration * 24 * 60 * 60 * 1000)
+  }, [commodity.maturityDate, commodity.duration])
+
+  const departureDate = useMemo(() => {
+    // If we have an explicit maturity date, infer departure by subtracting duration.
+    if (commodity.maturityDate) {
+      const d = new Date(commodity.maturityDate)
+      return new Date(d.getTime() - commodity.duration * 24 * 60 * 60 * 1000)
+    }
+    return new Date(Date.now() - 2 * 24 * 60 * 60 * 1000)
+  }, [commodity.maturityDate, commodity.duration])
+
+  const vehicleType = commodity.type === "Metals" ? "plane" : "ship"
+  const vesselName = commodity.shipmentId ?? `${commodity.name} ${vehicleType === "plane" ? "Jet" : "Vessel"}`
 
   const kycStatus = (session?.user as any)?.kycStatus as string | undefined
   const isAuthed = !!session?.user
@@ -210,6 +230,41 @@ export function DealDetailView({ commodity }: { commodity: MarketplaceCommodity 
 
             <TabsContent value="logistics" className="space-y-4 mt-4">
               <Card className="p-6 border-2">
+                <h3 className="font-semibold mb-4">Logistics Map</h3>
+                {hasCoords ? (
+                  <ShipmentMap
+                    originCoordinates={{ lat: commodity.originLat as number, lng: commodity.originLng as number }}
+                    destinationCoordinates={{ lat: commodity.destLat as number, lng: commodity.destLng as number }}
+                    departureDate={departureDate}
+                    arrivalDate={arrivalDate}
+                    vesselName={vesselName}
+                    vehicleType={vehicleType}
+                  />
+                ) : (
+                  <div className="text-sm text-muted-foreground">
+                    This deal is missing coordinates. Add origin/destination coordinates in the Admin deal editor to
+                    enable map tracking.
+                  </div>
+                )}
+                <div className="mt-4 space-y-2">
+                  <div className="flex items-center justify-between text-sm">
+                    <div className="font-medium">Departed {commodity.origin}</div>
+                    <div className="text-muted-foreground">{departureDate.toLocaleDateString()}</div>
+                  </div>
+                  <div className="flex items-center justify-between text-sm">
+                    <div className="font-medium">Currently in transit</div>
+                    <div className="text-muted-foreground">
+                      {new Date() < departureDate ? "Pending" : new Date() > arrivalDate ? "Completed" : "Active"}
+                    </div>
+                  </div>
+                  <div className="flex items-center justify-between text-sm">
+                    <div className="font-medium">Estimated arrival {commodity.destination}</div>
+                    <div className="text-muted-foreground">{arrivalDate.toLocaleDateString()}</div>
+                  </div>
+                </div>
+              </Card>
+
+              <Card className="p-6 border-2">
                 <h3 className="font-semibold mb-4 flex items-center">
                   <MapPin className="h-5 w-5 mr-2 text-amber-500" />
                   Shipping route
@@ -254,6 +309,21 @@ export function DealDetailView({ commodity }: { commodity: MarketplaceCommodity 
             <TabsContent value="documents" className="space-y-4 mt-4">
               {docsQuery.isLoading ? (
                 <Card className="p-6 border-2 text-sm text-muted-foreground">Loading documents…</Card>
+              ) : docsQuery.isError ? (
+                <Card className="p-6 border-2 text-sm text-muted-foreground">
+                  {(docsQuery.error as Error).message === "Unauthorized" ? (
+                    <span>
+                      Please <Link className="underline" href="/login">log in</Link> to view verified deal documents.
+                    </span>
+                  ) : (docsQuery.error as Error).message === "KYC approval required" ? (
+                    <span>
+                      KYC approval is required to view verified deal documents.{" "}
+                      <Link className="underline" href="/kyc-verification">Complete verification</Link>.
+                    </span>
+                  ) : (
+                    <span>Failed to load documents.</span>
+                  )}
+                </Card>
               ) : (docsQuery.data?.length ?? 0) === 0 ? (
                 <Card className="p-6 border-2 text-sm text-muted-foreground">No verified documents available yet.</Card>
               ) : (

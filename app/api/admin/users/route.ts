@@ -95,6 +95,8 @@ export async function GET(request: NextRequest) {
       role: u.role,
       kycStatus: u.kycStatus,
       walletBalance: Number(u.walletBalance),
+      walletFrozen: (u as any).walletFrozen ?? false,
+      walletFrozenAt: (u as any).walletFrozenAt ? new Date((u as any).walletFrozenAt).toISOString() : null,
       disabled: (u as any).disabled ?? false,
       disabledAt: (u as any).disabledAt ? new Date((u as any).disabledAt).toISOString() : null,
       createdAt: u.createdAt.toISOString(),
