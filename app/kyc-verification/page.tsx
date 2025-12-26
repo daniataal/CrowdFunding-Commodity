@@ -71,7 +71,7 @@ export default function KycVerificationPage() {
 
       setSuccess(true)
       // Update session to reflect KYC status change
-      await update()
+      await update({ kycStatus: "PENDING" })
       
       // Redirect after a short delay
       setTimeout(() => {

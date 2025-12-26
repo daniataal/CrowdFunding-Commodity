@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useMemo, useState } from "react"
+import { useEffect, useMemo, useRef, useState } from "react"
 import { useSession } from "next-auth/react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -28,6 +28,7 @@ export function SettingsView({
   const [isSaving, setIsSaving] = useState(false)
   const qc = useQueryClient()
   const { toast } = useToast()
+  const avatarInputRef = useRef<HTMLInputElement | null>(null)
 
   // Profile state
   const [name, setName] = useState(user?.name || "")
@@ -161,6 +162,28 @@ export function SettingsView({
     },
   })
 
+  const uploadAvatarMutation = useMutation({
+    mutationFn: async (file: File) => {
+      if (!file.type.startsWith("image/")) throw new Error("Photo must be an image")
+      if (file.size > 2 * 1024 * 1024) throw new Error("Max size is 2MB")
+
+      const formData = new FormData()
+      formData.append("avatar", file)
+      const res = await fetch("/api/user/avatar", { method: "POST", body: formData })
+      const json = await res.json().catch(() => ({}))
+      if (!res.ok) throw new Error((json as any).error || "Failed to upload photo")
+      return (json as any).data as { avatar: string }
+    },
+    onSuccess: async (data) => {
+      await qc.invalidateQueries({ queryKey: ["user", "profile"] })
+      await update({ avatar: data.avatar })
+      toast({ title: "Photo updated", description: "Your profile photo has been updated." })
+    },
+    onError: (e) => {
+      toast({ title: "Upload failed", description: (e as Error).message, variant: "destructive" })
+    },
+  })
+
   const uploadKycMutation = useMutation({
     mutationFn: async () => {
       if (!idFile || !addressFile) throw new Error("Please upload both documents")
@@ -177,7 +200,7 @@ export function SettingsView({
       setAddressFile(null)
       setKycError("")
       await Promise.all([qc.invalidateQueries({ queryKey: ["user", "profile"] }), qc.invalidateQueries({ queryKey: ["user", "kyc", "documents"] })])
-      await update()
+      await update({ kycStatus: "PENDING" })
       toast({ title: "KYC submitted", description: "Your documents were submitted for review." })
     },
     onError: (e) => {
@@ -294,18 +317,28 @@ export function SettingsView({
                   </AvatarFallback>
                 </Avatar>
                 <div>
+                  <Input
+                    ref={avatarInputRef}
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    disabled={uploadAvatarMutation.isPending}
+                    onChange={(e) => {
+                      const f = e.target.files?.[0] ?? null
+                      // allow re-selecting the same file later
+                      e.currentTarget.value = ""
+                      if (!f) return
+                      uploadAvatarMutation.mutate(f)
+                    }}
+                  />
                   <Button
                     variant="outline"
                     className="gap-2 bg-transparent"
-                    onClick={() =>
-                      toast({
-                        title: "Upload photo",
-                        description: "Profile photo uploads aren’t enabled in this deployment yet.",
-                      })
-                    }
+                    disabled={uploadAvatarMutation.isPending}
+                    onClick={() => avatarInputRef.current?.click()}
                   >
-                    <Upload className="h-4 w-4" />
-                    Upload Photo
+                    {uploadAvatarMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />}
+                    {uploadAvatarMutation.isPending ? "Uploading..." : "Upload Photo"}
                   </Button>
                   <p className="mt-2 text-xs text-muted-foreground">JPG, PNG or GIF. Max size 2MB.</p>
                 </div>
