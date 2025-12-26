@@ -13,7 +13,7 @@ import { Separator } from "@/components/ui/separator"
 import { User, Lock, Bell, Palette, Shield, CreditCard, Save, Upload } from "lucide-react"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
-import type { UserProfile } from "@/lib/domain"
+import type { UserProfile, WalletTransaction } from "@/lib/domain"
 
 export function SettingsView({ defaultTab = "profile" }: { defaultTab?: "profile" | "security" | "notifications" | "preferences" | "billing" }) {
   const { data: session } = useSession()
@@ -53,6 +53,26 @@ export function SettingsView({ defaultTab = "profile" }: { defaultTab?: "profile
       const json = await res.json()
       if (!res.ok) throw new Error(json.error || "Failed to load profile")
       return json.data as UserProfile
+    },
+  })
+
+  const currentSessionQuery = useQuery({
+    queryKey: ["security", "current-session"],
+    queryFn: async () => {
+      const res = await fetch("/api/sessions/current")
+      const json = await res.json()
+      if (!res.ok) throw new Error(json.error || "Failed to load session")
+      return json.data as { userAgent: string | null; ip: string | null; lastSeenAt: string }
+    },
+  })
+
+  const billingTransactionsQuery = useQuery({
+    queryKey: ["billing", "transactions"],
+    queryFn: async () => {
+      const res = await fetch("/api/wallet/transactions")
+      const json = await res.json()
+      if (!res.ok) throw new Error(json.error || "Failed to load transactions")
+      return json.data as WalletTransaction[]
     },
   })
 
@@ -155,7 +175,7 @@ export function SettingsView({ defaultTab = "profile" }: { defaultTab?: "profile
             <CardContent className="space-y-6">
               <div className="flex items-center gap-6">
                 <Avatar className="h-24 w-24">
-                  <AvatarImage src={user?.avatar || "/placeholder.svg"} />
+                  <AvatarImage src={profileQuery.data?.avatar || "/placeholder.svg"} />
                   <AvatarFallback className="bg-emerald-500/20 text-2xl text-emerald-500">
                     {user?.name?.charAt(0).toUpperCase()}
                   </AvatarFallback>
@@ -315,22 +335,22 @@ export function SettingsView({ defaultTab = "profile" }: { defaultTab?: "profile
               <CardDescription>Manage your active sessions across devices</CardDescription>
             </CardHeader>
             <CardContent className="space-y-3">
-              <div className="flex items-center justify-between rounded-lg border border-border p-3">
-                <div>
-                  <div className="font-medium">Current Session</div>
-                  <div className="text-sm text-muted-foreground">Chrome on MacOS • New York, US</div>
+              {currentSessionQuery.isLoading ? (
+                <div className="text-sm text-muted-foreground">Loading session…</div>
+              ) : currentSessionQuery.isError ? (
+                <div className="text-sm text-muted-foreground">Unable to load session</div>
+              ) : (
+                <div className="flex items-center justify-between rounded-lg border border-border p-3">
+                  <div>
+                    <div className="font-medium">Current Session</div>
+                    <div className="text-sm text-muted-foreground">
+                      {(currentSessionQuery.data?.userAgent ?? "Unknown device")}
+                      {currentSessionQuery.data?.ip ? ` • ${currentSessionQuery.data.ip}` : ""}
+                    </div>
+                  </div>
+                  <div className="text-xs text-emerald-500">Active now</div>
                 </div>
-                <div className="text-xs text-emerald-500">Active now</div>
-              </div>
-              <div className="flex items-center justify-between rounded-lg border border-border p-3">
-                <div>
-                  <div className="font-medium">Mobile App</div>
-                  <div className="text-sm text-muted-foreground">iOS 17 • New York, US</div>
-                </div>
-                <Button variant="ghost" size="sm" className="text-red-500 hover:text-red-400">
-                  Revoke
-                </Button>
-              </div>
+              )}
             </CardContent>
           </Card>
         </TabsContent>
@@ -463,21 +483,10 @@ export function SettingsView({ defaultTab = "profile" }: { defaultTab?: "profile
               <CardDescription>Manage your saved payment methods</CardDescription>
             </CardHeader>
             <CardContent className="space-y-3">
-              <div className="flex items-center justify-between rounded-lg border border-border p-4">
-                <div className="flex items-center gap-3">
-                  <div className="flex h-10 w-14 items-center justify-center rounded bg-slate-800">
-                    <span className="text-xs font-bold text-white">VISA</span>
-                  </div>
-                  <div>
-                    <div className="font-medium">•••• 4242</div>
-                    <div className="text-sm text-muted-foreground">Expires 12/25</div>
-                  </div>
-                </div>
-                <Button variant="ghost" size="sm">
-                  Remove
-                </Button>
+              <div className="rounded-lg border border-border bg-muted/30 p-4 text-sm text-muted-foreground">
+                Payment methods are not configured for this deployment yet.
               </div>
-              <Button variant="outline" className="w-full bg-transparent">
+              <Button variant="outline" className="w-full bg-transparent" disabled>
                 Add Payment Method
               </Button>
             </CardContent>
@@ -489,38 +498,48 @@ export function SettingsView({ defaultTab = "profile" }: { defaultTab?: "profile
               <CardDescription>View your recent transactions</CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="space-y-2">
-                <div className="flex items-center justify-between border-b border-border pb-2">
-                  <div>
-                    <div className="font-medium">Wheat Shipment #4523</div>
-                    <div className="text-sm text-muted-foreground">Jan 15, 2025</div>
-                  </div>
-                  <div className="text-right">
-                    <div className="font-medium">$25,000</div>
-                    <div className="text-xs text-emerald-500">Completed</div>
-                  </div>
+              {billingTransactionsQuery.isLoading ? (
+                <div className="text-sm text-muted-foreground">Loading transactions…</div>
+              ) : billingTransactionsQuery.isError ? (
+                <div className="text-sm text-muted-foreground">Unable to load transactions</div>
+              ) : (billingTransactionsQuery.data?.length ?? 0) === 0 ? (
+                <div className="text-sm text-muted-foreground">No transactions yet</div>
+              ) : (
+                <div className="space-y-2">
+                  {(billingTransactionsQuery.data ?? []).slice(0, 10).map((t) => {
+                    const title = t.commodity?.name || t.description || t.type
+                    const date = new Date(t.createdAt).toLocaleDateString(undefined, {
+                      year: "numeric",
+                      month: "short",
+                      day: "numeric",
+                    })
+                    const amount = new Intl.NumberFormat(undefined, {
+                      style: "currency",
+                      currency: currency || "USD",
+                    }).format(t.amount)
+
+                    const statusColor =
+                      t.status === "COMPLETED"
+                        ? "text-emerald-500"
+                        : t.status === "PENDING"
+                          ? "text-amber-500"
+                          : "text-red-500"
+
+                    return (
+                      <div key={t.id} className="flex items-center justify-between border-b border-border pb-2 last:border-b-0 last:pb-0">
+                        <div>
+                          <div className="font-medium">{title}</div>
+                          <div className="text-sm text-muted-foreground">{date}</div>
+                        </div>
+                        <div className="text-right">
+                          <div className="font-medium">{amount}</div>
+                          <div className={`text-xs ${statusColor}`}>{t.status}</div>
+                        </div>
+                      </div>
+                    )
+                  })}
                 </div>
-                <div className="flex items-center justify-between border-b border-border pb-2">
-                  <div>
-                    <div className="font-medium">Copper Futures #8821</div>
-                    <div className="text-sm text-muted-foreground">Jan 10, 2025</div>
-                  </div>
-                  <div className="text-right">
-                    <div className="font-medium">$15,000</div>
-                    <div className="text-xs text-emerald-500">Completed</div>
-                  </div>
-                </div>
-                <div className="flex items-center justify-between pb-2">
-                  <div>
-                    <div className="font-medium">Coffee Batch #2214</div>
-                    <div className="text-sm text-muted-foreground">Jan 5, 2025</div>
-                  </div>
-                  <div className="text-right">
-                    <div className="font-medium">$8,500</div>
-                    <div className="text-xs text-emerald-500">Completed</div>
-                  </div>
-                </div>
-              </div>
+              )}
             </CardContent>
           </Card>
         </TabsContent>

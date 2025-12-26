@@ -44,7 +44,7 @@ export default async function SystemHealthPage() {
     },
     {
       title: "Platform Volume",
-      value: `$${((Math.abs(totalVolume._sum.amount || 0)) / 1000).toFixed(0)}k`,
+      value: `$${(Math.abs(Number(totalVolume._sum.amount ?? 0)) / 1000).toFixed(0)}k`,
       icon: BarChart3,
     },
   ]

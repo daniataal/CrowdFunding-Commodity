@@ -53,8 +53,8 @@ export const authConfig = {
     async session({ session, token }) {
       if (session.user) {
         session.user.id = token.id as string
-        session.user.role = token.role as string
-        session.user.kycStatus = token.kycStatus as string
+        session.user.role = token.role as any
+        session.user.kycStatus = token.kycStatus as any
       }
       return session
     },

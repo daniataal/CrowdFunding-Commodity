@@ -1,18 +1,31 @@
 "use client"
 
-import { useState } from "react"
+import { useMemo } from "react"
 import { Button } from "@/components/ui/button"
 import { ScrollArea } from "@/components/ui/scroll-area"
-import { mockNotifications, type Notification } from "@/lib/mock-data"
+import type { NotificationItem } from "@/lib/domain"
 import { Bell, DollarSign, Package, TrendingUp, AlertTriangle, Settings, Check, X } from "lucide-react"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { Badge } from "@/components/ui/badge"
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 
 export function NotificationPanel() {
-  const [notifications, setNotifications] = useState<Notification[]>(mockNotifications)
-  const unreadCount = notifications.filter((n) => !n.read).length
+  const qc = useQueryClient()
 
-  const getIcon = (type: Notification["type"]) => {
+  const notificationsQuery = useQuery({
+    queryKey: ["notifications"],
+    queryFn: async () => {
+      const res = await fetch("/api/notifications")
+      const json = await res.json()
+      if (!res.ok) throw new Error(json.error || "Failed to load notifications")
+      return json.data as NotificationItem[]
+    },
+  })
+
+  const notifications = notificationsQuery.data ?? []
+  const unreadCount = useMemo(() => notifications.filter((n) => !n.read).length, [notifications])
+
+  const getIcon = (type: NotificationItem["type"]) => {
     switch (type) {
       case "dividend":
         return <DollarSign className="h-4 w-4 text-emerald-500" />
@@ -43,17 +56,43 @@ export function NotificationPanel() {
     }
   }
 
-  const markAsRead = (id: string) => {
-    setNotifications(notifications.map((n) => (n.id === id ? { ...n, read: true } : n)))
-  }
+  const markAsReadMutation = useMutation({
+    mutationFn: async (id: string) => {
+      const res = await fetch(`/api/notifications/${id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ read: true }),
+      })
+      const json = await res.json()
+      if (!res.ok) throw new Error(json.error || "Failed to mark as read")
+      return json.data as NotificationItem
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["notifications"] }),
+  })
 
-  const markAllAsRead = () => {
-    setNotifications(notifications.map((n) => ({ ...n, read: true })))
-  }
+  const markAllAsReadMutation = useMutation({
+    mutationFn: async () => {
+      const res = await fetch("/api/notifications", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ markAllRead: true }),
+      })
+      const json = await res.json()
+      if (!res.ok) throw new Error(json.error || "Failed to mark all as read")
+      return json
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["notifications"] }),
+  })
 
-  const deleteNotification = (id: string) => {
-    setNotifications(notifications.filter((n) => n.id !== id))
-  }
+  const deleteNotificationMutation = useMutation({
+    mutationFn: async (id: string) => {
+      const res = await fetch(`/api/notifications/${id}`, { method: "DELETE" })
+      const json = await res.json()
+      if (!res.ok) throw new Error(json.error || "Failed to delete notification")
+      return json
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["notifications"] }),
+  })
 
   return (
     <DropdownMenu>
@@ -74,13 +113,23 @@ export function NotificationPanel() {
             {unreadCount > 0 && <p className="text-xs text-muted-foreground">{unreadCount} unread</p>}
           </div>
           {unreadCount > 0 && (
-            <Button variant="ghost" size="sm" onClick={markAllAsRead} className="h-8 text-xs">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => markAllAsReadMutation.mutate()}
+              className="h-8 text-xs"
+              disabled={markAllAsReadMutation.isPending}
+            >
               Mark all read
             </Button>
           )}
         </div>
         <ScrollArea className="h-[400px]">
-          {notifications.length === 0 ? (
+          {notificationsQuery.isLoading ? (
+            <div className="flex flex-col items-center justify-center py-12 text-center">
+              <p className="text-sm text-muted-foreground">Loading…</p>
+            </div>
+          ) : notifications.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-12 text-center">
               <Bell className="mb-2 h-12 w-12 text-muted-foreground/50" />
               <p className="text-sm text-muted-foreground">No notifications</p>
@@ -109,7 +158,8 @@ export function NotificationPanel() {
                         variant="ghost"
                         size="icon"
                         className="h-6 w-6"
-                        onClick={() => markAsRead(notification.id)}
+                        onClick={() => markAsReadMutation.mutate(notification.id)}
+                        disabled={markAsReadMutation.isPending}
                       >
                         <Check className="h-3 w-3" />
                       </Button>
@@ -118,7 +168,8 @@ export function NotificationPanel() {
                       variant="ghost"
                       size="icon"
                       className="h-6 w-6 text-red-500 hover:text-red-400"
-                      onClick={() => deleteNotification(notification.id)}
+                      onClick={() => deleteNotificationMutation.mutate(notification.id)}
+                      disabled={deleteNotificationMutation.isPending}
                     >
                       <X className="h-3 w-3" />
                     </Button>

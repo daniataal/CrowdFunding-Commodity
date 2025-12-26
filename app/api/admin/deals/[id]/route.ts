@@ -20,14 +20,15 @@ const updateSchema = z.object({
   status: z.enum(["FUNDING", "ACTIVE", "IN_TRANSIT", "SETTLED", "CANCELLED"]).optional(),
 })
 
-export async function GET(_request: NextRequest, { params }: { params: { id: string } }) {
-  if (!params?.id) return NextResponse.json({ error: "Missing id" }, { status: 400 })
+export async function GET(_request: NextRequest, context: { params: Promise<{ id: string }> }) {
+  const { id } = await context.params
+  if (!id) return NextResponse.json({ error: "Missing id" }, { status: 400 })
   const gate = await requireDbRole(["ADMIN", "AUDITOR"])
   if (!gate.ok) {
     return NextResponse.json({ error: gate.status === 403 ? "Forbidden" : "Unauthorized" }, { status: gate.status })
   }
 
-  const commodity = await prisma.commodity.findUnique({ where: { id: params.id } })
+  const commodity = await prisma.commodity.findUnique({ where: { id } })
   if (!commodity) return NextResponse.json({ error: "Not found" }, { status: 404 })
 
   return NextResponse.json({
@@ -43,8 +44,9 @@ export async function GET(_request: NextRequest, { params }: { params: { id: str
   })
 }
 
-export async function PATCH(request: NextRequest, { params }: { params: { id: string } }) {
-  if (!params?.id) return NextResponse.json({ error: "Missing id" }, { status: 400 })
+export async function PATCH(request: NextRequest, context: { params: Promise<{ id: string }> }) {
+  const { id } = await context.params
+  if (!id) return NextResponse.json({ error: "Missing id" }, { status: 400 })
   const gate = await requireDbRole(["ADMIN"])
   if (!gate.ok) {
     return NextResponse.json({ error: gate.status === 403 ? "Forbidden" : "Unauthorized" }, { status: gate.status })
@@ -54,7 +56,7 @@ export async function PATCH(request: NextRequest, { params }: { params: { id: st
   const validated = updateSchema.parse(body)
 
   const updated = await prisma.commodity.update({
-    where: { id: params.id },
+    where: { id },
     data: {
       ...(validated.name !== undefined ? { name: validated.name } : {}),
       ...(validated.type !== undefined ? { type: validated.type } : {}),

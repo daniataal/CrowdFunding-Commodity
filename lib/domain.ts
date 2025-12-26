@@ -59,6 +59,17 @@ export type ActivityItem = {
   status: "success" | "pending" | "info"
 }
 
+export type NotificationItem = {
+  id: string
+  type: "investment" | "shipment" | "dividend" | "alert" | "system"
+  title: string
+  message: string
+  timestamp: string
+  read: boolean
+  icon?: string | null
+  link?: string | null
+}
+
 export type UserProfile = {
   id: string
   email: string

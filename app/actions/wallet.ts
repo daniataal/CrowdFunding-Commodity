@@ -115,7 +115,7 @@ export async function withdrawFunds(formData: FormData) {
     }
 
     // Check if user has sufficient balance
-    if (user.walletBalance < validatedData.amount) {
+    if (Number(user.walletBalance) < validatedData.amount) {
       return { error: "Insufficient balance" }
     }
 
