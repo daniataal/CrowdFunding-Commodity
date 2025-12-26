@@ -187,7 +187,10 @@ export function SettingsView({
   })
 
   const kycStatus = (profileQuery.data?.kycStatus ?? session?.user?.kycStatus ?? "NOT_STARTED") as KycStatus
-  const kycDisabled = kycStatus === "APPROVED" || kycStatus === "PENDING"
+  // IMPORTANT: if a file input is disabled, our Input component sets `pointer-events-none`,
+  // which prevents the OS file picker from opening. Match /kyc-verification: only lock when APPROVED.
+  const kycFilePickDisabled = kycStatus === "APPROVED"
+  const kycSubmitDisabled = kycStatus === "APPROVED"
 
   const kycStatusBadge = useMemo(() => {
     const cls =
@@ -420,7 +423,7 @@ export function SettingsView({
               {kycStatus === "PENDING" && (
                 <Alert className="bg-amber-500/10 border-amber-500/20">
                   <AlertDescription className="text-amber-500">
-                    Your documents are being reviewed. Upload is disabled until review completes.
+                    Your documents are being reviewed. You can still resubmit if you need to correct something.
                   </AlertDescription>
                 </Alert>
               )}
@@ -445,7 +448,7 @@ export function SettingsView({
                         id="kyc-id"
                         type="file"
                         accept="image/*,.pdf"
-                        disabled={kycDisabled || uploadKycMutation.isPending}
+                        disabled={kycFilePickDisabled || uploadKycMutation.isPending}
                         onChange={(e) => {
                           const f = e.target.files?.[0] ?? null
                           if (f && f.size > 5 * 1024 * 1024) return setKycError("File size must be less than 5MB")
@@ -471,7 +474,7 @@ export function SettingsView({
                         id="kyc-address"
                         type="file"
                         accept="image/*,.pdf"
-                        disabled={kycDisabled || uploadKycMutation.isPending}
+                        disabled={kycFilePickDisabled || uploadKycMutation.isPending}
                         onChange={(e) => {
                           const f = e.target.files?.[0] ?? null
                           if (f && f.size > 5 * 1024 * 1024) return setKycError("File size must be less than 5MB")
@@ -493,7 +496,7 @@ export function SettingsView({
                   <div className="pt-2">
                     <Button
                       className="bg-emerald-600 hover:bg-emerald-500"
-                      disabled={kycDisabled || uploadKycMutation.isPending || !idFile || !addressFile}
+                      disabled={kycSubmitDisabled || uploadKycMutation.isPending || !idFile || !addressFile}
                       onClick={() => uploadKycMutation.mutate()}
                     >
                       {uploadKycMutation.isPending ? (
