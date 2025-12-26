@@ -130,7 +130,17 @@ export function AssetDetailModal({ commodity, open, onOpenChange }: AssetDetailM
   const departureDate = commodity?.maturityDate
     ? new Date(new Date(commodity.maturityDate).getTime() - (commodity?.duration ?? 0) * 24 * 60 * 60 * 1000)
     : new Date(Date.now() - 2 * 24 * 60 * 60 * 1000)
-  const vehicleType = commodity?.type === "Metals" ? "plane" : "ship"
+  const transport = String(commodity?.transportMethod ?? "").toLowerCase()
+  const vehicleType =
+    commodity?.type === "Metals" && (transport.includes("brink") || transport.includes("armored"))
+      ? "armored"
+      : commodity?.type === "Metals" && (transport.includes("air") || transport.includes("jet") || transport.includes("plane"))
+        ? "plane"
+        : commodity?.type === "Metals"
+          ? "plane"
+          : transport.includes("air") || transport.includes("plane")
+            ? "plane"
+            : "ship"
   const vesselName = commodity?.shipmentId ?? `${commodity?.name ?? "Shipment"} ${vehicleType === "plane" ? "Jet" : "Vessel"}`
 
   return (

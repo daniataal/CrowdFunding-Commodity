@@ -16,6 +16,7 @@ export function CreateDealForm() {
   const router = useRouter()
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState("")
+  const [isGeocoding, setIsGeocoding] = useState(false)
   const [formData, setFormData] = useState({
     templateKey: "",
     name: "",
@@ -284,6 +285,50 @@ export function CreateDealForm() {
                 disabled={isLoading}
                 placeholder="Rotterdam, Netherlands"
               />
+            </div>
+
+            <div className="md:col-span-2">
+              <div className="flex items-center justify-between gap-3 rounded-lg border bg-muted/20 p-3">
+                <div className="text-sm">
+                  <div className="font-medium">Coordinates</div>
+                  <div className="text-xs text-muted-foreground">
+                    Auto-fill from the origin/destination names (countries, cities, ports).
+                  </div>
+                </div>
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="bg-transparent"
+                  disabled={isLoading || isGeocoding || !formData.origin.trim() || !formData.destination.trim()}
+                  onClick={async () => {
+                    setIsGeocoding(true)
+                    setError("")
+                    try {
+                      const [oRes, dRes] = await Promise.all([
+                        fetch(`/api/geocode?query=${encodeURIComponent(formData.origin.trim())}`),
+                        fetch(`/api/geocode?query=${encodeURIComponent(formData.destination.trim())}`),
+                      ])
+                      const oJson = await oRes.json()
+                      const dJson = await dRes.json()
+                      if (!oRes.ok) throw new Error(oJson.error || "Failed to geocode origin")
+                      if (!dRes.ok) throw new Error(dJson.error || "Failed to geocode destination")
+                      setFormData((prev) => ({
+                        ...prev,
+                        originLat: String(oJson.data.lat),
+                        originLng: String(oJson.data.lng),
+                        destLat: String(dJson.data.lat),
+                        destLng: String(dJson.data.lng),
+                      }))
+                    } catch (e) {
+                      setError((e as Error).message)
+                    } finally {
+                      setIsGeocoding(false)
+                    }
+                  }}
+                >
+                  {isGeocoding ? "Geocoding..." : "Auto-fill coordinates"}
+                </Button>
+              </div>
             </div>
 
             <div className="space-y-2">

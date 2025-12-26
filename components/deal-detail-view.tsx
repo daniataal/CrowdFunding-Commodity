@@ -73,7 +73,17 @@ export function DealDetailView({ commodity }: { commodity: MarketplaceCommodity 
     return new Date(Date.now() - 2 * 24 * 60 * 60 * 1000)
   }, [commodity.maturityDate, commodity.duration])
 
-  const vehicleType = commodity.type === "Metals" ? "plane" : "ship"
+  const transport = String(commodity.transportMethod ?? "").toLowerCase()
+  const vehicleType =
+    commodity.type === "Metals" && (transport.includes("brink") || transport.includes("armored"))
+      ? "armored"
+      : commodity.type === "Metals" && (transport.includes("air") || transport.includes("jet") || transport.includes("plane"))
+        ? "plane"
+        : commodity.type === "Metals"
+          ? "plane"
+          : transport.includes("air") || transport.includes("plane")
+            ? "plane"
+            : "ship"
   const vesselName = commodity.shipmentId ?? `${commodity.name} ${vehicleType === "plane" ? "Jet" : "Vessel"}`
 
   const kycStatus = (session?.user as any)?.kycStatus as string | undefined

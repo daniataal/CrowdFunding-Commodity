@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
 import { z } from "zod"
 import { requireDbRole } from "@/lib/authz"
+import { geocodePlace } from "@/lib/geocoding"
 
 const createDealSchema = z.object({
   templateKey: z.string().optional(),
@@ -56,6 +57,31 @@ export async function POST(request: NextRequest) {
     const body = await request.json()
     const validatedData = createDealSchema.parse(body)
 
+    // Fallback: if coordinates weren't provided, attempt to geocode from origin/destination strings.
+    let originLat = validatedData.originLat ?? null
+    let originLng = validatedData.originLng ?? null
+    let destLat = validatedData.destLat ?? null
+    let destLng = validatedData.destLng ?? null
+
+    if (
+      (originLat === null || originLng === null) &&
+      validatedData.origin &&
+      validatedData.origin.trim().length > 0
+    ) {
+      const r = await geocodePlace(validatedData.origin)
+      if (r) {
+        originLat = r.lat
+        originLng = r.lng
+      }
+    }
+    if ((destLat === null || destLng === null) && validatedData.destination && validatedData.destination.trim().length > 0) {
+      const r = await geocodePlace(validatedData.destination)
+      if (r) {
+        destLat = r.lat
+        destLng = r.lng
+      }
+    }
+
     const commodity = await prisma.commodity.create({
       data: {
         name: validatedData.name,
@@ -67,10 +93,10 @@ export async function POST(request: NextRequest) {
         minInvestment: validatedData.minInvestment,
         maxInvestment: validatedData.maxInvestment,
         platformFeeBps: validatedData.platformFeeBps,
-        originLat: validatedData.originLat,
-        originLng: validatedData.originLng,
-        destLat: validatedData.destLat,
-        destLng: validatedData.destLng,
+        originLat,
+        originLng,
+        destLat,
+        destLng,
         amountRequired: validatedData.amountRequired,
         description: validatedData.description,
         origin: validatedData.origin,

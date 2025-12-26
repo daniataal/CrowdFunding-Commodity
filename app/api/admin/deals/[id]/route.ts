@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
 import { requireDbRole } from "@/lib/authz"
 import { z } from "zod"
+import { geocodePlace } from "@/lib/geocoding"
 
 const updateSchema = z.object({
   name: z.string().min(1).optional(),
@@ -70,6 +71,18 @@ export async function PATCH(request: NextRequest, context: { params: Promise<{ i
   const body = await request.json()
   const validated = updateSchema.parse(body)
 
+  // If origin/destination change and coordinates weren't explicitly set, attempt to auto-geocode.
+  const shouldGeocodeOrigin =
+    validated.origin !== undefined && validated.origin.trim().length > 0 && validated.originLat === undefined && validated.originLng === undefined
+  const shouldGeocodeDest =
+    validated.destination !== undefined &&
+    validated.destination.trim().length > 0 &&
+    validated.destLat === undefined &&
+    validated.destLng === undefined
+
+  const inferredOrigin = shouldGeocodeOrigin ? await geocodePlace(validated.origin as string) : null
+  const inferredDest = shouldGeocodeDest ? await geocodePlace(validated.destination as string) : null
+
   const updated = await prisma.commodity.update({
     where: { id },
     data: {
@@ -83,10 +96,26 @@ export async function PATCH(request: NextRequest, context: { params: Promise<{ i
         ? { maxInvestment: validated.maxInvestment === null ? null : Number(validated.maxInvestment) }
         : {}),
       ...(validated.platformFeeBps !== undefined ? { platformFeeBps: Number(validated.platformFeeBps) } : {}),
-      ...(validated.originLat !== undefined ? { originLat: validated.originLat === null ? null : Number(validated.originLat) } : {}),
-      ...(validated.originLng !== undefined ? { originLng: validated.originLng === null ? null : Number(validated.originLng) } : {}),
-      ...(validated.destLat !== undefined ? { destLat: validated.destLat === null ? null : Number(validated.destLat) } : {}),
-      ...(validated.destLng !== undefined ? { destLng: validated.destLng === null ? null : Number(validated.destLng) } : {}),
+      ...(validated.originLat !== undefined
+        ? { originLat: validated.originLat === null ? null : Number(validated.originLat) }
+        : inferredOrigin
+          ? { originLat: inferredOrigin.lat }
+          : {}),
+      ...(validated.originLng !== undefined
+        ? { originLng: validated.originLng === null ? null : Number(validated.originLng) }
+        : inferredOrigin
+          ? { originLng: inferredOrigin.lng }
+          : {}),
+      ...(validated.destLat !== undefined
+        ? { destLat: validated.destLat === null ? null : Number(validated.destLat) }
+        : inferredDest
+          ? { destLat: inferredDest.lat }
+          : {}),
+      ...(validated.destLng !== undefined
+        ? { destLng: validated.destLng === null ? null : Number(validated.destLng) }
+        : inferredDest
+          ? { destLng: inferredDest.lng }
+          : {}),
       ...(validated.amountRequired !== undefined ? { amountRequired: Number(validated.amountRequired) } : {}),
       ...(validated.description !== undefined ? { description: validated.description } : {}),
       ...(validated.origin !== undefined ? { origin: validated.origin } : {}),
