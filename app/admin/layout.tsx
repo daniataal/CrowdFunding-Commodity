@@ -42,37 +42,37 @@ export default async function AdminLayout({
             </Link>
           </div>
           <nav className="p-4 space-y-2">
-            <Link href="/admin">
-              <Button variant="ghost" className="w-full justify-start gap-2">
+            <Button asChild variant="ghost" className="w-full justify-start gap-2">
+              <Link href="/admin">
                 <LayoutDashboard className="h-4 w-4" />
                 Dashboard
-              </Button>
-            </Link>
-            <Link href="/admin/deals">
-              <Button variant="ghost" className="w-full justify-start gap-2">
+              </Link>
+            </Button>
+            <Button asChild variant="ghost" className="w-full justify-start gap-2">
+              <Link href="/admin/deals">
                 <Package className="h-4 w-4" />
                 Deal Management
-              </Button>
-            </Link>
-            <Link href="/admin/users">
-              <Button variant="ghost" className="w-full justify-start gap-2">
+              </Link>
+            </Button>
+            <Button asChild variant="ghost" className="w-full justify-start gap-2">
+              <Link href="/admin/users">
                 <Users className="h-4 w-4" />
                 User Management
-              </Button>
-            </Link>
-            <Link href="/admin/system">
-              <Button variant="ghost" className="w-full justify-start gap-2">
+              </Link>
+            </Button>
+            <Button asChild variant="ghost" className="w-full justify-start gap-2">
+              <Link href="/admin/system">
                 <BarChart3 className="h-4 w-4" />
                 System Health
-              </Button>
-            </Link>
+              </Link>
+            </Button>
             <div className="pt-4 border-t border-border">
-              <Link href="/">
-                <Button variant="ghost" className="w-full justify-start gap-2">
+              <Button asChild variant="ghost" className="w-full justify-start gap-2">
+                <Link href="/">
                   <Settings className="h-4 w-4" />
                   Back to App
-                </Button>
-              </Link>
+                </Link>
+              </Button>
               <form
                 action={async () => {
                   "use server"

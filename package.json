@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "build": "prisma generate && next build",
-    "dev": "next dev",
+    "dev": "next dev --webpack --disable-source-maps",
     "lint": "eslint .",
     "start": "next start",
     "db:generate": "prisma generate",

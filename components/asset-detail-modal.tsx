@@ -22,23 +22,28 @@ interface AssetDetailModalProps {
 export function AssetDetailModal({ commodity, open, onOpenChange }: AssetDetailModalProps) {
   const [investAmount, setInvestAmount] = useState("")
   const qc = useQueryClient()
+  const commodityId = commodity?.id
 
-  if (!commodity) return null
-
-  const fundedPercentage = commodity.amountRequired > 0 ? (commodity.currentAmount / commodity.amountRequired) * 100 : 0
-  const remainingAmount = commodity.amountRequired - commodity.currentAmount
+  const fundedPercentage =
+    commodity && commodity.amountRequired > 0 ? (commodity.currentAmount / commodity.amountRequired) * 100 : 0
+  const remainingAmount = commodity ? commodity.amountRequired - commodity.currentAmount : 0
   const projectedReturn = investAmount
-    ? (Number.parseFloat(investAmount) * (commodity.targetApy / 100) * (commodity.duration / 365)).toFixed(2)
+    ? (
+        Number.parseFloat(investAmount) *
+        (Number(commodity?.targetApy ?? 0) / 100) *
+        (Number(commodity?.duration ?? 0) / 365)
+      ).toFixed(2)
     : "0.00"
 
   const investMutation = useMutation({
     mutationFn: async () => {
+      if (!commodityId) throw new Error("No commodity selected")
       const amount = Number.parseFloat(investAmount)
       if (!Number.isFinite(amount) || amount <= 0) throw new Error("Enter a valid amount")
       const res = await fetch("/api/invest", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ commodityId: commodity.id, amount }),
+        body: JSON.stringify({ commodityId, amount }),
       })
       const json = await res.json()
       if (!res.ok) throw new Error(json.error || "Investment failed")
@@ -59,28 +64,32 @@ export function AssetDetailModal({ commodity, open, onOpenChange }: AssetDetailM
   })
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={open && !!commodity} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle className="text-2xl">{commodity.name}</DialogTitle>
-          <div className="flex gap-2 mt-2">
-            <Badge variant="outline">{commodity.type}</Badge>
-            <Badge
-              variant="outline"
-              className={
-                commodity.risk === "Low"
-                  ? "border-emerald-500/50 text-emerald-500"
-                  : commodity.risk === "Medium"
-                    ? "border-amber-500/50 text-amber-500"
-                    : "border-red-500/50 text-red-500"
-              }
-            >
-              {commodity.risk} Risk
-            </Badge>
-          </div>
-        </DialogHeader>
+        {!commodity ? (
+          <div className="py-8 text-sm text-muted-foreground">Select a marketplace deal to view details.</div>
+        ) : (
+          <>
+            <DialogHeader>
+              <DialogTitle className="text-2xl">{commodity.name}</DialogTitle>
+              <div className="flex gap-2 mt-2">
+                <Badge variant="outline">{commodity.type}</Badge>
+                <Badge
+                  variant="outline"
+                  className={
+                    commodity.risk === "Low"
+                      ? "border-emerald-500/50 text-emerald-500"
+                      : commodity.risk === "Medium"
+                        ? "border-amber-500/50 text-amber-500"
+                        : "border-red-500/50 text-red-500"
+                  }
+                >
+                  {commodity.risk} Risk
+                </Badge>
+              </div>
+            </DialogHeader>
 
-        <Tabs defaultValue="financials" className="mt-4">
+            <Tabs defaultValue="financials" className="mt-4">
           <TabsList className="grid w-full grid-cols-3">
             <TabsTrigger value="financials">Financials</TabsTrigger>
             <TabsTrigger value="logistics">Logistics</TabsTrigger>
@@ -286,7 +295,9 @@ export function AssetDetailModal({ commodity, open, onOpenChange }: AssetDetailM
               </div>
             </Card>
           </TabsContent>
-        </Tabs>
+            </Tabs>
+          </>
+        )}
       </DialogContent>
     </Dialog>
   )

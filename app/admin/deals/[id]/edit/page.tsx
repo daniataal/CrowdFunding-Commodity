@@ -5,8 +5,9 @@ import { EditDealForm } from "@/components/admin/edit-deal-form"
 
 export const dynamic = "force-dynamic"
 
-export default async function EditDealPage({ params }: { params: { id: string } }) {
-  if (!params?.id) redirect("/admin/deals")
+export default async function EditDealPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params
+  if (!id) redirect("/admin/deals")
   const session = await auth()
   if (!session?.user) redirect("/login")
 
@@ -16,7 +17,7 @@ export default async function EditDealPage({ params }: { params: { id: string } 
   })
   if (!dbUser || dbUser.role !== "ADMIN") redirect("/admin/deals")
 
-  const commodity = await prisma.commodity.findUnique({ where: { id: params.id } })
+  const commodity = await prisma.commodity.findUnique({ where: { id } })
   if (!commodity) redirect("/admin/deals")
 
   return (

@@ -30,12 +30,12 @@ export default async function DealsPage() {
           <p className="text-muted-foreground">Create and manage commodity listings</p>
         </div>
         {isAdmin && (
-          <Link href="/admin/deals/new">
-            <Button className="bg-emerald-600 hover:bg-emerald-700">
+          <Button asChild className="bg-emerald-600 hover:bg-emerald-700">
+            <Link href="/admin/deals/new">
               <Plus className="mr-2 h-4 w-4" />
               Create New Deal
-            </Button>
-          </Link>
+            </Link>
+          </Button>
         )}
       </div>
 
@@ -98,19 +98,19 @@ export default async function DealsPage() {
 
                 <div className="flex gap-2 pt-2">
                   {isAdmin && (
-                    <Link href={`/admin/deals/${commodity.id}/edit`} className="flex-1">
-                      <Button variant="outline" className="w-full" size="sm">
+                    <Button asChild variant="outline" className="w-full flex-1" size="sm">
+                      <Link href={`/admin/deals/${commodity.id}/edit`}>
                         <Edit className="mr-2 h-3 w-3" />
                         Edit
-                      </Button>
-                    </Link>
+                      </Link>
+                    </Button>
                   )}
-                  <Link href={`/admin/deals/${commodity.id}`} className="flex-1">
-                    <Button variant="outline" className="w-full" size="sm">
+                  <Button asChild variant="outline" className="w-full flex-1" size="sm">
+                    <Link href={`/admin/deals/${commodity.id}`}>
                       <Eye className="mr-2 h-3 w-3" />
                       View
-                    </Button>
-                  </Link>
+                    </Link>
+                  </Button>
                 </div>
               </CardContent>
             </Card>

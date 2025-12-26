@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
+import { useToast } from "@/components/ui/use-toast"
 import {
   Search,
   BookOpen,
@@ -21,6 +22,7 @@ import {
 
 export function HelpView() {
   const [searchQuery, setSearchQuery] = useState("")
+  const { toast } = useToast()
 
   const faqs = [
     {
@@ -160,7 +162,17 @@ export function HelpView() {
                 <CardDescription>Get instant help from our support team</CardDescription>
               </CardHeader>
               <CardContent>
-                <Button className="w-full bg-emerald-600 hover:bg-emerald-500">Start Chat</Button>
+                <Button
+                  className="w-full bg-emerald-600 hover:bg-emerald-500"
+                  onClick={() =>
+                    toast({
+                      title: "Live chat",
+                      description: "Live chat isn’t enabled in this deployment yet.",
+                    })
+                  }
+                >
+                  Start Chat
+                </Button>
                 <p className="mt-3 text-center text-xs text-muted-foreground">Average response time: 2 minutes</p>
               </CardContent>
             </Card>
@@ -174,7 +186,13 @@ export function HelpView() {
                 <CardDescription>Send us a detailed message</CardDescription>
               </CardHeader>
               <CardContent>
-                <Button variant="outline" className="w-full bg-transparent">
+                <Button
+                  variant="outline"
+                  className="w-full bg-transparent"
+                  onClick={() => {
+                    window.location.href = "mailto:support@commodityflow.com"
+                  }}
+                >
                   Send Email
                 </Button>
                 <p className="mt-3 text-center text-xs text-muted-foreground">
@@ -194,7 +212,16 @@ export function HelpView() {
                 <CardDescription>Speak with a specialist</CardDescription>
               </CardHeader>
               <CardContent>
-                <Button variant="outline" className="w-full bg-transparent">
+                <Button
+                  variant="outline"
+                  className="w-full bg-transparent"
+                  onClick={() =>
+                    toast({
+                      title: "Phone support",
+                      description: "Phone calling isn’t available from the web app yet.",
+                    })
+                  }
+                >
                   Call Now
                 </Button>
                 <p className="mt-3 text-center text-xs text-muted-foreground">
@@ -214,7 +241,16 @@ export function HelpView() {
                 <CardDescription>Browse our knowledge base</CardDescription>
               </CardHeader>
               <CardContent>
-                <Button variant="outline" className="w-full bg-transparent">
+                <Button
+                  variant="outline"
+                  className="w-full bg-transparent"
+                  onClick={() =>
+                    toast({
+                      title: "Help Center",
+                      description: "The help center is coming soon.",
+                    })
+                  }
+                >
                   Visit Help Center
                 </Button>
                 <p className="mt-3 text-center text-xs text-muted-foreground">
@@ -254,7 +290,17 @@ export function HelpView() {
                   placeholder="Describe your issue or question..."
                 />
               </div>
-              <Button className="w-full bg-emerald-600 hover:bg-emerald-500">Send Message</Button>
+              <Button
+                className="w-full bg-emerald-600 hover:bg-emerald-500"
+                onClick={() =>
+                  toast({
+                    title: "Message sent",
+                    description: "Thanks! Support messaging isn’t wired up yet, but your form looks good.",
+                  })
+                }
+              >
+                Send Message
+              </Button>
             </CardContent>
           </Card>
         </TabsContent>
@@ -268,7 +314,16 @@ export function HelpView() {
                 <CardDescription>Complete walkthrough for new investors</CardDescription>
               </CardHeader>
               <CardContent>
-                <Button variant="outline" className="w-full bg-transparent">
+                <Button
+                  variant="outline"
+                  className="w-full bg-transparent"
+                  onClick={() =>
+                    toast({
+                      title: "Download",
+                      description: "Downloads aren’t enabled yet for this deployment.",
+                    })
+                  }
+                >
                   Download PDF
                 </Button>
               </CardContent>
@@ -281,7 +336,16 @@ export function HelpView() {
                 <CardDescription>Learn about diversification and risk management</CardDescription>
               </CardHeader>
               <CardContent>
-                <Button variant="outline" className="w-full bg-transparent">
+                <Button
+                  variant="outline"
+                  className="w-full bg-transparent"
+                  onClick={() =>
+                    toast({
+                      title: "Download",
+                      description: "Downloads aren’t enabled yet for this deployment.",
+                    })
+                  }
+                >
                   Download PDF
                 </Button>
               </CardContent>
@@ -294,7 +358,16 @@ export function HelpView() {
                 <CardDescription>Understanding commodity investment taxation</CardDescription>
               </CardHeader>
               <CardContent>
-                <Button variant="outline" className="w-full bg-transparent">
+                <Button
+                  variant="outline"
+                  className="w-full bg-transparent"
+                  onClick={() =>
+                    toast({
+                      title: "Download",
+                      description: "Downloads aren’t enabled yet for this deployment.",
+                    })
+                  }
+                >
                   Download PDF
                 </Button>
               </CardContent>
@@ -307,7 +380,16 @@ export function HelpView() {
                 <CardDescription>Important information about investment risks</CardDescription>
               </CardHeader>
               <CardContent>
-                <Button variant="outline" className="w-full bg-transparent">
+                <Button
+                  variant="outline"
+                  className="w-full bg-transparent"
+                  onClick={() =>
+                    toast({
+                      title: "Download",
+                      description: "Downloads aren’t enabled yet for this deployment.",
+                    })
+                  }
+                >
                   Download PDF
                 </Button>
               </CardContent>

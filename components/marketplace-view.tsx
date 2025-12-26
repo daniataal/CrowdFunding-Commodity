@@ -204,7 +204,13 @@ export function MarketplaceView({
                   </div>
                 </div>
 
-                <Button className="w-full mt-4 bg-emerald-600 hover:bg-emerald-700 text-white">
+                <Button
+                  className="w-full mt-4 bg-emerald-600 hover:bg-emerald-700 text-white"
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    onSelectAsset(commodity)
+                  }}
+                >
                   View Details
                 </Button>
               </Card>

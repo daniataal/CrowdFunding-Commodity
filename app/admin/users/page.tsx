@@ -12,14 +12,14 @@ export const dynamic = "force-dynamic"
 export default async function UsersPage({
   searchParams,
 }: {
-  searchParams: { filter?: string }
+  searchParams?: { filter?: string }
 }) {
   const session = await auth()
   const isAdmin = session?.user?.role === "ADMIN"
 
   const where: any = {}
 
-  if (searchParams.filter === "kyc_pending") {
+  if (searchParams?.filter === "kyc_pending") {
     where.kycStatus = "PENDING"
   }
 
@@ -44,7 +44,7 @@ export default async function UsersPage({
         <CardHeader>
           <CardTitle>Users</CardTitle>
           <CardDescription>
-            {searchParams.filter === "kyc_pending"
+            {searchParams?.filter === "kyc_pending"
               ? "Users with pending KYC verification"
               : "All platform users"}
           </CardDescription>

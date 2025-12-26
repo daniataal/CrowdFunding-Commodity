@@ -8,8 +8,9 @@ import { Button } from "@/components/ui/button"
 
 export const dynamic = "force-dynamic"
 
-export default async function DealDetailsPage({ params }: { params: { id: string } }) {
-  if (!params?.id) redirect("/admin/deals")
+export default async function DealDetailsPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params
+  if (!id) redirect("/admin/deals")
   const session = await auth()
   if (!session?.user) redirect("/login")
 
@@ -20,7 +21,7 @@ export default async function DealDetailsPage({ params }: { params: { id: string
   if (!dbUser || (dbUser.role !== "ADMIN" && dbUser.role !== "AUDITOR")) redirect("/")
 
   const commodity = await prisma.commodity.findUnique({
-    where: { id: params.id },
+    where: { id },
     include: { _count: { select: { investments: true } } },
   })
   if (!commodity) redirect("/admin/deals")
@@ -35,15 +36,13 @@ export default async function DealDetailsPage({ params }: { params: { id: string
           <p className="text-muted-foreground">Deal details</p>
         </div>
         <div className="flex gap-2">
-          <Link href="/admin/deals">
-            <Button variant="outline" className="bg-transparent">
-              Back
-            </Button>
-          </Link>
+          <Button asChild variant="outline" className="bg-transparent">
+            <Link href="/admin/deals">Back</Link>
+          </Button>
           {isAdmin && (
-            <Link href={`/admin/deals/${commodity.id}/edit`}>
-              <Button className="bg-emerald-600 hover:bg-emerald-700 text-white">Edit</Button>
-            </Link>
+            <Button asChild className="bg-emerald-600 hover:bg-emerald-700 text-white">
+              <Link href={`/admin/deals/${commodity.id}/edit`}>Edit</Link>
+            </Button>
           )}
         </div>
       </div>
