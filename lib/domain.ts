@@ -5,6 +5,15 @@ export type CommodityType = "Agriculture" | "Energy" | "Metals"
 export type RiskLevel = "Low" | "Medium" | "High"
 export type CommodityStatus = "FUNDING" | "ACTIVE" | "IN_TRANSIT" | "SETTLED" | "CANCELLED"
 
+export type DocumentType =
+  | "BILL_OF_LADING"
+  | "INSURANCE_CERTIFICATE"
+  | "QUALITY_CERTIFICATION"
+  | "COMMODITY_CONTRACT"
+  | "KYC_ID"
+  | "KYC_PROOF_OF_ADDRESS"
+  | "OTHER"
+
 export type MarketplaceCommodity = {
   id: string
   type: CommodityType
@@ -23,6 +32,20 @@ export type MarketplaceCommodity = {
   insuranceValue?: number | null
   transportMethod?: string | null
   riskScore?: number | null
+}
+
+export type CommodityDocument = {
+  id: string
+  commodityId?: string | null
+  userId?: string | null
+  type: DocumentType
+  name: string
+  url: string
+  mimeType?: string | null
+  size?: number | null
+  verified: boolean
+  verifiedAt?: string | null
+  createdAt: string
 }
 
 export type DashboardSummary = {

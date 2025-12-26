@@ -39,6 +39,9 @@ export default async function DealDetailsPage({ params }: { params: Promise<{ id
           <Button asChild variant="outline" className="bg-transparent">
             <Link href="/admin/deals">Back</Link>
           </Button>
+          <Button asChild variant="outline" className="bg-transparent">
+            <Link href={`/admin/deals/${commodity.id}/documents`}>Documents</Link>
+          </Button>
           {isAdmin && (
             <Button asChild className="bg-emerald-600 hover:bg-emerald-700 text-white">
               <Link href={`/admin/deals/${commodity.id}/edit`}>Edit</Link>
