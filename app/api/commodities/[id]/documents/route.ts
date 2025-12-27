@@ -24,7 +24,8 @@ export async function GET(_request: Request, context: { params: Promise<{ id: st
     return NextResponse.json({ error: "KYC approval required" }, { status: 403 })
   }
 
-  // User-facing: only expose verified documents for a deal
+  // User-facing: only expose verified documents for a deal.
+  // NOTE: We return a signed internal URL instead of the raw file URL.
   const docs = await prisma.document.findMany({
     where: { commodityId: id, verified: true },
     orderBy: { createdAt: "desc" },
@@ -38,7 +39,7 @@ export async function GET(_request: Request, context: { params: Promise<{ id: st
       userId: d.userId,
       type: d.type,
       name: d.name,
-      url: d.url,
+      url: `/api/documents/${d.id}/signed-url`,
       mimeType: d.mimeType,
       size: d.size,
       verified: d.verified,

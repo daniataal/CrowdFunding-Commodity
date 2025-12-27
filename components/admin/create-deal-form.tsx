@@ -41,6 +41,13 @@ export function CreateDealForm() {
     transportMethod: "",
     riskScore: "",
     maturityDate: "",
+    metalForm: "",
+    purityPreset: "",
+    purityPercent: "",
+    karat: "",
+    grossWeightTroyOz: "",
+    refineryName: "",
+    refineryLocation: "",
   })
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -104,6 +111,13 @@ export function CreateDealForm() {
                     duration: t.duration !== undefined ? String(t.duration) : formData.duration,
                     insuranceValue: t.insuranceValue !== undefined ? String(t.insuranceValue) : formData.insuranceValue,
                     transportMethod: t.transportMethod ?? formData.transportMethod,
+                    metalForm: (t as any).metalForm ?? formData.metalForm,
+                    purityPercent: (t as any).purityPercent !== undefined ? String((t as any).purityPercent) : formData.purityPercent,
+                    karat: (t as any).karat !== undefined ? String((t as any).karat) : formData.karat,
+                    grossWeightTroyOz:
+                      (t as any).grossWeightTroyOz !== undefined ? String((t as any).grossWeightTroyOz) : formData.grossWeightTroyOz,
+                    refineryName: (t as any).refineryName ?? formData.refineryName,
+                    refineryLocation: (t as any).refineryLocation ?? formData.refineryLocation,
                   })
                 }}
                 disabled={isLoading}
@@ -432,6 +446,130 @@ export function CreateDealForm() {
                 placeholder="3.5"
               />
             </div>
+
+            {formData.type === "Metals" && (
+              <>
+                <div className="md:col-span-2">
+                  <div className="text-sm font-semibold">Precious metals specs</div>
+                  <div className="text-xs text-muted-foreground">
+                    Support bullion and doré (semi-refined). Doré typically requires a destination refinery.
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <Label>Form</Label>
+                  <Select value={formData.metalForm} onValueChange={(v) => setFormData({ ...formData, metalForm: v })} disabled={isLoading}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select form" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="BULLION">Bullion</SelectItem>
+                      <SelectItem value="DORE">Doré</SelectItem>
+                      <SelectItem value="SCRAP">Scrap</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="space-y-2">
+                  <Label>Purity preset</Label>
+                  <Select
+                    value={formData.purityPreset}
+                    onValueChange={(v) => {
+                      const map: Record<string, { purity?: string; karat?: string }> = {
+                        "91+": { purity: "91" },
+                        "96+": { purity: "96" },
+                        "99.5": { purity: "99.5" },
+                        "99.99": { purity: "99.99" },
+                        "23K": { purity: "95.8", karat: "23" },
+                        "24K": { purity: "99.9", karat: "24" },
+                        CUSTOM: {},
+                      }
+                      const picked = map[v] ?? {}
+                      setFormData({
+                        ...formData,
+                        purityPreset: v,
+                        purityPercent: picked.purity ?? formData.purityPercent,
+                        karat: picked.karat ?? formData.karat,
+                      })
+                    }}
+                    disabled={isLoading}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select preset" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="91+">91%+</SelectItem>
+                      <SelectItem value="96+">96%+</SelectItem>
+                      <SelectItem value="99.5">99.5%</SelectItem>
+                      <SelectItem value="99.99">99.99%</SelectItem>
+                      <SelectItem value="23K">23K</SelectItem>
+                      <SelectItem value="24K">24K</SelectItem>
+                      <SelectItem value="CUSTOM">Custom</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="purityPercent">Purity (%)</Label>
+                  <Input
+                    id="purityPercent"
+                    type="number"
+                    step="0.01"
+                    value={formData.purityPercent as any}
+                    onChange={(e) => setFormData({ ...formData, purityPercent: e.target.value })}
+                    disabled={isLoading}
+                    placeholder="e.g. 96"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="karat">Karat (optional)</Label>
+                  <Input
+                    id="karat"
+                    type="number"
+                    value={formData.karat as any}
+                    onChange={(e) => setFormData({ ...formData, karat: e.target.value })}
+                    disabled={isLoading}
+                    placeholder="e.g. 24"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="grossWeightTroyOz">Gross weight (troy oz)</Label>
+                  <Input
+                    id="grossWeightTroyOz"
+                    type="number"
+                    step="0.0001"
+                    value={formData.grossWeightTroyOz as any}
+                    onChange={(e) => setFormData({ ...formData, grossWeightTroyOz: e.target.value })}
+                    disabled={isLoading}
+                    placeholder="e.g. 1000"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="refineryName">Destination refinery *</Label>
+                  <Input
+                    id="refineryName"
+                    value={formData.refineryName}
+                    onChange={(e) => setFormData({ ...formData, refineryName: e.target.value })}
+                    disabled={isLoading}
+                    placeholder="e.g. Valcambi / PAMP / Metalor"
+                  />
+                </div>
+
+                <div className="space-y-2 md:col-span-2">
+                  <Label htmlFor="refineryLocation">Refinery location (optional)</Label>
+                  <Input
+                    id="refineryLocation"
+                    value={formData.refineryLocation}
+                    onChange={(e) => setFormData({ ...formData, refineryLocation: e.target.value })}
+                    disabled={isLoading}
+                    placeholder="e.g. Switzerland"
+                  />
+                </div>
+              </>
+            )}
           </div>
 
           <div className="space-y-2">

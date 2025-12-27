@@ -3,7 +3,15 @@ export type KycStatus = "PENDING" | "APPROVED" | "REJECTED" | "NOT_STARTED"
 
 export type CommodityType = "Agriculture" | "Energy" | "Metals"
 export type RiskLevel = "Low" | "Medium" | "High"
-export type CommodityStatus = "FUNDING" | "ACTIVE" | "IN_TRANSIT" | "ARRIVED" | "SETTLED" | "CANCELLED"
+export type CommodityStatus =
+  | "FUNDING"
+  | "ACTIVE"
+  | "IN_TRANSIT"
+  | "ARRIVED"
+  | "INSPECTED"
+  | "RELEASED"
+  | "SETTLED"
+  | "CANCELLED"
 
 export type DocumentType =
   | "BILL_OF_LADING"
@@ -40,6 +48,12 @@ export type MarketplaceCommodity = {
   transportMethod?: string | null
   riskScore?: number | null
   maturityDate?: string | null
+  metalForm?: string | null
+  purityPercent?: number | null
+  karat?: number | null
+  grossWeightTroyOz?: number | null
+  refineryName?: string | null
+  refineryLocation?: string | null
 }
 
 export type CommodityDocument = {

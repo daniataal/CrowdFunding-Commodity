@@ -25,6 +25,11 @@ export function PayoutsForm({
   const [totalPayout, setTotalPayout] = useState("")
   const [markSettled, setMarkSettled] = useState(true)
   const [force, setForce] = useState(false)
+  const [idempotencyKey] = useState(() => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const c = (globalThis as any).crypto
+    return c?.randomUUID ? c.randomUUID() : `${Date.now()}-${Math.random().toString(16).slice(2)}`
+  })
 
   const mutation = useMutation({
     mutationFn: async () => {
@@ -32,7 +37,7 @@ export function PayoutsForm({
       if (!Number.isFinite(n) || n <= 0) throw new Error("Enter a valid total payout amount")
       const res = await fetch(`/api/admin/deals/${dealId}/payouts`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", "Idempotency-Key": idempotencyKey },
         body: JSON.stringify({ totalPayout: n, markSettled, force }),
       })
       const json = await res.json()
@@ -50,11 +55,11 @@ export function PayoutsForm({
           transaction.
         </div>
 
-        {dealStatus !== "ARRIVED" && (
+        {dealStatus !== "RELEASED" && (
           <Alert className="mt-4 border-amber-500/20 bg-amber-500/10">
             <AlertDescription className="text-amber-500">
               Deal status is <span className="font-medium">{dealStatus}</span>. Payouts are normally distributed after{" "}
-              <span className="font-medium">ARRIVED</span>.
+              <span className="font-medium">RELEASED</span>.
             </AlertDescription>
           </Alert>
         )}
@@ -113,7 +118,7 @@ export function PayoutsForm({
           <Button
             className="bg-emerald-600 hover:bg-emerald-700 text-white"
             onClick={() => mutation.mutate()}
-            disabled={mutation.isPending || (dealStatus !== "ARRIVED" && !force)}
+            disabled={mutation.isPending || (dealStatus !== "RELEASED" && !force)}
           >
             {mutation.isPending ? "Distributing..." : "Distribute Payouts"}
           </Button>

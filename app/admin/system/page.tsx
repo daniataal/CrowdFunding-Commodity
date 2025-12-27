@@ -3,6 +3,9 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { BarChart3, Database, Users, TrendingUp } from "lucide-react"
 import { auth } from "@/auth"
 import { LogisticsSyncCard } from "@/components/admin/logistics-sync-card"
+import { JobsCard } from "@/components/admin/jobs-card"
+import { AlertsCard } from "@/components/admin/alerts-card"
+import { ApprovalsCard } from "@/components/admin/approvals-card"
 
 export const dynamic = "force-dynamic"
 
@@ -117,6 +120,9 @@ export default async function SystemHealthPage() {
       </Card>
 
       <LogisticsSyncCard isAdmin={isAdmin} />
+      <JobsCard isAdmin={isAdmin} />
+      <AlertsCard isAdmin={isAdmin} />
+      <ApprovalsCard isAdmin={isAdmin} />
     </div>
   )
 }

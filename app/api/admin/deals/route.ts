@@ -45,6 +45,12 @@ const createDealSchema = z.object({
   transportMethod: z.string().optional(),
   riskScore: z.string().optional().transform((val) => val ? Number.parseFloat(val) : null),
   maturityDate: z.string().optional().transform((val) => (val ? new Date(val) : null)),
+  metalForm: z.string().optional().transform((val) => (val && val.trim() ? val : null)),
+  purityPercent: z.union([z.string(), z.number()]).optional().transform((val) => (val === undefined || val === "" ? null : Number(val))),
+  karat: z.union([z.string(), z.number()]).optional().transform((val) => (val === undefined || val === "" ? null : Number(val))),
+  grossWeightTroyOz: z.union([z.string(), z.number()]).optional().transform((val) => (val === undefined || val === "" ? null : Number(val))),
+  refineryName: z.string().optional().transform((val) => (val && val.trim() ? val.trim() : null)),
+  refineryLocation: z.string().optional().transform((val) => (val && val.trim() ? val.trim() : null)),
 })
 
 export async function POST(request: NextRequest) {
@@ -56,6 +62,11 @@ export async function POST(request: NextRequest) {
 
     const body = await request.json()
     const validatedData = createDealSchema.parse(body)
+
+    // Metals UX rule: require a destination refinery for precious metals (bullion/doré/etc.).
+    if (validatedData.type === "Metals" && !validatedData.refineryName) {
+      return NextResponse.json({ error: "Refinery name is required for Metals deals" }, { status: 400 })
+    }
 
     // Fallback: if coordinates weren't provided, attempt to geocode from origin/destination strings.
     let originLat = validatedData.originLat ?? null
@@ -106,6 +117,12 @@ export async function POST(request: NextRequest) {
         transportMethod: validatedData.transportMethod,
         riskScore: validatedData.riskScore,
         maturityDate: validatedData.maturityDate,
+        metalForm: validatedData.metalForm,
+        purityPercent: validatedData.purityPercent,
+        karat: validatedData.karat,
+        grossWeightTroyOz: validatedData.grossWeightTroyOz,
+        refineryName: validatedData.refineryName,
+        refineryLocation: validatedData.refineryLocation,
         status: "FUNDING",
       },
     })

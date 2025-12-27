@@ -63,6 +63,10 @@ export function MarketplaceView({
         return "In Transit"
       case "ARRIVED":
         return "Arrived"
+      case "INSPECTED":
+        return "Inspected"
+      case "RELEASED":
+        return "Released"
       case "SETTLED":
         return "Settled"
       case "ACTIVE":
@@ -168,6 +172,14 @@ export function MarketplaceView({
                 <h3 className="text-lg font-semibold mb-2 group-hover:text-primary transition-colors">
                   {commodity.name}
                 </h3>
+                {commodity.type === "Metals" && (
+                  <div className="mb-3 flex flex-wrap gap-2">
+                    {commodity.metalForm ? <Badge variant="outline">{commodity.metalForm}</Badge> : null}
+                    {commodity.purityPercent ? <Badge variant="outline">Purity {commodity.purityPercent}%</Badge> : null}
+                    {commodity.karat ? <Badge variant="outline">{commodity.karat}K</Badge> : null}
+                    {commodity.refineryLocation ? <Badge variant="outline">{commodity.refineryLocation}</Badge> : null}
+                  </div>
+                )}
                 <p className="text-sm text-muted-foreground mb-4">{commodity.description}</p>
 
                 <div className="grid grid-cols-3 gap-4 mb-4">

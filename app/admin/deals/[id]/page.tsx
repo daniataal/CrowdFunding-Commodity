@@ -6,6 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { ShipmentArrivalControls } from "@/components/admin/shipment-arrival-controls"
+import { SettlementStageControls } from "@/components/admin/settlement-stage-controls"
 
 export const dynamic = "force-dynamic"
 
@@ -112,6 +113,12 @@ export default async function DealDetailsPage({ params }: { params: Promise<{ id
               <ShipmentArrivalControls dealId={commodity.id} canManage={isAdmin} currentStatus={commodity.status} />
             </div>
           </div>
+          <div className="md:col-span-2">
+            <div className="text-sm text-muted-foreground">Settlement staging</div>
+            <div className="mt-2">
+              <SettlementStageControls dealId={commodity.id} canManage={isAdmin} currentStatus={commodity.status} />
+            </div>
+          </div>
           {isAdmin && commodity.status === "ARRIVED" && (
             <div className="md:col-span-2">
               <Button asChild className="bg-emerald-600 hover:bg-emerald-700 text-white">
@@ -119,6 +126,16 @@ export default async function DealDetailsPage({ params }: { params: Promise<{ id
               </Button>
               <div className="mt-2 text-sm text-muted-foreground">
                 Recommended next step after arrival: distribute investor payouts and mark the deal settled.
+              </div>
+            </div>
+          )}
+          {isAdmin && commodity.status === "RELEASED" && (
+            <div className="md:col-span-2">
+              <Button asChild className="bg-emerald-600 hover:bg-emerald-700 text-white">
+                <Link href={`/admin/deals/${commodity.id}/payouts`}>Start Settlement (Distribute Payouts)</Link>
+              </Button>
+              <div className="mt-2 text-sm text-muted-foreground">
+                Deal is released; you can now distribute investor payouts and mark the deal settled.
               </div>
             </div>
           )}

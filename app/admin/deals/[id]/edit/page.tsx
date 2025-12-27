@@ -50,6 +50,12 @@ export default async function EditDealPage({ params }: { params: Promise<{ id: s
           transportMethod: commodity.transportMethod,
           riskScore: commodity.riskScore === null ? null : Number(commodity.riskScore),
           maturityDate: commodity.maturityDate ? commodity.maturityDate.toISOString() : null,
+          metalForm: (commodity as any).metalForm ?? null,
+          purityPercent: (commodity as any).purityPercent ?? null,
+          karat: (commodity as any).karat ?? null,
+          grossWeightTroyOz: (commodity as any).grossWeightTroyOz ?? null,
+          refineryName: (commodity as any).refineryName ?? null,
+          refineryLocation: (commodity as any).refineryLocation ?? null,
         }}
       />
     </div>

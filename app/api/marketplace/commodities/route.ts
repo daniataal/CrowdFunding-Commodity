@@ -42,6 +42,12 @@ export async function GET(request: NextRequest) {
     transportMethod: c.transportMethod,
     riskScore: c.riskScore === null ? null : Number(c.riskScore),
     maturityDate: c.maturityDate ? c.maturityDate.toISOString() : null,
+    metalForm: (c as any).metalForm ?? null,
+    purityPercent: (c as any).purityPercent ?? null,
+    karat: (c as any).karat ?? null,
+    grossWeightTroyOz: (c as any).grossWeightTroyOz ?? null,
+    refineryName: (c as any).refineryName ?? null,
+    refineryLocation: (c as any).refineryLocation ?? null,
   }))
 
   return NextResponse.json({ success: true, data })

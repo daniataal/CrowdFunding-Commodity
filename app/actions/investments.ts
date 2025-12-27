@@ -4,6 +4,14 @@ import { auth } from "@/auth"
 import { prisma } from "@/lib/prisma"
 import { z } from "zod"
 import { revalidatePath } from "next/cache"
+import {
+  createBalancedLedgerEntry,
+  getOrCreateCommodityEscrowAccount,
+  getOrCreatePlatformFeeIncomeAccount,
+  getOrCreateUserWalletAccount,
+} from "@/lib/ledger"
+import { runIdempotent, sha256Base64Url } from "@/lib/idempotency"
+import { LEGAL_VERSIONS } from "@/lib/legal"
 
 const investSchema = z.object({
   commodityId: z.string(),
@@ -27,6 +35,9 @@ export async function investInCommodity(formData: FormData) {
     }
 
     const validatedData = investSchema.parse(rawData)
+    const ipAddress = (formData.get("ipAddress") as string | null) ?? null
+    const userAgent = (formData.get("userAgent") as string | null) ?? null
+    const idempotencyKey = (formData.get("idempotencyKey") as string | null) ?? null
 
     // Get user with current balance
     const user = await prisma.user.findUnique({
@@ -83,7 +94,13 @@ export async function investInCommodity(formData: FormData) {
     }
 
     // Start transaction
-    const result = await prisma.$transaction(async (tx) => {
+    const exec = async (tx: any) => {
+      const [wallet, escrow, feeIncome] = await Promise.all([
+        getOrCreateUserWalletAccount(tx, session.user.id),
+        getOrCreateCommodityEscrowAccount(tx, validatedData.commodityId),
+        getOrCreatePlatformFeeIncomeAccount(tx),
+      ])
+
       // Deduct from wallet
       if (Number(user.walletBalance) < totalDebit) {
         return { error: "Insufficient balance" } as any
@@ -132,7 +149,7 @@ export async function investInCommodity(formData: FormData) {
       })
 
       // Create transaction record
-      await tx.transaction.create({
+      const walletTx = await tx.transaction.create({
         data: {
           userId: session.user.id,
           commodityId: validatedData.commodityId,
@@ -146,6 +163,24 @@ export async function investInCommodity(formData: FormData) {
             feeBps: platformFeeBps,
           },
         },
+      })
+
+      await createBalancedLedgerEntry(tx, {
+        type: "INVESTMENT",
+        description: `Investment in ${commodity.name}`,
+        userId: session.user.id,
+        commodityId: validatedData.commodityId,
+        transactionId: walletTx.id,
+        metadata: {
+          principal: validatedData.amount,
+          fee,
+          feeBps: platformFeeBps,
+        },
+        lines: [
+          { accountId: wallet.id, debit: totalDebit },
+          { accountId: escrow.id, credit: validatedData.amount },
+          { accountId: feeIncome.id, credit: fee },
+        ],
       })
 
       // Create audit log
@@ -168,18 +203,85 @@ export async function investInCommodity(formData: FormData) {
         },
       })
 
-      return { investment, updatedCommodity }
-    })
+      // Persist compliance consents (audit-grade).
+      await tx.userConsent.upsert({
+        where: {
+          userId_commodityId_type_version: {
+            userId: session.user.id,
+            commodityId: validatedData.commodityId,
+            type: "RISK_DISCLOSURE",
+            version: LEGAL_VERSIONS.riskDisclosure,
+          },
+        },
+        create: {
+          userId: session.user.id,
+          commodityId: validatedData.commodityId,
+          type: "RISK_DISCLOSURE",
+          version: LEGAL_VERSIONS.riskDisclosure,
+          ipAddress,
+          userAgent,
+          context: { ack: true },
+        },
+        update: { ipAddress, userAgent },
+      })
+      await tx.userConsent.upsert({
+        where: {
+          userId_commodityId_type_version: {
+            userId: session.user.id,
+            commodityId: validatedData.commodityId,
+            type: "TERMS_OF_SERVICE",
+            version: LEGAL_VERSIONS.termsOfService,
+          },
+        },
+        create: {
+          userId: session.user.id,
+          commodityId: validatedData.commodityId,
+          type: "TERMS_OF_SERVICE",
+          version: LEGAL_VERSIONS.termsOfService,
+          ipAddress,
+          userAgent,
+          context: { ack: true },
+        },
+        update: { ipAddress, userAgent },
+      })
 
-    if (result && "error" in (result as any)) {
-      return { error: (result as any).error }
+      return { investment, updatedCommodity }
     }
+
+    const result = idempotencyKey
+      ? await runIdempotent({
+          userId: session.user.id,
+          scope: `invest:${validatedData.commodityId}`,
+          key: idempotencyKey,
+          requestHash: sha256Base64Url(
+            JSON.stringify({
+              commodityId: validatedData.commodityId,
+              amount: validatedData.amount,
+              ackRisk: validatedData.ackRisk,
+              ackTerms: validatedData.ackTerms,
+            })
+          ),
+          run: exec,
+          response: (v) => ({
+            investmentId: v.investment.id,
+            commodityId: v.updatedCommodity.id,
+            newCurrentAmount: Number(v.updatedCommodity.currentAmount),
+          }),
+        })
+      : { ok: true as const, value: await prisma.$transaction(exec) }
+
+    if (!result.ok) {
+      return { error: result.error }
+    }
+
+    const finalValue = result.value as any
+    if (finalValue && "error" in finalValue) return { error: finalValue.error }
 
     revalidatePath("/")
     revalidatePath("/marketplace")
     revalidatePath("/wallet")
 
-    return { success: true, data: result }
+    return { success: true, data: finalValue }
   } catch (error) {
     if (error instanceof z.ZodError) {
       return { error: error.errors[0].message }

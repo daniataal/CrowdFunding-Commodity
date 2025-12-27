@@ -129,9 +129,12 @@ export function AssetDetailModal({ commodity, open, onOpenChange }: AssetDetailM
       const kycStatus = (session?.user as any)?.kycStatus as string | undefined
       if (kycStatus !== "APPROVED") throw new Error("KYC approval is required before investing")
       if (!ackRisk || !ackTerms) throw new Error("Please accept the Risk Disclosure and Terms to continue")
+      const idem =
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        (globalThis as any).crypto?.randomUUID?.() ?? `${Date.now()}-${Math.random().toString(16).slice(2)}`
       const res = await fetch("/api/invest", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", "Idempotency-Key": idem },
         body: JSON.stringify({ commodityId, amount, ackRisk: true, ackTerms: true }),
       })
       const json = await res.json()
@@ -540,7 +543,21 @@ export function AssetDetailModal({ commodity, open, onOpenChange }: AssetDetailM
                 {(docsQuery.data ?? []).map((d) => {
                   const Icon = docIcon(d.type)
                   return (
-                    <a key={d.id} href={d.url} target="_blank" rel="noreferrer">
+                    <a
+                      key={d.id}
+                      href={d.url}
+                      target="_blank"
+                      rel="noreferrer"
+                      onClick={async (e) => {
+                        // Convert signed-url endpoint → expiring download link.
+                        if (!d.url.startsWith("/api/documents/")) return
+                        e.preventDefault()
+                        const res = await fetch(d.url)
+                        const json = await res.json()
+                        if (!res.ok) throw new Error(json.error || "Failed to get download link")
+                        window.open(json.data.url, "_blank", "noopener,noreferrer")
+                      }}
+                    >
                       <Card className="p-6 border-2 hover:border-primary/50 transition-colors cursor-pointer">
                         <div className="flex items-center gap-4">
                           <div className="h-12 w-12 rounded-lg bg-primary/10 flex items-center justify-center">

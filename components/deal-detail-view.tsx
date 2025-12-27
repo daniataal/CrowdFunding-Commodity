@@ -17,6 +17,7 @@ import type { CommodityDocument, DocumentType, MarketplaceCommodity } from "@/li
 import { DollarSign, TrendingUp, MapPin, Truck, FileText, Shield, Calendar, Link as LinkIcon } from "lucide-react"
 import { ShipmentMap } from "@/components/shipment-map"
 import type { ShipmentEvent } from "@/lib/domain"
+import { MetalsValueCalculator } from "@/components/metals-value-calculator"
 
 const typeLabels: Record<DocumentType, string> = {
   BILL_OF_LADING: "Bill of Lading",
@@ -147,9 +148,12 @@ export function DealDetailView({ commodity }: { commodity: MarketplaceCommodity 
       if (maxInvestment !== null && amount > maxInvestment) throw new Error(`Maximum investment is $${maxInvestment.toLocaleString()}`)
       if (amount > remainingAmount) throw new Error("Investment exceeds remaining funding amount")
       if (!ackRisk || !ackTerms) throw new Error("Please accept the Risk Disclosure and Terms to continue")
+      const idem =
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        (globalThis as any).crypto?.randomUUID?.() ?? `${Date.now()}-${Math.random().toString(16).slice(2)}`
       const res = await fetch("/api/invest", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", "Idempotency-Key": idem },
         body: JSON.stringify({ commodityId, amount, ackRisk: true, ackTerms: true }),
       })
       const json = await res.json()
@@ -277,6 +281,14 @@ export function DealDetailView({ commodity }: { commodity: MarketplaceCommodity 
                   </div>
                 </div>
               </Card>
+
+              {commodity.type === "Metals" && (
+                <MetalsValueCalculator
+                  grossWeightTroyOz={commodity.grossWeightTroyOz ?? null}
+                  purityPercent={commodity.purityPercent ?? null}
+                  metalLabel={commodity.name}
+                />
+              )}
             </TabsContent>
 
             <TabsContent value="logistics" className="space-y-4 mt-4">
@@ -413,7 +425,21 @@ export function DealDetailView({ commodity }: { commodity: MarketplaceCommodity 
                   {(docsQuery.data ?? []).map((d) => {
                     const Icon = docIcon(d.type)
                     return (
-                      <a key={d.id} href={d.url} target="_blank" rel="noreferrer">
+                      <a
+                        key={d.id}
+                        href={d.url}
+                        target="_blank"
+                        rel="noreferrer"
+                        onClick={async (e) => {
+                          // Convert signed-url endpoint → expiring download link.
+                          if (!d.url.startsWith("/api/documents/")) return
+                          e.preventDefault()
+                          const res = await fetch(d.url)
+                          const json = await res.json()
+                          if (!res.ok) throw new Error(json.error || "Failed to get download link")
+                          window.open(json.data.url, "_blank", "noopener,noreferrer")
+                        }}
+                      >
                         <Card className="p-6 border-2 hover:border-primary/50 transition-colors cursor-pointer">
                           <div className="flex items-center gap-4">
                             <div className="h-12 w-12 rounded-lg bg-primary/10 flex items-center justify-center">

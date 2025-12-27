@@ -12,6 +12,14 @@ import { useMutation, useQueryClient } from "@tanstack/react-query"
 import { useState } from "react"
 import { toast } from "@/hooks/use-toast"
 
+function makeIdempotencyKey() {
+  // Browser support: prefer crypto.randomUUID; fallback for older environments.
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const c = (globalThis as any).crypto
+  if (c?.randomUUID) return c.randomUUID()
+  return `${Date.now()}-${Math.random().toString(16).slice(2)}`
+}
+
 export function WalletView() {
   const qc = useQueryClient()
   const [depositOpen, setDepositOpen] = useState(false)
@@ -48,9 +56,10 @@ export function WalletView() {
     mutationFn: async () => {
       const amount = Number.parseFloat(depositAmount)
       if (!Number.isFinite(amount) || amount <= 0) throw new Error("Enter a valid deposit amount")
+      const idem = makeIdempotencyKey()
       const res = await fetch("/api/wallet/deposit", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", "Idempotency-Key": idem },
         body: JSON.stringify({ amount, reference: depositReference || undefined }),
       })
       const json = await res.json()
@@ -75,9 +84,10 @@ export function WalletView() {
     mutationFn: async () => {
       const amount = Number.parseFloat(withdrawAmount)
       if (!Number.isFinite(amount) || amount <= 0) throw new Error("Enter a valid withdrawal amount")
+      const idem = makeIdempotencyKey()
       const res = await fetch("/api/wallet/withdraw", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", "Idempotency-Key": idem },
         body: JSON.stringify({ amount, description: withdrawDescription || undefined }),
       })
       const json = await res.json()
@@ -127,6 +137,15 @@ export function WalletView() {
           <Button variant="outline" className="flex-1 bg-transparent" onClick={() => setWithdrawOpen(true)}>
             <Download className="h-4 w-4 mr-2" />
             Withdraw
+          </Button>
+          <Button
+            variant="outline"
+            className="bg-transparent"
+            onClick={() => {
+              window.open("/api/reports/statement.csv", "_blank", "noopener,noreferrer")
+            }}
+          >
+            Export CSV
           </Button>
         </div>
       </Card>

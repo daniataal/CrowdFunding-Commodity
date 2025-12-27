@@ -38,6 +38,12 @@ export function EditDealForm({
     transportMethod?: string | null
     riskScore?: number | null
     maturityDate?: string | null
+    metalForm?: string | null
+    purityPercent?: number | null
+    karat?: number | null
+    grossWeightTroyOz?: number | null
+    refineryName?: string | null
+    refineryLocation?: string | null
   }
 }) {
   const router = useRouter()
@@ -66,6 +72,13 @@ export function EditDealForm({
     transportMethod: initial.transportMethod ?? "",
     riskScore: initial.riskScore ?? "",
     maturityDate: initial.maturityDate ? String(initial.maturityDate).slice(0, 10) : "",
+    metalForm: initial.metalForm ?? "",
+    purityPercent: initial.purityPercent === null || initial.purityPercent === undefined ? "" : String(initial.purityPercent),
+    karat: initial.karat === null || initial.karat === undefined ? "" : String(initial.karat),
+    grossWeightTroyOz:
+      initial.grossWeightTroyOz === null || initial.grossWeightTroyOz === undefined ? "" : String(initial.grossWeightTroyOz),
+    refineryName: initial.refineryName ?? "",
+    refineryLocation: initial.refineryLocation ?? "",
   })
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -243,6 +256,70 @@ export function EditDealForm({
               />
             </div>
           </div>
+
+          {formData.type === "Metals" && (
+            <div className="grid gap-4 md:grid-cols-2">
+              <div className="md:col-span-2">
+                <div className="text-sm font-semibold">Precious metals specs</div>
+                <div className="text-xs text-muted-foreground">Bullion vs doré, purity/karat, and destination refinery.</div>
+              </div>
+
+              <div className="space-y-2">
+                <Label>Form</Label>
+                <Select value={formData.metalForm} onValueChange={(v) => setFormData({ ...formData, metalForm: v })}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select form" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="BULLION">Bullion</SelectItem>
+                    <SelectItem value="DORE">Doré</SelectItem>
+                    <SelectItem value="SCRAP">Scrap</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="purityPercent">Purity (%)</Label>
+                <Input
+                  id="purityPercent"
+                  type="number"
+                  step="0.01"
+                  value={formData.purityPercent as any}
+                  onChange={(e) => setFormData({ ...formData, purityPercent: e.target.value })}
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="karat">Karat (optional)</Label>
+                <Input id="karat" type="number" value={formData.karat as any} onChange={(e) => setFormData({ ...formData, karat: e.target.value })} />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="grossWeightTroyOz">Gross weight (troy oz)</Label>
+                <Input
+                  id="grossWeightTroyOz"
+                  type="number"
+                  step="0.0001"
+                  value={formData.grossWeightTroyOz as any}
+                  onChange={(e) => setFormData({ ...formData, grossWeightTroyOz: e.target.value })}
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="refineryName">Destination refinery</Label>
+                <Input id="refineryName" value={formData.refineryName} onChange={(e) => setFormData({ ...formData, refineryName: e.target.value })} />
+              </div>
+
+              <div className="space-y-2 md:col-span-2">
+                <Label htmlFor="refineryLocation">Refinery location</Label>
+                <Input
+                  id="refineryLocation"
+                  value={formData.refineryLocation}
+                  onChange={(e) => setFormData({ ...formData, refineryLocation: e.target.value })}
+                />
+              </div>
+            </div>
+          )}
 
           <div className="rounded-lg border bg-muted/20 p-3 flex items-center justify-between gap-3">
             <div className="text-sm">

@@ -26,7 +26,13 @@ const updateSchema = z.object({
   transportMethod: z.string().nullable().optional(),
   riskScore: z.union([z.string(), z.number()]).nullable().optional(),
   maturityDate: z.union([z.string(), z.date()]).nullable().optional(),
-  status: z.enum(["FUNDING", "ACTIVE", "IN_TRANSIT", "ARRIVED", "SETTLED", "CANCELLED"]).optional(),
+  status: z.enum(["FUNDING", "ACTIVE", "IN_TRANSIT", "ARRIVED", "INSPECTED", "RELEASED", "SETTLED", "CANCELLED"]).optional(),
+  metalForm: z.union([z.string(), z.null()]).optional(),
+  purityPercent: z.union([z.string(), z.number()]).nullable().optional(),
+  karat: z.union([z.string(), z.number()]).nullable().optional(),
+  grossWeightTroyOz: z.union([z.string(), z.number()]).nullable().optional(),
+  refineryName: z.union([z.string(), z.null()]).optional(),
+  refineryLocation: z.union([z.string(), z.null()]).optional(),
 })
 
 export async function GET(_request: NextRequest, context: { params: Promise<{ id: string }> }) {
@@ -130,6 +136,16 @@ export async function PATCH(request: NextRequest, context: { params: Promise<{ i
         ? { maturityDate: validated.maturityDate === null ? null : new Date(validated.maturityDate as any) }
         : {}),
       ...(validated.status !== undefined ? { status: validated.status } : {}),
+      ...(validated.metalForm !== undefined ? { metalForm: validated.metalForm } : {}),
+      ...(validated.purityPercent !== undefined
+        ? { purityPercent: validated.purityPercent === null ? null : Number(validated.purityPercent) }
+        : {}),
+      ...(validated.karat !== undefined ? { karat: validated.karat === null ? null : Number(validated.karat) } : {}),
+      ...(validated.grossWeightTroyOz !== undefined
+        ? { grossWeightTroyOz: validated.grossWeightTroyOz === null ? null : Number(validated.grossWeightTroyOz) }
+        : {}),
+      ...(validated.refineryName !== undefined ? { refineryName: validated.refineryName } : {}),
+      ...(validated.refineryLocation !== undefined ? { refineryLocation: validated.refineryLocation } : {}),
     },
   })
 
