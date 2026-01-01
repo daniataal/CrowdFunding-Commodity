@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useMemo, useState } from "react"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Card } from "@/components/ui/card"
@@ -12,6 +12,12 @@ import { Progress } from "@/components/ui/progress"
 import { MapPin, FileText, DollarSign, TrendingUp, Shield, Truck, Calendar, Link as LinkIcon } from "lucide-react"
 import type { CommodityDocument, DocumentType, MarketplaceCommodity } from "@/lib/domain"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
+import { Checkbox } from "@/components/ui/checkbox"
+import { Alert, AlertDescription } from "@/components/ui/alert"
+import Link from "next/link"
+import { useSession } from "next-auth/react"
+import { ShipmentMap } from "@/components/shipment-map"
+import type { ShipmentEvent } from "@/lib/domain"
 
 interface AssetDetailModalProps {
   commodity: MarketplaceCommodity | null
@@ -42,8 +48,19 @@ function docIcon(type: DocumentType) {
 
 export function AssetDetailModal({ commodity, open, onOpenChange }: AssetDetailModalProps) {
   const [investAmount, setInvestAmount] = useState("")
+  const [ackRisk, setAckRisk] = useState(false)
+  const [ackTerms, setAckTerms] = useState(false)
+  const [detailsTab, setDetailsTab] = useState<"financials" | "logistics" | "documents">("financials")
   const qc = useQueryClient()
+  const { data: session } = useSession()
   const commodityId = commodity?.id
+
+  const arrivalDate = commodity?.maturityDate
+    ? new Date(commodity.maturityDate)
+    : new Date(Date.now() + (commodity?.duration ?? 0) * 24 * 60 * 60 * 1000)
+  const departureDate = commodity?.maturityDate
+    ? new Date(new Date(commodity.maturityDate).getTime() - (commodity?.duration ?? 0) * 24 * 60 * 60 * 1000)
+    : new Date(Date.now() - 2 * 24 * 60 * 60 * 1000)
 
   const docsQuery = useQuery({
     queryKey: ["commodities", commodityId, "documents"],
@@ -56,9 +73,35 @@ export function AssetDetailModal({ commodity, open, onOpenChange }: AssetDetailM
     },
   })
 
+  const shipmentEventsQuery = useQuery({
+    queryKey: ["commodities", commodityId, "shipment-events"],
+    enabled: !!commodityId && open,
+    queryFn: async () => {
+      const res = await fetch(`/api/commodities/${commodityId}/shipment-events`)
+      const json = await res.json()
+      if (!res.ok) throw new Error(json.error || "Failed to load shipment events")
+      return json.data as ShipmentEvent[]
+    },
+  })
+
+  const { effectiveDepartureDate, effectiveArrivalDate } = useMemo(() => {
+    const events = shipmentEventsQuery.data ?? []
+    const departed = events.find((e) => e.type === "DEPARTED")
+    const arrived = [...events].reverse().find((e) => e.type === "ARRIVED")
+    return {
+      effectiveDepartureDate: departed ? new Date(departed.occurredAt) : departureDate,
+      effectiveArrivalDate: arrived ? new Date(arrived.occurredAt) : arrivalDate,
+    }
+  }, [shipmentEventsQuery.data, departureDate, arrivalDate])
+
   const fundedPercentage =
     commodity && commodity.amountRequired > 0 ? (commodity.currentAmount / commodity.amountRequired) * 100 : 0
   const remainingAmount = commodity ? commodity.amountRequired - commodity.currentAmount : 0
+  const minInvestment = commodity?.minInvestment ?? 1000
+  const maxInvestment = commodity?.maxInvestment ?? null
+  const platformFeeBps = commodity?.platformFeeBps ?? 150
+  const hasCoords =
+    commodity?.originLat != null && commodity?.originLng != null && commodity?.destLat != null && commodity?.destLng != null
   const projectedReturn = investAmount
     ? (
         Number.parseFloat(investAmount) *
@@ -67,15 +110,32 @@ export function AssetDetailModal({ commodity, open, onOpenChange }: AssetDetailM
       ).toFixed(2)
     : "0.00"
 
+  const amountNum = Number.parseFloat(investAmount)
+  const isAmountValid = Number.isFinite(amountNum) && amountNum > 0
+  const fee = isAmountValid ? (amountNum * platformFeeBps) / 10000 : 0
+  const totalDebit = isAmountValid ? amountNum + fee : 0
+  const minViolation = isAmountValid && amountNum < minInvestment
+  const maxViolation = isAmountValid && maxInvestment !== null && amountNum > maxInvestment
+  const remainingViolation = isAmountValid && amountNum > remainingAmount
+
   const investMutation = useMutation({
     mutationFn: async () => {
       if (!commodityId) throw new Error("No commodity selected")
       const amount = Number.parseFloat(investAmount)
       if (!Number.isFinite(amount) || amount <= 0) throw new Error("Enter a valid amount")
+      if (amount < minInvestment) throw new Error(`Minimum investment is $${minInvestment.toLocaleString()}`)
+      if (maxInvestment !== null && amount > maxInvestment) throw new Error(`Maximum investment is $${maxInvestment.toLocaleString()}`)
+      if (amount > remainingAmount) throw new Error("Investment exceeds remaining funding amount")
+      const kycStatus = (session?.user as any)?.kycStatus as string | undefined
+      if (kycStatus !== "APPROVED") throw new Error("KYC approval is required before investing")
+      if (!ackRisk || !ackTerms) throw new Error("Please accept the Risk Disclosure and Terms to continue")
+      const idem =
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        (globalThis as any).crypto?.randomUUID?.() ?? `${Date.now()}-${Math.random().toString(16).slice(2)}`
       const res = await fetch("/api/invest", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ commodityId, amount }),
+        headers: { "Content-Type": "application/json", "Idempotency-Key": idem },
+        body: JSON.stringify({ commodityId, amount, ackRisk: true, ackTerms: true }),
       })
       const json = await res.json()
       if (!res.ok) throw new Error(json.error || "Investment failed")
@@ -83,6 +143,8 @@ export function AssetDetailModal({ commodity, open, onOpenChange }: AssetDetailM
     },
     onSuccess: async () => {
       setInvestAmount("")
+      setAckRisk(false)
+      setAckTerms(false)
       onOpenChange(false)
       await Promise.all([
         qc.invalidateQueries({ queryKey: ["marketplace", "commodities"] }),
@@ -94,6 +156,20 @@ export function AssetDetailModal({ commodity, open, onOpenChange }: AssetDetailM
       ])
     },
   })
+
+  const kycApproved = (session?.user as any)?.kycStatus === "APPROVED"
+  const transport = String(commodity?.transportMethod ?? "").toLowerCase()
+  const vehicleType =
+    commodity?.type === "Metals" && (transport.includes("brink") || transport.includes("armored"))
+      ? "armored"
+      : commodity?.type === "Metals" && (transport.includes("air") || transport.includes("jet") || transport.includes("plane"))
+        ? "plane"
+        : commodity?.type === "Metals"
+          ? "plane"
+          : transport.includes("air") || transport.includes("plane")
+            ? "plane"
+            : "ship"
+  const vesselName = commodity?.shipmentId ?? `${commodity?.name ?? "Shipment"} ${vehicleType === "plane" ? "Jet" : "Vessel"}`
 
   return (
     <Dialog open={open && !!commodity} onOpenChange={onOpenChange}>
@@ -121,7 +197,27 @@ export function AssetDetailModal({ commodity, open, onOpenChange }: AssetDetailM
               </div>
             </DialogHeader>
 
-            <Tabs defaultValue="financials" className="mt-4">
+            <div className="mt-4 flex items-center justify-between gap-2">
+              <div className="text-sm text-muted-foreground">
+                {commodity.status !== "FUNDING" ? "Shipment tracking is available for funded deals." : "Funding in progress."}
+              </div>
+              {commodity.status !== "FUNDING" && (
+                <Button
+                  variant="outline"
+                  className="bg-transparent"
+                  onClick={() => {
+                    setDetailsTab("logistics")
+                    setTimeout(() => {
+                      document.getElementById("modal-logistics-map")?.scrollIntoView({ behavior: "smooth", block: "start" })
+                    }, 0)
+                  }}
+                >
+                  Track Shipment
+                </Button>
+              )}
+            </div>
+
+            <Tabs value={detailsTab} onValueChange={(v) => setDetailsTab(v as any)} className="mt-4">
           <TabsList className="grid w-full grid-cols-3">
             <TabsTrigger value="financials">Financials</TabsTrigger>
             <TabsTrigger value="logistics">Logistics</TabsTrigger>
@@ -169,6 +265,17 @@ export function AssetDetailModal({ commodity, open, onOpenChange }: AssetDetailM
                 Investment Calculator
               </h3>
               <div className="space-y-4">
+                {!kycApproved && (
+                  <Alert className="border-amber-500/20 bg-amber-500/10">
+                    <AlertDescription className="text-amber-500">
+                      KYC approval is required before investing.{" "}
+                      <Link className="underline" href="/kyc-verification">
+                        Complete verification
+                      </Link>
+                      .
+                    </AlertDescription>
+                  </Alert>
+                )}
                 <div>
                   <Label htmlFor="amount">Investment Amount ($)</Label>
                   <Input
@@ -178,7 +285,13 @@ export function AssetDetailModal({ commodity, open, onOpenChange }: AssetDetailM
                     value={investAmount}
                     onChange={(e) => setInvestAmount(e.target.value)}
                     className="mt-2"
+                    disabled={!kycApproved}
                   />
+                  <div className="mt-2 text-xs text-muted-foreground">
+                    Min ${minInvestment.toLocaleString()}
+                    {maxInvestment !== null ? ` • Max $${maxInvestment.toLocaleString()}` : ""} • Remaining $
+                    {remainingAmount.toLocaleString()}
+                  </div>
                 </div>
                 <div className="grid grid-cols-2 gap-4 p-4 bg-background rounded-lg">
                   <div>
@@ -195,6 +308,65 @@ export function AssetDetailModal({ commodity, open, onOpenChange }: AssetDetailM
                     </p>
                   </div>
                 </div>
+                <div className="rounded-lg border p-4 bg-background/50">
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="text-muted-foreground">Platform fee</span>
+                    <span className="font-medium">{(platformFeeBps / 100).toFixed(2)}%</span>
+                  </div>
+                  <div className="mt-2 space-y-1 text-sm">
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Principal</span>
+                      <span className="font-medium">${isAmountValid ? amountNum.toFixed(2) : "0.00"}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Fee</span>
+                      <span className="font-medium">${fee.toFixed(2)}</span>
+                    </div>
+                    <div className="flex justify-between border-t pt-2">
+                      <span className="text-muted-foreground">Total wallet debit</span>
+                      <span className="font-semibold">${totalDebit.toFixed(2)}</span>
+                    </div>
+                  </div>
+                  {(minViolation || maxViolation || remainingViolation) && (
+                    <div className="mt-2 text-xs text-red-500">
+                      {minViolation && `Below minimum ($${minInvestment.toLocaleString()}). `}
+                      {maxViolation && maxInvestment !== null && `Above maximum ($${maxInvestment.toLocaleString()}). `}
+                      {remainingViolation && "Exceeds remaining funding."}
+                    </div>
+                  )}
+                </div>
+                <div className="space-y-3 rounded-lg border p-4 bg-background/50">
+                  <div className="flex items-start gap-3">
+                    <Checkbox
+                      checked={ackRisk}
+                      onCheckedChange={(v) => setAckRisk(Boolean(v))}
+                      disabled={!kycApproved}
+                      aria-label="Acknowledge risk disclosure"
+                    />
+                    <div className="text-sm">
+                      I have read and understand the{" "}
+                      <Link className="underline" href="/legal/risk-disclosure" target="_blank">
+                        Risk Disclosure
+                      </Link>
+                      .
+                    </div>
+                  </div>
+                  <div className="flex items-start gap-3">
+                    <Checkbox
+                      checked={ackTerms}
+                      onCheckedChange={(v) => setAckTerms(Boolean(v))}
+                      disabled={!kycApproved}
+                      aria-label="Accept terms of service"
+                    />
+                    <div className="text-sm">
+                      I agree to the{" "}
+                      <Link className="underline" href="/legal/terms" target="_blank">
+                        Terms of Service
+                      </Link>
+                      .
+                    </div>
+                  </div>
+                </div>
                 {investMutation.error && (
                   <div className="text-sm text-red-500">{(investMutation.error as Error).message}</div>
                 )}
@@ -202,7 +374,16 @@ export function AssetDetailModal({ commodity, open, onOpenChange }: AssetDetailM
                   className="w-full bg-emerald-600 hover:bg-emerald-700 text-white"
                   size="lg"
                   onClick={() => investMutation.mutate()}
-                  disabled={investMutation.isPending}
+                  disabled={
+                    investMutation.isPending ||
+                    !kycApproved ||
+                    !ackRisk ||
+                    !ackTerms ||
+                    !isAmountValid ||
+                    minViolation ||
+                    maxViolation ||
+                    remainingViolation
+                  }
                 >
                   {investMutation.isPending ? "Investing..." : "Invest Now"}
                 </Button>
@@ -211,6 +392,71 @@ export function AssetDetailModal({ commodity, open, onOpenChange }: AssetDetailM
           </TabsContent>
 
           <TabsContent value="logistics" className="space-y-4 mt-4">
+            <Card id="modal-logistics-map" className="p-6 border-2">
+              <h3 className="font-semibold mb-4">Logistics Map</h3>
+              {hasCoords && commodity ? (
+                <ShipmentMap
+                  originCoordinates={{ lat: commodity.originLat as number, lng: commodity.originLng as number }}
+                  destinationCoordinates={{ lat: commodity.destLat as number, lng: commodity.destLng as number }}
+                  departureDate={effectiveDepartureDate}
+                  arrivalDate={effectiveArrivalDate}
+                  vesselName={vesselName}
+                  vehicleType={vehicleType}
+                />
+              ) : (
+                <div className="text-sm text-muted-foreground">No coordinates available for this deal yet.</div>
+              )}
+              {commodity && (
+                <div className="mt-4 space-y-2">
+                  {shipmentEventsQuery.isError ? (
+                    <div className="text-sm text-muted-foreground">
+                      {(shipmentEventsQuery.error as Error).message === "Unauthorized" ? (
+                        <span>
+                          Please <Link className="underline" href="/login">log in</Link> to view shipment tracking.
+                        </span>
+                      ) : (shipmentEventsQuery.error as Error).message === "KYC approval required" ? (
+                        <span>
+                          KYC approval is required to view shipment tracking.{" "}
+                          <Link className="underline" href="/kyc-verification">Complete verification</Link>.
+                        </span>
+                      ) : (
+                        <span>Shipment events unavailable.</span>
+                      )}
+                    </div>
+                  ) : null}
+
+                  {(() => {
+                    const events = shipmentEventsQuery.data ?? []
+                    const departed = events.find((e) => e.type === "DEPARTED")
+                    const arrived = [...events].reverse().find((e) => e.type === "ARRIVED")
+                    const now = new Date()
+                    const departedAt = departed ? new Date(departed.occurredAt) : departureDate
+                    const arrivedAt = arrived ? new Date(arrived.occurredAt) : arrivalDate
+                    const arrivedPast = Boolean(arrived && arrivedAt <= now)
+                    const inTransitState = now < departedAt ? "Pending" : arrivedPast ? "Completed" : "Active"
+                    return (
+                      <>
+                        <div className="flex items-center justify-between text-sm">
+                          <div className="font-medium">Departed {commodity.origin}</div>
+                          <div className="text-muted-foreground">{departedAt.toLocaleDateString()}</div>
+                        </div>
+                        <div className="flex items-center justify-between text-sm">
+                          <div className="font-medium">Currently in transit</div>
+                          <div className="text-muted-foreground">{inTransitState}</div>
+                        </div>
+                        <div className="flex items-center justify-between text-sm">
+                          <div className="font-medium">
+                            {arrivedPast ? "Arrived" : "Estimated arrival"} {commodity.destination}
+                          </div>
+                          <div className="text-muted-foreground">{arrivedAt.toLocaleDateString()}</div>
+                        </div>
+                      </>
+                    )
+                  })()}
+                </div>
+              )}
+            </Card>
+
             <Card className="p-6 border-2">
               <h3 className="font-semibold mb-4 flex items-center">
                 <MapPin className="h-5 w-5 mr-2 text-amber-500" />
@@ -275,6 +521,21 @@ export function AssetDetailModal({ commodity, open, onOpenChange }: AssetDetailM
           <TabsContent value="documents" className="space-y-4 mt-4">
             {docsQuery.isLoading ? (
               <Card className="p-6 border-2 text-sm text-muted-foreground">Loading documents…</Card>
+            ) : docsQuery.isError ? (
+              <Card className="p-6 border-2 text-sm text-muted-foreground">
+                {(docsQuery.error as Error).message === "Unauthorized" ? (
+                  <span>
+                    Please <Link className="underline" href="/login">log in</Link> to view verified deal documents.
+                  </span>
+                ) : (docsQuery.error as Error).message === "KYC approval required" ? (
+                  <span>
+                    KYC approval is required to view verified deal documents.{" "}
+                    <Link className="underline" href="/kyc-verification">Complete verification</Link>.
+                  </span>
+                ) : (
+                  <span>Failed to load documents.</span>
+                )}
+              </Card>
             ) : (docsQuery.data?.length ?? 0) === 0 ? (
               <Card className="p-6 border-2 text-sm text-muted-foreground">No verified documents available yet.</Card>
             ) : (
@@ -282,7 +543,21 @@ export function AssetDetailModal({ commodity, open, onOpenChange }: AssetDetailM
                 {(docsQuery.data ?? []).map((d) => {
                   const Icon = docIcon(d.type)
                   return (
-                    <a key={d.id} href={d.url} target="_blank" rel="noreferrer">
+                    <a
+                      key={d.id}
+                      href={d.url}
+                      target="_blank"
+                      rel="noreferrer"
+                      onClick={async (e) => {
+                        // Convert signed-url endpoint → expiring download link.
+                        if (!d.url.startsWith("/api/documents/")) return
+                        e.preventDefault()
+                        const res = await fetch(d.url)
+                        const json = await res.json()
+                        if (!res.ok) throw new Error(json.error || "Failed to get download link")
+                        window.open(json.data.url, "_blank", "noopener,noreferrer")
+                      }}
+                    >
                       <Card className="p-6 border-2 hover:border-primary/50 transition-colors cursor-pointer">
                         <div className="flex items-center gap-4">
                           <div className="h-12 w-12 rounded-lg bg-primary/10 flex items-center justify-center">

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
 import { z } from "zod"
 import { requireDbRole } from "@/lib/authz"
+import { geocodePlace } from "@/lib/geocoding"
 
 const createDealSchema = z.object({
   templateKey: z.string().optional(),
@@ -25,6 +26,16 @@ const createDealSchema = z.object({
   risk: z.enum(["Low", "Medium", "High"]),
   targetApy: z.string().transform((val) => Number.parseFloat(val)),
   duration: z.string().transform((val) => Number.parseInt(val)),
+  minInvestment: z.string().optional().transform((val) => (val ? Number.parseFloat(val) : 1000)),
+  maxInvestment: z.string().optional().transform((val) => (val && val.trim() !== "" ? Number.parseFloat(val) : null)),
+  platformFeeBps: z
+    .union([z.string(), z.number()])
+    .optional()
+    .transform((val) => (val === undefined || val === null || val === "" ? 150 : Number(val))),
+  originLat: z.union([z.string(), z.number()]).optional().transform((val) => (val === undefined || val === "" ? null : Number(val))),
+  originLng: z.union([z.string(), z.number()]).optional().transform((val) => (val === undefined || val === "" ? null : Number(val))),
+  destLat: z.union([z.string(), z.number()]).optional().transform((val) => (val === undefined || val === "" ? null : Number(val))),
+  destLng: z.union([z.string(), z.number()]).optional().transform((val) => (val === undefined || val === "" ? null : Number(val))),
   amountRequired: z.string().transform((val) => Number.parseFloat(val)),
   description: z.string().min(1),
   origin: z.string().min(1),
@@ -33,6 +44,13 @@ const createDealSchema = z.object({
   insuranceValue: z.string().optional().transform((val) => val ? Number.parseFloat(val) : null),
   transportMethod: z.string().optional(),
   riskScore: z.string().optional().transform((val) => val ? Number.parseFloat(val) : null),
+  maturityDate: z.string().optional().transform((val) => (val ? new Date(val) : null)),
+  metalForm: z.string().optional().transform((val) => (val && val.trim() ? val : null)),
+  purityPercent: z.union([z.string(), z.number()]).optional().transform((val) => (val === undefined || val === "" ? null : Number(val))),
+  karat: z.union([z.string(), z.number()]).optional().transform((val) => (val === undefined || val === "" ? null : Number(val))),
+  grossWeightTroyOz: z.union([z.string(), z.number()]).optional().transform((val) => (val === undefined || val === "" ? null : Number(val))),
+  refineryName: z.string().optional().transform((val) => (val && val.trim() ? val.trim() : null)),
+  refineryLocation: z.string().optional().transform((val) => (val && val.trim() ? val.trim() : null)),
 })
 
 export async function POST(request: NextRequest) {
@@ -45,6 +63,36 @@ export async function POST(request: NextRequest) {
     const body = await request.json()
     const validatedData = createDealSchema.parse(body)
 
+    // Metals UX rule: require a destination refinery for precious metals (bullion/doré/etc.).
+    if (validatedData.type === "Metals" && !validatedData.refineryName) {
+      return NextResponse.json({ error: "Refinery name is required for Metals deals" }, { status: 400 })
+    }
+
+    // Fallback: if coordinates weren't provided, attempt to geocode from origin/destination strings.
+    let originLat = validatedData.originLat ?? null
+    let originLng = validatedData.originLng ?? null
+    let destLat = validatedData.destLat ?? null
+    let destLng = validatedData.destLng ?? null
+
+    if (
+      (originLat === null || originLng === null) &&
+      validatedData.origin &&
+      validatedData.origin.trim().length > 0
+    ) {
+      const r = await geocodePlace(validatedData.origin)
+      if (r) {
+        originLat = r.lat
+        originLng = r.lng
+      }
+    }
+    if ((destLat === null || destLng === null) && validatedData.destination && validatedData.destination.trim().length > 0) {
+      const r = await geocodePlace(validatedData.destination)
+      if (r) {
+        destLat = r.lat
+        destLng = r.lng
+      }
+    }
+
     const commodity = await prisma.commodity.create({
       data: {
         name: validatedData.name,
@@ -53,6 +101,13 @@ export async function POST(request: NextRequest) {
         risk: validatedData.risk,
         targetApy: validatedData.targetApy,
         duration: validatedData.duration,
+        minInvestment: validatedData.minInvestment,
+        maxInvestment: validatedData.maxInvestment,
+        platformFeeBps: validatedData.platformFeeBps,
+        originLat,
+        originLng,
+        destLat,
+        destLng,
         amountRequired: validatedData.amountRequired,
         description: validatedData.description,
         origin: validatedData.origin,
@@ -61,6 +116,13 @@ export async function POST(request: NextRequest) {
         insuranceValue: validatedData.insuranceValue,
         transportMethod: validatedData.transportMethod,
         riskScore: validatedData.riskScore,
+        maturityDate: validatedData.maturityDate,
+        metalForm: validatedData.metalForm,
+        purityPercent: validatedData.purityPercent,
+        karat: validatedData.karat,
+        grossWeightTroyOz: validatedData.grossWeightTroyOz,
+        refineryName: validatedData.refineryName,
+        refineryLocation: validatedData.refineryLocation,
         status: "FUNDING",
       },
     })

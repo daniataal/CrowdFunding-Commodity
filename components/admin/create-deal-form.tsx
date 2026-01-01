@@ -16,6 +16,7 @@ export function CreateDealForm() {
   const router = useRouter()
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState("")
+  const [isGeocoding, setIsGeocoding] = useState(false)
   const [formData, setFormData] = useState({
     templateKey: "",
     name: "",
@@ -24,14 +25,29 @@ export function CreateDealForm() {
     risk: "",
     targetApy: "",
     duration: "",
+    minInvestment: "1000",
+    maxInvestment: "",
+    platformFeeBps: "150",
     amountRequired: "",
     description: "",
     origin: "",
     destination: "",
+    originLat: "",
+    originLng: "",
+    destLat: "",
+    destLng: "",
     shipmentId: "",
     insuranceValue: "",
     transportMethod: "",
     riskScore: "",
+    maturityDate: "",
+    metalForm: "",
+    purityPreset: "",
+    purityPercent: "",
+    karat: "",
+    grossWeightTroyOz: "",
+    refineryName: "",
+    refineryLocation: "",
   })
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -95,6 +111,13 @@ export function CreateDealForm() {
                     duration: t.duration !== undefined ? String(t.duration) : formData.duration,
                     insuranceValue: t.insuranceValue !== undefined ? String(t.insuranceValue) : formData.insuranceValue,
                     transportMethod: t.transportMethod ?? formData.transportMethod,
+                    metalForm: (t as any).metalForm ?? formData.metalForm,
+                    purityPercent: (t as any).purityPercent !== undefined ? String((t as any).purityPercent) : formData.purityPercent,
+                    karat: (t as any).karat !== undefined ? String((t as any).karat) : formData.karat,
+                    grossWeightTroyOz:
+                      (t as any).grossWeightTroyOz !== undefined ? String((t as any).grossWeightTroyOz) : formData.grossWeightTroyOz,
+                    refineryName: (t as any).refineryName ?? formData.refineryName,
+                    refineryLocation: (t as any).refineryLocation ?? formData.refineryLocation,
                   })
                 }}
                 disabled={isLoading}
@@ -204,6 +227,57 @@ export function CreateDealForm() {
             </div>
 
             <div className="space-y-2">
+              <Label htmlFor="minInvestment">Minimum Investment ($)</Label>
+              <Input
+                id="minInvestment"
+                type="number"
+                step="0.01"
+                value={formData.minInvestment}
+                onChange={(e) => setFormData({ ...formData, minInvestment: e.target.value })}
+                disabled={isLoading}
+                placeholder="1000"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="maxInvestment">Maximum Investment ($)</Label>
+              <Input
+                id="maxInvestment"
+                type="number"
+                step="0.01"
+                value={formData.maxInvestment}
+                onChange={(e) => setFormData({ ...formData, maxInvestment: e.target.value })}
+                disabled={isLoading}
+                placeholder="(optional)"
+              />
+              <div className="text-xs text-muted-foreground">Leave blank for no maximum per investor.</div>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="platformFeeBps">Platform Fee (bps)</Label>
+              <Input
+                id="platformFeeBps"
+                type="number"
+                value={formData.platformFeeBps}
+                onChange={(e) => setFormData({ ...formData, platformFeeBps: e.target.value })}
+                disabled={isLoading}
+                placeholder="150"
+              />
+              <div className="text-xs text-muted-foreground">Basis points. 150 = 1.50%.</div>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="maturityDate">Maturity Date</Label>
+              <Input
+                id="maturityDate"
+                type="date"
+                value={formData.maturityDate}
+                onChange={(e) => setFormData({ ...formData, maturityDate: e.target.value })}
+                disabled={isLoading}
+              />
+            </div>
+
+            <div className="space-y-2">
               <Label htmlFor="origin">Origin *</Label>
               <Input
                 id="origin"
@@ -224,6 +298,102 @@ export function CreateDealForm() {
                 required
                 disabled={isLoading}
                 placeholder="Rotterdam, Netherlands"
+              />
+            </div>
+
+            <div className="md:col-span-2">
+              <div className="flex items-center justify-between gap-3 rounded-lg border bg-muted/20 p-3">
+                <div className="text-sm">
+                  <div className="font-medium">Coordinates</div>
+                  <div className="text-xs text-muted-foreground">
+                    Auto-fill from the origin/destination names (countries, cities, ports).
+                  </div>
+                </div>
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="bg-transparent"
+                  disabled={isLoading || isGeocoding || !formData.origin.trim() || !formData.destination.trim()}
+                  onClick={async () => {
+                    setIsGeocoding(true)
+                    setError("")
+                    try {
+                      const [oRes, dRes] = await Promise.all([
+                        fetch(`/api/geocode?query=${encodeURIComponent(formData.origin.trim())}`),
+                        fetch(`/api/geocode?query=${encodeURIComponent(formData.destination.trim())}`),
+                      ])
+                      const oJson = await oRes.json()
+                      const dJson = await dRes.json()
+                      if (!oRes.ok) throw new Error(oJson.error || "Failed to geocode origin")
+                      if (!dRes.ok) throw new Error(dJson.error || "Failed to geocode destination")
+                      setFormData((prev) => ({
+                        ...prev,
+                        originLat: String(oJson.data.lat),
+                        originLng: String(oJson.data.lng),
+                        destLat: String(dJson.data.lat),
+                        destLng: String(dJson.data.lng),
+                      }))
+                    } catch (e) {
+                      setError((e as Error).message)
+                    } finally {
+                      setIsGeocoding(false)
+                    }
+                  }}
+                >
+                  {isGeocoding ? "Geocoding..." : "Auto-fill coordinates"}
+                </Button>
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="originLat">Origin Lat</Label>
+              <Input
+                id="originLat"
+                type="number"
+                step="0.0001"
+                value={formData.originLat}
+                onChange={(e) => setFormData({ ...formData, originLat: e.target.value })}
+                disabled={isLoading}
+                placeholder="-23.5505"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="originLng">Origin Lng</Label>
+              <Input
+                id="originLng"
+                type="number"
+                step="0.0001"
+                value={formData.originLng}
+                onChange={(e) => setFormData({ ...formData, originLng: e.target.value })}
+                disabled={isLoading}
+                placeholder="-46.6333"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="destLat">Destination Lat</Label>
+              <Input
+                id="destLat"
+                type="number"
+                step="0.0001"
+                value={formData.destLat}
+                onChange={(e) => setFormData({ ...formData, destLat: e.target.value })}
+                disabled={isLoading}
+                placeholder="51.9225"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="destLng">Destination Lng</Label>
+              <Input
+                id="destLng"
+                type="number"
+                step="0.0001"
+                value={formData.destLng}
+                onChange={(e) => setFormData({ ...formData, destLng: e.target.value })}
+                disabled={isLoading}
+                placeholder="4.4792"
               />
             </div>
 
@@ -276,6 +446,130 @@ export function CreateDealForm() {
                 placeholder="3.5"
               />
             </div>
+
+            {formData.type === "Metals" && (
+              <>
+                <div className="md:col-span-2">
+                  <div className="text-sm font-semibold">Precious metals specs</div>
+                  <div className="text-xs text-muted-foreground">
+                    Support bullion and doré (semi-refined). Doré typically requires a destination refinery.
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <Label>Form</Label>
+                  <Select value={formData.metalForm} onValueChange={(v) => setFormData({ ...formData, metalForm: v })} disabled={isLoading}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select form" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="BULLION">Bullion</SelectItem>
+                      <SelectItem value="DORE">Doré</SelectItem>
+                      <SelectItem value="SCRAP">Scrap</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="space-y-2">
+                  <Label>Purity preset</Label>
+                  <Select
+                    value={formData.purityPreset}
+                    onValueChange={(v) => {
+                      const map: Record<string, { purity?: string; karat?: string }> = {
+                        "91+": { purity: "91" },
+                        "96+": { purity: "96" },
+                        "99.5": { purity: "99.5" },
+                        "99.99": { purity: "99.99" },
+                        "23K": { purity: "95.8", karat: "23" },
+                        "24K": { purity: "99.9", karat: "24" },
+                        CUSTOM: {},
+                      }
+                      const picked = map[v] ?? {}
+                      setFormData({
+                        ...formData,
+                        purityPreset: v,
+                        purityPercent: picked.purity ?? formData.purityPercent,
+                        karat: picked.karat ?? formData.karat,
+                      })
+                    }}
+                    disabled={isLoading}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select preset" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="91+">91%+</SelectItem>
+                      <SelectItem value="96+">96%+</SelectItem>
+                      <SelectItem value="99.5">99.5%</SelectItem>
+                      <SelectItem value="99.99">99.99%</SelectItem>
+                      <SelectItem value="23K">23K</SelectItem>
+                      <SelectItem value="24K">24K</SelectItem>
+                      <SelectItem value="CUSTOM">Custom</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="purityPercent">Purity (%)</Label>
+                  <Input
+                    id="purityPercent"
+                    type="number"
+                    step="0.01"
+                    value={formData.purityPercent as any}
+                    onChange={(e) => setFormData({ ...formData, purityPercent: e.target.value })}
+                    disabled={isLoading}
+                    placeholder="e.g. 96"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="karat">Karat (optional)</Label>
+                  <Input
+                    id="karat"
+                    type="number"
+                    value={formData.karat as any}
+                    onChange={(e) => setFormData({ ...formData, karat: e.target.value })}
+                    disabled={isLoading}
+                    placeholder="e.g. 24"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="grossWeightTroyOz">Gross weight (troy oz)</Label>
+                  <Input
+                    id="grossWeightTroyOz"
+                    type="number"
+                    step="0.0001"
+                    value={formData.grossWeightTroyOz as any}
+                    onChange={(e) => setFormData({ ...formData, grossWeightTroyOz: e.target.value })}
+                    disabled={isLoading}
+                    placeholder="e.g. 1000"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="refineryName">Destination refinery *</Label>
+                  <Input
+                    id="refineryName"
+                    value={formData.refineryName}
+                    onChange={(e) => setFormData({ ...formData, refineryName: e.target.value })}
+                    disabled={isLoading}
+                    placeholder="e.g. Valcambi / PAMP / Metalor"
+                  />
+                </div>
+
+                <div className="space-y-2 md:col-span-2">
+                  <Label htmlFor="refineryLocation">Refinery location (optional)</Label>
+                  <Input
+                    id="refineryLocation"
+                    value={formData.refineryLocation}
+                    onChange={(e) => setFormData({ ...formData, refineryLocation: e.target.value })}
+                    disabled={isLoading}
+                    placeholder="e.g. Switzerland"
+                  />
+                </div>
+              </>
+            )}
           </div>
 
           <div className="space-y-2">

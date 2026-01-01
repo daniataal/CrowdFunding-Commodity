@@ -1,10 +1,21 @@
 import { prisma } from "@/lib/prisma"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { BarChart3, Database, Users, TrendingUp } from "lucide-react"
+import { auth } from "@/auth"
+import { LogisticsSyncCard } from "@/components/admin/logistics-sync-card"
+import { JobsCard } from "@/components/admin/jobs-card"
+import { AlertsCard } from "@/components/admin/alerts-card"
+import { ApprovalsCard } from "@/components/admin/approvals-card"
 
 export const dynamic = "force-dynamic"
 
 export default async function SystemHealthPage() {
+  const session = await auth()
+  const dbUser = session?.user?.id
+    ? await prisma.user.findUnique({ where: { id: session.user.id }, select: { role: true } })
+    : null
+  const isAdmin = dbUser?.role === "ADMIN"
+
   const [
     totalUsers,
     totalCommodities,
@@ -107,6 +118,11 @@ export default async function SystemHealthPage() {
           <p className="text-sm text-muted-foreground mt-2">Total transactions processed</p>
         </CardContent>
       </Card>
+
+      <LogisticsSyncCard isAdmin={isAdmin} />
+      <JobsCard isAdmin={isAdmin} />
+      <AlertsCard isAdmin={isAdmin} />
+      <ApprovalsCard isAdmin={isAdmin} />
     </div>
   )
 }

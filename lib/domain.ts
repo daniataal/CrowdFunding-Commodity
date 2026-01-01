@@ -3,7 +3,15 @@ export type KycStatus = "PENDING" | "APPROVED" | "REJECTED" | "NOT_STARTED"
 
 export type CommodityType = "Agriculture" | "Energy" | "Metals"
 export type RiskLevel = "Low" | "Medium" | "High"
-export type CommodityStatus = "FUNDING" | "ACTIVE" | "IN_TRANSIT" | "SETTLED" | "CANCELLED"
+export type CommodityStatus =
+  | "FUNDING"
+  | "ACTIVE"
+  | "IN_TRANSIT"
+  | "ARRIVED"
+  | "INSPECTED"
+  | "RELEASED"
+  | "SETTLED"
+  | "CANCELLED"
 
 export type DocumentType =
   | "BILL_OF_LADING"
@@ -22,6 +30,13 @@ export type MarketplaceCommodity = {
   risk: RiskLevel
   targetApy: number
   duration: number
+  minInvestment?: number | null
+  maxInvestment?: number | null
+  platformFeeBps?: number | null
+  originLat?: number | null
+  originLng?: number | null
+  destLat?: number | null
+  destLng?: number | null
   amountRequired: number
   currentAmount: number
   description: string
@@ -32,6 +47,13 @@ export type MarketplaceCommodity = {
   insuranceValue?: number | null
   transportMethod?: string | null
   riskScore?: number | null
+  maturityDate?: string | null
+  metalForm?: string | null
+  purityPercent?: number | null
+  karat?: number | null
+  grossWeightTroyOz?: number | null
+  refineryName?: string | null
+  refineryLocation?: string | null
 }
 
 export type CommodityDocument = {
@@ -82,6 +104,16 @@ export type ActivityItem = {
   status: "success" | "pending" | "info"
 }
 
+export type ShipmentEvent = {
+  id: string
+  commodityId: string
+  type: "DEPARTED" | "IN_TRANSIT" | "ARRIVED"
+  occurredAt: string
+  description: string
+  source: string
+  createdAt: string
+}
+
 export type NotificationItem = {
   id: string
   type: "investment" | "shipment" | "dividend" | "alert" | "system"
@@ -99,6 +131,10 @@ export type UserProfile = {
   name: string
   role: UserRole
   kycStatus: KycStatus
+  disabled?: boolean
+  disabledAt?: string | null
+  walletFrozen?: boolean
+  walletFrozenAt?: string | null
   avatar?: string | null
   phone?: string | null
   company?: string | null
@@ -112,6 +148,41 @@ export type UserProfile = {
   currency: string
   timezone: string
   language: string
+}
+
+export type AdminUserSummary = {
+  id: string
+  email: string
+  name: string
+  role: UserRole
+  kycStatus: KycStatus
+  walletBalance: number
+  walletFrozen?: boolean
+  walletFrozenAt?: string | null
+  disabled: boolean
+  disabledAt: string | null
+  createdAt: string
+  _count: { investments: number; transactions: number; documents: number }
+}
+
+export type AdminUserDetail = AdminUserSummary & {
+  updatedAt: string
+  avatar?: string | null
+  phone?: string | null
+  company?: string | null
+  kycDocuments: CommodityDocument[]
+}
+
+export type AuditLogItem = {
+  id: string
+  action: string
+  entityType: string
+  entityId?: string | null
+  changes?: any
+  ipAddress?: string | null
+  userAgent?: string | null
+  createdAt: string
+  actor?: { id: string; email: string; name: string; role: UserRole } | null
 }
 
 

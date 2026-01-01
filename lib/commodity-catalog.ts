@@ -20,6 +20,13 @@ export type CommodityTemplate = {
   duration?: number
   insuranceValue?: number
   transportMethod?: string
+  // Metals-specific optional defaults
+  metalForm?: string
+  purityPercent?: number
+  karat?: number
+  grossWeightTroyOz?: number
+  refineryName?: string
+  refineryLocation?: string
 }
 
 export const COMMODITY_TEMPLATES: CommodityTemplate[] = [
@@ -77,6 +84,28 @@ export const COMMODITY_TEMPLATES: CommodityTemplate[] = [
     duration: 60,
     insuranceValue: 2500000,
     transportMethod: "Secured Vault Transfer",
+    metalForm: "BULLION",
+    purityPercent: 99.99,
+    karat: 24,
+    grossWeightTroyOz: 1000,
+    refineryName: "Valcambi",
+    refineryLocation: "Switzerland",
+  },
+  {
+    key: "gold-dore",
+    name: "Gold (Au) Doré",
+    type: "Metals",
+    icon: "gold",
+    risk: "High",
+    targetApy: 14.4,
+    duration: 75,
+    insuranceValue: 2200000,
+    transportMethod: "Secured Vault Transfer",
+    metalForm: "DORE",
+    purityPercent: 91,
+    grossWeightTroyOz: 1200,
+    refineryName: "PAMP",
+    refineryLocation: "Switzerland",
   },
   {
     key: "silver",
@@ -88,6 +117,71 @@ export const COMMODITY_TEMPLATES: CommodityTemplate[] = [
     duration: 60,
     insuranceValue: 1200000,
     transportMethod: "Secured Vault Transfer",
+    metalForm: "BULLION",
+    purityPercent: 99.9,
+    grossWeightTroyOz: 5000,
+    refineryName: "Metalor",
+    refineryLocation: "Switzerland",
+  },
+  {
+    key: "silver-coins",
+    name: "Silver (Ag) Coins",
+    type: "Metals",
+    icon: "silver",
+    risk: "Medium",
+    targetApy: 12.6,
+    duration: 60,
+    insuranceValue: 1100000,
+    transportMethod: "Secured Vault Transfer",
+    metalForm: "COINS",
+    purityPercent: 99.9,
+    grossWeightTroyOz: 3500,
+    refineryName: "Metalor",
+    refineryLocation: "Switzerland",
+  },
+  {
+    key: "silver-shot",
+    name: "Silver (Ag) Shot / Grain",
+    type: "Metals",
+    icon: "silver",
+    risk: "High",
+    targetApy: 15.2,
+    duration: 70,
+    insuranceValue: 950000,
+    transportMethod: "Secured Vault Transfer",
+    metalForm: "GRAIN",
+    purityPercent: 99.9,
+    grossWeightTroyOz: 4000,
+    refineryName: "Valcambi",
+    refineryLocation: "Switzerland",
+  },
+  {
+    key: "rough-diamonds",
+    name: "Rough Diamonds (Uncut)",
+    type: "Metals",
+    icon: "boxes",
+    risk: "High",
+    targetApy: 24.0,
+    duration: 90,
+    insuranceValue: 3000000,
+    transportMethod: "Secured Vault Transfer",
+    metalForm: "ROUGH_DIAMONDS",
+    refineryName: "Diamond Sorting Facility",
+    refineryLocation: "Antwerp, Belgium",
+  },
+  {
+    key: "cut-diamonds",
+    name: "Cut Diamonds (Polished)",
+    type: "Metals",
+    icon: "boxes",
+    risk: "High",
+    targetApy: 22.0,
+    duration: 90,
+    insuranceValue: 3500000,
+    transportMethod: "Secured Vault Transfer",
+    metalForm: "CUT_DIAMONDS",
+    refineryName: "Diamond Exchange",
+    refineryLocation: "Antwerp, Belgium",
   },
   {
     key: "diesel",

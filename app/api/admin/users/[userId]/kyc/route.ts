@@ -5,7 +5,56 @@ import { requireDbRole } from "@/lib/authz"
 
 const kycActionSchema = z.object({
   action: z.enum(["approve", "reject"]),
+  reason: z.string().trim().min(1).optional(),
 })
+
+export async function GET(
+  _request: NextRequest,
+  context: { params: Promise<{ userId: string }> }
+) {
+  const gate = await requireDbRole(["ADMIN", "AUDITOR"])
+  if (!gate.ok) {
+    return NextResponse.json({ error: gate.status === 403 ? "Forbidden" : "Unauthorized" }, { status: gate.status })
+  }
+
+  const { userId } = await context.params
+  if (!userId) {
+    return NextResponse.json({ error: "Missing userId" }, { status: 400 })
+  }
+
+  const user = await prisma.user.findUnique({
+    where: { id: userId },
+    select: {
+      id: true,
+      kycStatus: true,
+      documents: {
+        where: { type: { in: ["KYC_ID", "KYC_PROOF_OF_ADDRESS"] } },
+        orderBy: { createdAt: "desc" },
+      },
+    },
+  })
+
+  if (!user) return NextResponse.json({ error: "User not found" }, { status: 404 })
+
+  return NextResponse.json({
+    success: true,
+    data: {
+      userId: user.id,
+      kycStatus: user.kycStatus,
+      documents: user.documents.map((d) => ({
+        id: d.id,
+        type: d.type,
+        name: d.name,
+        url: d.url,
+        mimeType: d.mimeType,
+        size: d.size,
+        verified: d.verified,
+        verifiedAt: d.verifiedAt ? d.verifiedAt.toISOString() : null,
+        createdAt: d.createdAt.toISOString(),
+      })),
+    },
+  })
+}
 
 export async function POST(
   request: NextRequest,
@@ -23,7 +72,7 @@ export async function POST(
     }
 
     const body = await request.json()
-    const { action } = kycActionSchema.parse(body)
+    const { action, reason } = kycActionSchema.parse(body)
 
     const user = await prisma.user.findUnique({
       where: { id: userId },
@@ -65,6 +114,7 @@ export async function POST(
         changes: {
           previousStatus: user.kycStatus,
           newStatus,
+          ...(action === "reject" && reason ? { reason } : {}),
         },
       },
     })
