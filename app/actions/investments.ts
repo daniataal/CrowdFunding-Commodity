@@ -101,19 +101,26 @@ export async function investInCommodity(formData: FormData) {
         getOrCreatePlatformFeeIncomeAccount(tx),
       ])
 
-      // Deduct from wallet
-      if (Number(user.walletBalance) < totalDebit) {
-        return { error: "Insufficient balance" } as any
-      }
-
-      const updatedUser = await tx.user.update({
-        where: { id: session.user.id },
+      // Deduct from wallet atomically
+      const { count } = await tx.user.updateMany({
+        where: {
+          id: session.user.id,
+          walletBalance: { gte: totalDebit },
+        },
         data: {
           walletBalance: {
             decrement: totalDebit,
           },
         },
       })
+
+      if (count === 0) {
+        throw new Error("Insufficient balance")
+      }
+
+      // No need to fetch updatedUser since we don't use it elsewhere in exec logic except to return?
+      // exec returns { investment, updatedCommodity }. It doesn't return updatedUser.
+      // So we are good.
 
       // Update commodity funding
       const updatedCommodity = await tx.commodity.update({
@@ -250,24 +257,24 @@ export async function investInCommodity(formData: FormData) {
 
     const result = idempotencyKey
       ? await runIdempotent({
-          userId: session.user.id,
-          scope: `invest:${validatedData.commodityId}`,
-          key: idempotencyKey,
-          requestHash: sha256Base64Url(
-            JSON.stringify({
-              commodityId: validatedData.commodityId,
-              amount: validatedData.amount,
-              ackRisk: validatedData.ackRisk,
-              ackTerms: validatedData.ackTerms,
-            })
-          ),
-          run: exec,
-          response: (v) => ({
-            investmentId: v.investment.id,
-            commodityId: v.updatedCommodity.id,
-            newCurrentAmount: Number(v.updatedCommodity.currentAmount),
-          }),
-        })
+        userId: session.user.id,
+        scope: `invest:${validatedData.commodityId}`,
+        key: idempotencyKey,
+        requestHash: sha256Base64Url(
+          JSON.stringify({
+            commodityId: validatedData.commodityId,
+            amount: validatedData.amount,
+            ackRisk: validatedData.ackRisk,
+            ackTerms: validatedData.ackTerms,
+          })
+        ),
+        run: exec,
+        response: (v) => ({
+          investmentId: v.investment.id,
+          commodityId: v.updatedCommodity.id,
+          newCurrentAmount: Number(v.updatedCommodity.currentAmount),
+        }),
+      })
       : { ok: true as const, value: await prisma.$transaction(exec) }
 
     if (!result.ok) {

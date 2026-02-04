@@ -273,29 +273,29 @@ export function SettingsView({
         <p className="text-muted-foreground">Manage your account settings and preferences</p>
       </div>
 
-      <Tabs defaultValue={defaultTab} className="space-y-6">
-        <TabsList className="grid w-full grid-cols-2 lg:grid-cols-6">
-          <TabsTrigger value="profile" className="gap-2">
+      <Tabs defaultValue={defaultTab} className="space-y-8">
+        <TabsList className="grid w-full grid-cols-2 lg:grid-cols-6 bg-[#0A0A0A] border border-white/10 p-1 h-auto rounded-xl gap-1">
+          <TabsTrigger value="profile" className="gap-2 data-[state=active]:bg-primary data-[state=active]:text-white h-10 rounded-lg">
             <User className="h-4 w-4" />
             <span className="hidden sm:inline">Profile</span>
           </TabsTrigger>
-          <TabsTrigger value="kyc" className="gap-2">
+          <TabsTrigger value="kyc" className="gap-2 data-[state=active]:bg-primary data-[state=active]:text-white h-10 rounded-lg">
             <Shield className="h-4 w-4" />
             <span className="hidden sm:inline">KYC</span>
           </TabsTrigger>
-          <TabsTrigger value="security" className="gap-2">
+          <TabsTrigger value="security" className="gap-2 data-[state=active]:bg-primary data-[state=active]:text-white h-10 rounded-lg">
             <Lock className="h-4 w-4" />
             <span className="hidden sm:inline">Security</span>
           </TabsTrigger>
-          <TabsTrigger value="notifications" className="gap-2">
+          <TabsTrigger value="notifications" className="gap-2 data-[state=active]:bg-primary data-[state=active]:text-white h-10 rounded-lg">
             <Bell className="h-4 w-4" />
             <span className="hidden sm:inline">Notifications</span>
           </TabsTrigger>
-          <TabsTrigger value="preferences" className="gap-2">
+          <TabsTrigger value="preferences" className="gap-2 data-[state=active]:bg-primary data-[state=active]:text-white h-10 rounded-lg">
             <Palette className="h-4 w-4" />
             <span className="hidden sm:inline">Preferences</span>
           </TabsTrigger>
-          <TabsTrigger value="billing" className="gap-2">
+          <TabsTrigger value="billing" className="gap-2 data-[state=active]:bg-primary data-[state=active]:text-white h-10 rounded-lg">
             <CreditCard className="h-4 w-4" />
             <span className="hidden sm:inline">Billing</span>
           </TabsTrigger>
@@ -303,16 +303,17 @@ export function SettingsView({
 
         {/* Profile Tab */}
         <TabsContent value="profile" className="space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>Profile Information</CardTitle>
-              <CardDescription>Update your personal information and profile details</CardDescription>
+          <Card className="border border-white/10 bg-[#0A0A0A] rounded-2xl relative overflow-hidden">
+            <div className="absolute top-0 right-0 w-32 h-32 bg-primary/10 rounded-full blur-[60px]" />
+            <CardHeader className="relative z-10">
+              <CardTitle className="text-white">Profile Information</CardTitle>
+              <CardDescription className="text-muted-foreground">Update your personal information and profile details</CardDescription>
             </CardHeader>
-            <CardContent className="space-y-6">
-              <div className="flex items-center gap-6">
-                <Avatar className="h-24 w-24">
+            <CardContent className="space-y-8 relative z-10">
+              <div className="flex items-center gap-8">
+                <Avatar className="h-28 w-28 border-2 border-white/10 shadow-xl">
                   <AvatarImage src={profileQuery.data?.avatar || "/placeholder.svg"} />
-                  <AvatarFallback className="bg-emerald-500/20 text-2xl text-emerald-500">
+                  <AvatarFallback className="bg-[#151515] text-3xl text-primary font-bold">
                     {user?.name?.charAt(0).toUpperCase()}
                   </AvatarFallback>
                 </Avatar>
@@ -325,7 +326,6 @@ export function SettingsView({
                     disabled={uploadAvatarMutation.isPending}
                     onChange={(e) => {
                       const f = e.target.files?.[0] ?? null
-                      // allow re-selecting the same file later
                       e.currentTarget.value = ""
                       if (!f) return
                       uploadAvatarMutation.mutate(f)
@@ -333,82 +333,100 @@ export function SettingsView({
                   />
                   <Button
                     variant="outline"
-                    className="gap-2 bg-transparent"
+                    className="gap-2 bg-white/5 border-white/10 text-white hover:bg-white/10 hover:text-white mb-2"
                     disabled={uploadAvatarMutation.isPending}
                     onClick={() => avatarInputRef.current?.click()}
                   >
                     {uploadAvatarMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />}
                     {uploadAvatarMutation.isPending ? "Uploading..." : "Upload Photo"}
                   </Button>
-                  <p className="mt-2 text-xs text-muted-foreground">JPG, PNG or GIF. Max size 2MB.</p>
+                  <p className="text-xs text-muted-foreground">JPG, PNG or GIF. Max size 2MB.</p>
                 </div>
               </div>
 
-              <Separator />
+              <Separator className="bg-white/5" />
 
-              <div className="grid gap-4 sm:grid-cols-2">
+              <div className="grid gap-6 sm:grid-cols-2">
                 <div className="space-y-2">
-                  <Label htmlFor="name">Full Name</Label>
-                  <Input id="name" value={name} onChange={(e) => setName(e.target.value)} />
+                  <Label htmlFor="name" className="text-white">Full Name</Label>
+                  <Input
+                    id="name"
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    className="bg-white/5 border-white/10 text-white focus-visible:ring-primary/50"
+                  />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="email">Email</Label>
-                  <Input id="email" type="email" value={email} disabled />
+                  <Label htmlFor="email" className="text-white">Email</Label>
+                  <Input
+                    id="email"
+                    type="email"
+                    value={email}
+                    disabled
+                    className="bg-white/5 border-white/10 text-muted-foreground cursor-not-allowed"
+                  />
                   <p className="text-xs text-muted-foreground">Email changes are not supported yet.</p>
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="phone">Phone Number</Label>
+                  <Label htmlFor="phone" className="text-white">Phone Number</Label>
                   <Input
                     id="phone"
                     type="tel"
                     placeholder="+1 (555) 000-0000"
                     value={phone}
                     onChange={(e) => setPhone(e.target.value)}
+                    className="bg-white/5 border-white/10 text-white focus-visible:ring-primary/50 placeholder:text-muted-foreground/50"
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="company">Company</Label>
+                  <Label htmlFor="company" className="text-white">Company</Label>
                   <Input
                     id="company"
                     placeholder="Acme Corp"
                     value={company}
                     onChange={(e) => setCompany(e.target.value)}
+                    className="bg-white/5 border-white/10 text-white focus-visible:ring-primary/50 placeholder:text-muted-foreground/50"
                   />
                 </div>
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="bio">Bio</Label>
+                <Label htmlFor="bio" className="text-white">Bio</Label>
                 <textarea
                   id="bio"
                   rows={4}
-                  className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                  className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white placeholder:text-muted-foreground/50 focus-visible:outline-none focus:ring-2 focus:ring-primary/50"
                   placeholder="Tell us about yourself..."
                   value={bio}
                   onChange={(e) => setBio(e.target.value)}
                 />
               </div>
 
-              <Button onClick={handleSave} disabled={isSaving} className="gap-2 bg-emerald-600 hover:bg-emerald-500">
+              <Button
+                onClick={handleSave}
+                disabled={isSaving}
+                className="gap-2 bg-primary hover:bg-red-600 text-white font-bold shadow-lg shadow-red-500/20 px-8"
+              >
                 <Save className="h-4 w-4" />
                 {isSaving ? "Saving..." : "Save Changes"}
               </Button>
             </CardContent>
           </Card>
 
-          <Card>
+          <Card className="border border-white/10 bg-[#0A0A0A] rounded-2xl relative overflow-hidden">
             <CardHeader>
-              <CardTitle>Account Type</CardTitle>
-              <CardDescription>Your current account status and verification level</CardDescription>
+              <CardTitle className="text-white">Account Type</CardTitle>
+              <CardDescription className="text-muted-foreground">Your current account status and verification level</CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="flex items-center justify-between rounded-lg border border-border bg-muted/30 p-4">
+              <div className="flex items-center justify-between rounded-xl border border-white/10 bg-white/5 p-6">
                 <div>
-                  <div className="font-semibold">Individual Investor</div>
+                  <div className="font-bold text-white text-lg">Individual Investor</div>
                   <div className="text-sm text-muted-foreground">Standard investment limits apply</div>
                 </div>
                 <Button
                   variant="outline"
+                  className="border-white/10 bg-transparent text-white hover:bg-white/10 hover:text-white"
                   onClick={() =>
                     toast({
                       title: "Upgrade",

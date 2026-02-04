@@ -3,17 +3,17 @@ export type CommodityTemplate = {
   name: string
   type: "Agriculture" | "Energy" | "Metals"
   icon:
-    | "coffee"
-    | "wheat"
-    | "fuel"
-    | "boxes"
-    | "leaf"
-    | "gold"
-    | "silver"
-    | "diesel"
-    | "titanium"
-    | "palladium"
-    | "copper"
+  | "coffee"
+  | "wheat"
+  | "fuel"
+  | "boxes"
+  | "leaf"
+  | "gold"
+  | "silver"
+  | "diesel"
+  | "titanium"
+  | "palladium"
+  | "copper"
   // Optional sane defaults to speed up listing creation
   risk?: "Low" | "Medium" | "High"
   targetApy?: number
@@ -76,7 +76,7 @@ export const COMMODITY_TEMPLATES: CommodityTemplate[] = [
   },
   {
     key: "gold",
-    name: "Gold (Au) Bullion",
+    name: "Gold",
     type: "Metals",
     icon: "gold",
     risk: "Medium",
@@ -92,24 +92,8 @@ export const COMMODITY_TEMPLATES: CommodityTemplate[] = [
     refineryLocation: "Switzerland",
   },
   {
-    key: "gold-dore",
-    name: "Gold (Au) Doré",
-    type: "Metals",
-    icon: "gold",
-    risk: "High",
-    targetApy: 14.4,
-    duration: 75,
-    insuranceValue: 2200000,
-    transportMethod: "Secured Vault Transfer",
-    metalForm: "DORE",
-    purityPercent: 91,
-    grossWeightTroyOz: 1200,
-    refineryName: "PAMP",
-    refineryLocation: "Switzerland",
-  },
-  {
     key: "silver",
-    name: "Silver (Ag) Bars",
+    name: "Silver",
     type: "Metals",
     icon: "silver",
     risk: "Medium",
@@ -124,40 +108,8 @@ export const COMMODITY_TEMPLATES: CommodityTemplate[] = [
     refineryLocation: "Switzerland",
   },
   {
-    key: "silver-coins",
-    name: "Silver (Ag) Coins",
-    type: "Metals",
-    icon: "silver",
-    risk: "Medium",
-    targetApy: 12.6,
-    duration: 60,
-    insuranceValue: 1100000,
-    transportMethod: "Secured Vault Transfer",
-    metalForm: "COINS",
-    purityPercent: 99.9,
-    grossWeightTroyOz: 3500,
-    refineryName: "Metalor",
-    refineryLocation: "Switzerland",
-  },
-  {
-    key: "silver-shot",
-    name: "Silver (Ag) Shot / Grain",
-    type: "Metals",
-    icon: "silver",
-    risk: "High",
-    targetApy: 15.2,
-    duration: 70,
-    insuranceValue: 950000,
-    transportMethod: "Secured Vault Transfer",
-    metalForm: "GRAIN",
-    purityPercent: 99.9,
-    grossWeightTroyOz: 4000,
-    refineryName: "Valcambi",
-    refineryLocation: "Switzerland",
-  },
-  {
-    key: "rough-diamonds",
-    name: "Rough Diamonds (Uncut)",
+    key: "diamonds",
+    name: "Diamonds",
     type: "Metals",
     icon: "boxes",
     risk: "High",
@@ -167,20 +119,6 @@ export const COMMODITY_TEMPLATES: CommodityTemplate[] = [
     transportMethod: "Secured Vault Transfer",
     metalForm: "ROUGH_DIAMONDS",
     refineryName: "Diamond Sorting Facility",
-    refineryLocation: "Antwerp, Belgium",
-  },
-  {
-    key: "cut-diamonds",
-    name: "Cut Diamonds (Polished)",
-    type: "Metals",
-    icon: "boxes",
-    risk: "High",
-    targetApy: 22.0,
-    duration: 90,
-    insuranceValue: 3500000,
-    transportMethod: "Secured Vault Transfer",
-    metalForm: "CUT_DIAMONDS",
-    refineryName: "Diamond Exchange",
     refineryLocation: "Antwerp, Belgium",
   },
   {

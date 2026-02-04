@@ -1,17 +1,17 @@
 import type React from "react"
 import type { Metadata } from "next"
-import { Geist, Geist_Mono } from "next/font/google"
+import { Inter, Sora } from "next/font/google"
 import { Analytics } from "@vercel/analytics/next"
 import { Providers } from "@/lib/providers"
 import "./globals.css"
 
-const _geist = Geist({ subsets: ["latin"] })
-const _geistMono = Geist_Mono({ subsets: ["latin"] })
+const _inter = Inter({ subsets: ["latin"], variable: "--font-sans" })
+const _sora = Sora({ subsets: ["latin"], variable: "--font-heading" })
 
 export const metadata: Metadata = {
-  title: "CommodityFund | Institutional Trading Platform",
+  title: "CommodityFund | Trade Like a Pro",
   description:
-    "Professional commodity crowdfunding platform for funding global shipments of Wheat, Copper, Coffee, Oil and more",
+    "Premium commodity crowdfunding platform for funding global shipments of Wheat, Copper, Coffee, Oil and more",
   generator: "v0.app",
   icons: {
     icon: [
@@ -39,7 +39,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className={`font-sans antialiased`}>
+      <body className={`${_inter.variable} ${_sora.variable} font-sans antialiased`}>
         <Providers>{children}</Providers>
         <Analytics />
       </body>

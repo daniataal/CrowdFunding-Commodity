@@ -56,22 +56,24 @@ export function ActivityView() {
   }
 
   return (
-    <div className="mx-auto max-w-4xl">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-foreground">Activity</h1>
+    <div className="mx-auto max-w-4xl space-y-8">
+      <div>
+        <h1 className="text-3xl font-bold text-white mb-2">Activity</h1>
         <p className="text-muted-foreground">Track your investments and transactions</p>
       </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Recent Activity</CardTitle>
-          <CardDescription>Your complete transaction history and updates</CardDescription>
+      <Card className="border border-white/10 bg-[#0A0A0A] rounded-2xl relative overflow-hidden">
+        <div className="absolute top-0 right-0 w-64 h-64 bg-primary/5 rounded-full blur-[80px]" />
+
+        <CardHeader className="relative z-10 border-b border-white/5">
+          <CardTitle className="text-white">Recent Activity</CardTitle>
+          <CardDescription className="text-muted-foreground">Your complete transaction history and updates</CardDescription>
         </CardHeader>
-        <CardContent>
-          <ScrollArea className="h-[600px] pr-4">
-            <div className="relative space-y-0">
+        <CardContent className="relative z-10 p-0">
+          <ScrollArea className="h-[600px]">
+            <div className="p-6 relative space-y-0">
               {/* Timeline line */}
-              <div className="absolute left-[22px] top-4 bottom-4 w-0.5 bg-border" />
+              <div className="absolute left-[45px] top-6 bottom-6 w-[1px] bg-white/10" />
 
               <ActivityItems getIcon={getIcon} getStatusBadge={getStatusBadge} formatTimestamp={formatTimestamp} formatAmount={formatAmount} />
             </div>
@@ -108,28 +110,28 @@ function ActivityItems({
   return (
     <>
       {items.map((item) => (
-                <div key={item.id} className="relative flex gap-4 pb-8 last:pb-0">
-                  {/* Icon circle */}
-                  <div className="relative z-10 flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-full border-2 border-border bg-card">
-                    {getIcon(item.type)}
-                  </div>
+        <div key={item.id} className="relative flex gap-6 pb-8 last:pb-0 group">
+          {/* Icon circle */}
+          <div className="relative z-10 flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full border border-white/10 bg-[#0A0A0A] group-hover:bg-white/5 transition-colors shadow-lg shadow-black/50">
+            {getIcon(item.type)}
+          </div>
 
-                  {/* Content */}
-                  <div className="flex-1 pt-1">
-                    <div className="flex items-start justify-between gap-4">
-                      <div className="flex-1 space-y-1">
-                        <div className="flex items-center gap-2">
-                          <h3 className="font-semibold">{item.title}</h3>
-                          {getStatusBadge(item.status)}
-                        </div>
-                        <p className="text-sm text-muted-foreground">{item.description}</p>
-                        <p className="text-xs text-muted-foreground">{formatTimestamp(item.timestamp)}</p>
-                      </div>
-                      {item.amount && <div className="text-right">{formatAmount(item.amount)}</div>}
-                    </div>
-                  </div>
+          {/* Content */}
+          <div className="flex-1 pt-1 bg-white/[0.02] border border-white/5 rounded-xl p-4 hover:bg-white/[0.04] transition-colors">
+            <div className="flex items-start justify-between gap-4">
+              <div className="flex-1 space-y-1">
+                <div className="flex items-center gap-3">
+                  <h3 className="font-bold text-white text-sm">{item.title}</h3>
+                  {getStatusBadge(item.status)}
                 </div>
-              ))}
+                <p className="text-sm text-muted-foreground leading-relaxed">{item.description}</p>
+                <p className="text-xs text-muted-foreground/60 font-mono mt-2">{formatTimestamp(item.timestamp)}</p>
+              </div>
+              {item.amount && <div className="text-right font-bold">{formatAmount(item.amount)}</div>}
+            </div>
+          </div>
+        </div>
+      ))}
     </>
   )
 }

@@ -104,10 +104,10 @@ export function AssetDetailModal({ commodity, open, onOpenChange }: AssetDetailM
     commodity?.originLat != null && commodity?.originLng != null && commodity?.destLat != null && commodity?.destLng != null
   const projectedReturn = investAmount
     ? (
-        Number.parseFloat(investAmount) *
-        (Number(commodity?.targetApy ?? 0) / 100) *
-        (Number(commodity?.duration ?? 0) / 365)
-      ).toFixed(2)
+      Number.parseFloat(investAmount) *
+      (Number(commodity?.targetApy ?? 0) / 100) *
+      (Number(commodity?.duration ?? 0) / 365)
+    ).toFixed(2)
     : "0.00"
 
   const amountNum = Number.parseFloat(investAmount)
@@ -117,6 +117,8 @@ export function AssetDetailModal({ commodity, open, onOpenChange }: AssetDetailM
   const minViolation = isAmountValid && amountNum < minInvestment
   const maxViolation = isAmountValid && maxInvestment !== null && amountNum > maxInvestment
   const remainingViolation = isAmountValid && amountNum > remainingAmount
+
+  const [showSuccess, setShowSuccess] = useState(false)
 
   const investMutation = useMutation({
     mutationFn: async () => {
@@ -142,10 +144,7 @@ export function AssetDetailModal({ commodity, open, onOpenChange }: AssetDetailM
       return json
     },
     onSuccess: async () => {
-      setInvestAmount("")
-      setAckRisk(false)
-      setAckTerms(false)
-      onOpenChange(false)
+      setShowSuccess(true)
       await Promise.all([
         qc.invalidateQueries({ queryKey: ["marketplace", "commodities"] }),
         qc.invalidateQueries({ queryKey: ["wallet", "balance"] }),
@@ -156,6 +155,14 @@ export function AssetDetailModal({ commodity, open, onOpenChange }: AssetDetailM
       ])
     },
   })
+
+  const resetModal = () => {
+    setShowSuccess(false)
+    setInvestAmount("")
+    setAckRisk(false)
+    setAckTerms(false)
+    onOpenChange(false)
+  }
 
   const kycApproved = (session?.user as any)?.kycStatus === "APPROVED"
   const transport = String(commodity?.transportMethod ?? "").toLowerCase()
@@ -172,16 +179,55 @@ export function AssetDetailModal({ commodity, open, onOpenChange }: AssetDetailM
   const vesselName = commodity?.shipmentId ?? `${commodity?.name ?? "Shipment"} ${vehicleType === "plane" ? "Jet" : "Vessel"}`
 
   return (
-    <Dialog open={open && !!commodity} onOpenChange={onOpenChange}>
+    <Dialog open={open && !!commodity} onOpenChange={(v) => !v && resetModal()}>
       <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
         {!commodity ? (
           <div className="py-8 text-sm text-muted-foreground">Select a marketplace deal to view details.</div>
+        ) : showSuccess ? (
+          <div className="flex flex-col items-center justify-center py-10 text-center space-y-6">
+            <div className="h-20 w-20 rounded-full bg-emerald-500/10 flex items-center justify-center animate-in zoom-in duration-300">
+              <Shield className="h-10 w-10 text-emerald-600" />
+            </div>
+            <div className="space-y-2">
+              <h2 className="text-3xl font-bold text-foreground">Investment Confirmed!</h2>
+              <p className="text-muted-foreground max-w-md mx-auto">
+                You have successfully invested <span className="text-foreground font-semibold">${Number(investAmount).toLocaleString()}</span> in {commodity.name}.
+              </p>
+            </div>
+
+            <Card className="w-full max-w-sm p-4 bg-muted/30 border-dashed">
+              <div className="flex justify-between text-sm mb-2">
+                <span className="text-muted-foreground">Transaction ID</span>
+                <span className="font-mono text-xs">{investMutation.data?.data?.investmentId?.slice(-8) ?? "PENDING"}...</span>
+              </div>
+              <div className="flex justify-between text-sm mb-2">
+                <span className="text-muted-foreground">Ownership</span>
+                <span className="font-medium text-emerald-600">
+                  {((Number(investAmount) / commodity.amountRequired) * 100).toFixed(4)}%
+                </span>
+              </div>
+              <div className="flex justify-between text-sm">
+                <span className="text-muted-foreground">Est. Maturity</span>
+                <span>{arrivalDate.toLocaleDateString()}</span>
+              </div>
+            </Card>
+
+            <div className="flex gap-4 w-full max-w-xs">
+              <Button className="flex-1" variant="outline" onClick={resetModal}>
+                Close
+              </Button>
+              <Button className="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white" onClick={resetModal}>
+                View Portfolio
+              </Button>
+            </div>
+          </div>
         ) : (
           <>
             <DialogHeader>
               <DialogTitle className="text-2xl">{commodity.name}</DialogTitle>
               <div className="flex gap-2 mt-2">
                 <Badge variant="outline">{commodity.type}</Badge>
+                {commodity.grossWeightTroyOz && <Badge variant="outline">{commodity.grossWeightTroyOz} oz</Badge>}
                 <Badge
                   variant="outline"
                   className={
@@ -218,370 +264,370 @@ export function AssetDetailModal({ commodity, open, onOpenChange }: AssetDetailM
             </div>
 
             <Tabs value={detailsTab} onValueChange={(v) => setDetailsTab(v as any)} className="mt-4">
-          <TabsList className="grid w-full grid-cols-3">
-            <TabsTrigger value="financials">Financials</TabsTrigger>
-            <TabsTrigger value="logistics">Logistics</TabsTrigger>
-            <TabsTrigger value="documents">Documents</TabsTrigger>
-          </TabsList>
+              <TabsList className="grid w-full grid-cols-3">
+                <TabsTrigger value="financials">Financials</TabsTrigger>
+                <TabsTrigger value="logistics">Logistics</TabsTrigger>
+                <TabsTrigger value="documents">Documents</TabsTrigger>
+              </TabsList>
 
-          <TabsContent value="financials" className="space-y-4 mt-4">
-            <Card className="p-6 border-2">
-              <h3 className="font-semibold mb-4 flex items-center">
-                <DollarSign className="h-5 w-5 mr-2 text-emerald-500" />
-                Cost Breakdown
-              </h3>
-              <div className="space-y-3">
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Total Required</span>
-                  <span className="font-semibold">${commodity.amountRequired.toLocaleString()}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Already Funded</span>
-                  <span className="font-semibold text-emerald-500">${commodity.currentAmount.toLocaleString()}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Remaining</span>
-                  <span className="font-semibold">${remainingAmount.toLocaleString()}</span>
-                </div>
-                <Progress value={fundedPercentage} className="h-2" />
-                <div className="flex justify-between pt-2 border-t">
-                  <span className="text-muted-foreground">Insurance Coverage</span>
-                  <span className="font-semibold">${commodity.insuranceValue?.toLocaleString()}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Target APY</span>
-                  <span className="font-semibold text-emerald-500">{commodity.targetApy}%</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Duration</span>
-                  <span className="font-semibold">{commodity.duration} days</span>
-                </div>
-              </div>
-            </Card>
+              <TabsContent value="financials" className="space-y-4 mt-4">
+                <Card className="p-6 border-2">
+                  <h3 className="font-semibold mb-4 flex items-center">
+                    <DollarSign className="h-5 w-5 mr-2 text-emerald-500" />
+                    Cost Breakdown
+                  </h3>
+                  <div className="space-y-3">
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Total Required</span>
+                      <span className="font-semibold">${commodity.amountRequired.toLocaleString()}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Already Funded</span>
+                      <span className="font-semibold text-emerald-500">${commodity.currentAmount.toLocaleString()}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Remaining</span>
+                      <span className="font-semibold">${remainingAmount.toLocaleString()}</span>
+                    </div>
+                    <Progress value={fundedPercentage} className="h-2" />
+                    <div className="flex justify-between pt-2 border-t">
+                      <span className="text-muted-foreground">Insurance Coverage</span>
+                      <span className="font-semibold">${commodity.insuranceValue?.toLocaleString()}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Target APY</span>
+                      <span className="font-semibold text-emerald-500">{commodity.targetApy}%</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Duration</span>
+                      <span className="font-semibold">{commodity.duration} days</span>
+                    </div>
+                  </div>
+                </Card>
 
-            <Card className="p-6 border-2 bg-emerald-500/5">
-              <h3 className="font-semibold mb-4 flex items-center">
-                <TrendingUp className="h-5 w-5 mr-2 text-emerald-500" />
-                Investment Calculator
-              </h3>
-              <div className="space-y-4">
-                {!kycApproved && (
-                  <Alert className="border-amber-500/20 bg-amber-500/10">
-                    <AlertDescription className="text-amber-500">
-                      KYC approval is required before investing.{" "}
-                      <Link className="underline" href="/kyc-verification">
-                        Complete verification
-                      </Link>
-                      .
-                    </AlertDescription>
-                  </Alert>
-                )}
-                <div>
-                  <Label htmlFor="amount">Investment Amount ($)</Label>
-                  <Input
-                    id="amount"
-                    type="number"
-                    placeholder="10000"
-                    value={investAmount}
-                    onChange={(e) => setInvestAmount(e.target.value)}
-                    className="mt-2"
-                    disabled={!kycApproved}
-                  />
-                  <div className="mt-2 text-xs text-muted-foreground">
-                    Min ${minInvestment.toLocaleString()}
-                    {maxInvestment !== null ? ` • Max $${maxInvestment.toLocaleString()}` : ""} • Remaining $
-                    {remainingAmount.toLocaleString()}
+                <Card className="p-6 border-2 bg-emerald-500/5">
+                  <h3 className="font-semibold mb-4 flex items-center">
+                    <TrendingUp className="h-5 w-5 mr-2 text-emerald-500" />
+                    Investment Calculator
+                  </h3>
+                  <div className="space-y-4">
+                    {!kycApproved && (
+                      <Alert className="border-amber-500/20 bg-amber-500/10">
+                        <AlertDescription className="text-amber-500">
+                          KYC approval is required before investing.{" "}
+                          <Link className="underline" href="/kyc-verification">
+                            Complete verification
+                          </Link>
+                          .
+                        </AlertDescription>
+                      </Alert>
+                    )}
+                    <div>
+                      <Label htmlFor="amount">Investment Amount ($)</Label>
+                      <Input
+                        id="amount"
+                        type="number"
+                        placeholder="10000"
+                        value={investAmount}
+                        onChange={(e) => setInvestAmount(e.target.value)}
+                        className="mt-2"
+                        disabled={!kycApproved}
+                      />
+                      <div className="mt-2 text-xs text-muted-foreground">
+                        Min ${minInvestment.toLocaleString()}
+                        {maxInvestment !== null ? ` • Max $${maxInvestment.toLocaleString()}` : ""} • Remaining $
+                        {remainingAmount.toLocaleString()}
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-2 gap-4 p-4 bg-background rounded-lg">
+                      <div>
+                        <p className="text-sm text-muted-foreground">Projected Return</p>
+                        <p className="text-2xl font-bold text-emerald-500">${projectedReturn}</p>
+                      </div>
+                      <div>
+                        <p className="text-sm text-muted-foreground">Total Value</p>
+                        <p className="text-2xl font-bold">
+                          $
+                          {investAmount
+                            ? (Number.parseFloat(investAmount) + Number.parseFloat(projectedReturn)).toFixed(2)
+                            : "0.00"}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="rounded-lg border p-4 bg-background/50">
+                      <div className="flex items-center justify-between text-sm">
+                        <span className="text-muted-foreground">Platform fee</span>
+                        <span className="font-medium">{(platformFeeBps / 100).toFixed(2)}%</span>
+                      </div>
+                      <div className="mt-2 space-y-1 text-sm">
+                        <div className="flex justify-between">
+                          <span className="text-muted-foreground">Principal</span>
+                          <span className="font-medium">${isAmountValid ? amountNum.toFixed(2) : "0.00"}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-muted-foreground">Fee</span>
+                          <span className="font-medium">${fee.toFixed(2)}</span>
+                        </div>
+                        <div className="flex justify-between border-t pt-2">
+                          <span className="text-muted-foreground">Total wallet debit</span>
+                          <span className="font-semibold">${totalDebit.toFixed(2)}</span>
+                        </div>
+                      </div>
+                      {(minViolation || maxViolation || remainingViolation) && (
+                        <div className="mt-2 text-xs text-red-500">
+                          {minViolation && `Below minimum ($${minInvestment.toLocaleString()}). `}
+                          {maxViolation && maxInvestment !== null && `Above maximum ($${maxInvestment.toLocaleString()}). `}
+                          {remainingViolation && "Exceeds remaining funding."}
+                        </div>
+                      )}
+                    </div>
+                    <div className="space-y-3 rounded-lg border p-4 bg-background/50">
+                      <div className="flex items-start gap-3">
+                        <Checkbox
+                          checked={ackRisk}
+                          onCheckedChange={(v) => setAckRisk(Boolean(v))}
+                          disabled={!kycApproved}
+                          aria-label="Acknowledge risk disclosure"
+                        />
+                        <div className="text-sm">
+                          I have read and understand the{" "}
+                          <Link className="underline" href="/legal/risk-disclosure" target="_blank">
+                            Risk Disclosure
+                          </Link>
+                          .
+                        </div>
+                      </div>
+                      <div className="flex items-start gap-3">
+                        <Checkbox
+                          checked={ackTerms}
+                          onCheckedChange={(v) => setAckTerms(Boolean(v))}
+                          disabled={!kycApproved}
+                          aria-label="Accept terms of service"
+                        />
+                        <div className="text-sm">
+                          I agree to the{" "}
+                          <Link className="underline" href="/legal/terms" target="_blank">
+                            Terms of Service
+                          </Link>
+                          .
+                        </div>
+                      </div>
+                    </div>
+                    {investMutation.error && (
+                      <div className="text-sm text-red-500">{(investMutation.error as Error).message}</div>
+                    )}
+                    <Button
+                      className="w-full bg-emerald-600 hover:bg-emerald-700 text-white"
+                      size="lg"
+                      onClick={() => investMutation.mutate()}
+                      disabled={
+                        investMutation.isPending ||
+                        !kycApproved ||
+                        !ackRisk ||
+                        !ackTerms ||
+                        !isAmountValid ||
+                        minViolation ||
+                        maxViolation ||
+                        remainingViolation
+                      }
+                    >
+                      {investMutation.isPending ? "Investing..." : "Invest Now"}
+                    </Button>
                   </div>
-                </div>
-                <div className="grid grid-cols-2 gap-4 p-4 bg-background rounded-lg">
-                  <div>
-                    <p className="text-sm text-muted-foreground">Projected Return</p>
-                    <p className="text-2xl font-bold text-emerald-500">${projectedReturn}</p>
+                </Card>
+              </TabsContent>
+
+              <TabsContent value="logistics" className="space-y-4 mt-4">
+                <Card id="modal-logistics-map" className="p-6 border-2">
+                  <h3 className="font-semibold mb-4">Logistics Map</h3>
+                  {hasCoords && commodity ? (
+                    <ShipmentMap
+                      originCoordinates={{ lat: commodity.originLat as number, lng: commodity.originLng as number }}
+                      destinationCoordinates={{ lat: commodity.destLat as number, lng: commodity.destLng as number }}
+                      departureDate={effectiveDepartureDate}
+                      arrivalDate={effectiveArrivalDate}
+                      vesselName={vesselName}
+                      vehicleType={vehicleType}
+                    />
+                  ) : (
+                    <div className="text-sm text-muted-foreground">No coordinates available for this deal yet.</div>
+                  )}
+                  {commodity && (
+                    <div className="mt-4 space-y-2">
+                      {shipmentEventsQuery.isError ? (
+                        <div className="text-sm text-muted-foreground">
+                          {(shipmentEventsQuery.error as Error).message === "Unauthorized" ? (
+                            <span>
+                              Please <Link className="underline" href="/login">log in</Link> to view shipment tracking.
+                            </span>
+                          ) : (shipmentEventsQuery.error as Error).message === "KYC approval required" ? (
+                            <span>
+                              KYC approval is required to view shipment tracking.{" "}
+                              <Link className="underline" href="/kyc-verification">Complete verification</Link>.
+                            </span>
+                          ) : (
+                            <span>Shipment events unavailable.</span>
+                          )}
+                        </div>
+                      ) : null}
+
+                      {(() => {
+                        const events = shipmentEventsQuery.data ?? []
+                        const departed = events.find((e) => e.type === "DEPARTED")
+                        const arrived = [...events].reverse().find((e) => e.type === "ARRIVED")
+                        const now = new Date()
+                        const departedAt = departed ? new Date(departed.occurredAt) : departureDate
+                        const arrivedAt = arrived ? new Date(arrived.occurredAt) : arrivalDate
+                        const arrivedPast = Boolean(arrived && arrivedAt <= now)
+                        const inTransitState = now < departedAt ? "Pending" : arrivedPast ? "Completed" : "Active"
+                        return (
+                          <>
+                            <div className="flex items-center justify-between text-sm">
+                              <div className="font-medium">Departed {commodity.origin}</div>
+                              <div className="text-muted-foreground">{departedAt.toLocaleDateString()}</div>
+                            </div>
+                            <div className="flex items-center justify-between text-sm">
+                              <div className="font-medium">Currently in transit</div>
+                              <div className="text-muted-foreground">{inTransitState}</div>
+                            </div>
+                            <div className="flex items-center justify-between text-sm">
+                              <div className="font-medium">
+                                {arrivedPast ? "Arrived" : "Estimated arrival"} {commodity.destination}
+                              </div>
+                              <div className="text-muted-foreground">{arrivedAt.toLocaleDateString()}</div>
+                            </div>
+                          </>
+                        )
+                      })()}
+                    </div>
+                  )}
+                </Card>
+
+                <Card className="p-6 border-2">
+                  <h3 className="font-semibold mb-4 flex items-center">
+                    <MapPin className="h-5 w-5 mr-2 text-amber-500" />
+                    Shipping Route
+                  </h3>
+                  <div className="space-y-4">
+                    <div className="flex items-center gap-4">
+                      <div className="h-3 w-3 rounded-full bg-emerald-500" />
+                      <div>
+                        <p className="font-semibold">Origin</p>
+                        <p className="text-sm text-muted-foreground">{commodity.origin}</p>
+                      </div>
+                    </div>
+                    <div className="ml-1.5 h-12 w-0.5 bg-border" />
+                    <div className="flex items-center gap-4">
+                      <div className="h-3 w-3 rounded-full border-2 border-foreground" />
+                      <div>
+                        <p className="font-semibold">Destination</p>
+                        <p className="text-sm text-muted-foreground">{commodity.destination}</p>
+                      </div>
+                    </div>
                   </div>
-                  <div>
-                    <p className="text-sm text-muted-foreground">Total Value</p>
-                    <p className="text-2xl font-bold">
-                      $
-                      {investAmount
-                        ? (Number.parseFloat(investAmount) + Number.parseFloat(projectedReturn)).toFixed(2)
-                        : "0.00"}
+                </Card>
+
+                <Card className="p-6 border-2">
+                  <h3 className="font-semibold mb-4 flex items-center">
+                    <Truck className="h-5 w-5 mr-2 text-amber-500" />
+                    Shipping Manifest
+                  </h3>
+                  <div className="space-y-3">
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Shipment ID</span>
+                      <code className="text-sm bg-muted px-2 py-1 rounded">{commodity.shipmentId}</code>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Transport Method</span>
+                      <span className="font-semibold">{commodity.transportMethod}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Estimated Duration</span>
+                      <span className="font-semibold">{commodity.duration} days</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Insurance Provider</span>
+                      <span className="font-semibold">Lloyd's of London</span>
+                    </div>
+                  </div>
+                </Card>
+
+                <div className="bg-muted/50 rounded-lg p-4 flex items-start gap-3">
+                  <MapPin className="h-5 w-5 text-muted-foreground mt-0.5" />
+                  <div className="flex-1">
+                    <p className="text-sm font-medium">Route Optimization</p>
+                    <p className="text-sm text-muted-foreground mt-1">
+                      This shipment follows the most efficient trade route with minimal transit time and optimal customs
+                      clearance.
                     </p>
                   </div>
                 </div>
-                <div className="rounded-lg border p-4 bg-background/50">
-                  <div className="flex items-center justify-between text-sm">
-                    <span className="text-muted-foreground">Platform fee</span>
-                    <span className="font-medium">{(platformFeeBps / 100).toFixed(2)}%</span>
-                  </div>
-                  <div className="mt-2 space-y-1 text-sm">
-                    <div className="flex justify-between">
-                      <span className="text-muted-foreground">Principal</span>
-                      <span className="font-medium">${isAmountValid ? amountNum.toFixed(2) : "0.00"}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-muted-foreground">Fee</span>
-                      <span className="font-medium">${fee.toFixed(2)}</span>
-                    </div>
-                    <div className="flex justify-between border-t pt-2">
-                      <span className="text-muted-foreground">Total wallet debit</span>
-                      <span className="font-semibold">${totalDebit.toFixed(2)}</span>
-                    </div>
-                  </div>
-                  {(minViolation || maxViolation || remainingViolation) && (
-                    <div className="mt-2 text-xs text-red-500">
-                      {minViolation && `Below minimum ($${minInvestment.toLocaleString()}). `}
-                      {maxViolation && maxInvestment !== null && `Above maximum ($${maxInvestment.toLocaleString()}). `}
-                      {remainingViolation && "Exceeds remaining funding."}
-                    </div>
-                  )}
-                </div>
-                <div className="space-y-3 rounded-lg border p-4 bg-background/50">
-                  <div className="flex items-start gap-3">
-                    <Checkbox
-                      checked={ackRisk}
-                      onCheckedChange={(v) => setAckRisk(Boolean(v))}
-                      disabled={!kycApproved}
-                      aria-label="Acknowledge risk disclosure"
-                    />
-                    <div className="text-sm">
-                      I have read and understand the{" "}
-                      <Link className="underline" href="/legal/risk-disclosure" target="_blank">
-                        Risk Disclosure
-                      </Link>
-                      .
-                    </div>
-                  </div>
-                  <div className="flex items-start gap-3">
-                    <Checkbox
-                      checked={ackTerms}
-                      onCheckedChange={(v) => setAckTerms(Boolean(v))}
-                      disabled={!kycApproved}
-                      aria-label="Accept terms of service"
-                    />
-                    <div className="text-sm">
-                      I agree to the{" "}
-                      <Link className="underline" href="/legal/terms" target="_blank">
-                        Terms of Service
-                      </Link>
-                      .
-                    </div>
-                  </div>
-                </div>
-                {investMutation.error && (
-                  <div className="text-sm text-red-500">{(investMutation.error as Error).message}</div>
-                )}
-                <Button
-                  className="w-full bg-emerald-600 hover:bg-emerald-700 text-white"
-                  size="lg"
-                  onClick={() => investMutation.mutate()}
-                  disabled={
-                    investMutation.isPending ||
-                    !kycApproved ||
-                    !ackRisk ||
-                    !ackTerms ||
-                    !isAmountValid ||
-                    minViolation ||
-                    maxViolation ||
-                    remainingViolation
-                  }
-                >
-                  {investMutation.isPending ? "Investing..." : "Invest Now"}
-                </Button>
-              </div>
-            </Card>
-          </TabsContent>
+              </TabsContent>
 
-          <TabsContent value="logistics" className="space-y-4 mt-4">
-            <Card id="modal-logistics-map" className="p-6 border-2">
-              <h3 className="font-semibold mb-4">Logistics Map</h3>
-              {hasCoords && commodity ? (
-                <ShipmentMap
-                  originCoordinates={{ lat: commodity.originLat as number, lng: commodity.originLng as number }}
-                  destinationCoordinates={{ lat: commodity.destLat as number, lng: commodity.destLng as number }}
-                  departureDate={effectiveDepartureDate}
-                  arrivalDate={effectiveArrivalDate}
-                  vesselName={vesselName}
-                  vehicleType={vehicleType}
-                />
-              ) : (
-                <div className="text-sm text-muted-foreground">No coordinates available for this deal yet.</div>
-              )}
-              {commodity && (
-                <div className="mt-4 space-y-2">
-                  {shipmentEventsQuery.isError ? (
-                    <div className="text-sm text-muted-foreground">
-                      {(shipmentEventsQuery.error as Error).message === "Unauthorized" ? (
-                        <span>
-                          Please <Link className="underline" href="/login">log in</Link> to view shipment tracking.
-                        </span>
-                      ) : (shipmentEventsQuery.error as Error).message === "KYC approval required" ? (
-                        <span>
-                          KYC approval is required to view shipment tracking.{" "}
-                          <Link className="underline" href="/kyc-verification">Complete verification</Link>.
-                        </span>
-                      ) : (
-                        <span>Shipment events unavailable.</span>
-                      )}
-                    </div>
-                  ) : null}
-
-                  {(() => {
-                    const events = shipmentEventsQuery.data ?? []
-                    const departed = events.find((e) => e.type === "DEPARTED")
-                    const arrived = [...events].reverse().find((e) => e.type === "ARRIVED")
-                    const now = new Date()
-                    const departedAt = departed ? new Date(departed.occurredAt) : departureDate
-                    const arrivedAt = arrived ? new Date(arrived.occurredAt) : arrivalDate
-                    const arrivedPast = Boolean(arrived && arrivedAt <= now)
-                    const inTransitState = now < departedAt ? "Pending" : arrivedPast ? "Completed" : "Active"
-                    return (
-                      <>
-                        <div className="flex items-center justify-between text-sm">
-                          <div className="font-medium">Departed {commodity.origin}</div>
-                          <div className="text-muted-foreground">{departedAt.toLocaleDateString()}</div>
-                        </div>
-                        <div className="flex items-center justify-between text-sm">
-                          <div className="font-medium">Currently in transit</div>
-                          <div className="text-muted-foreground">{inTransitState}</div>
-                        </div>
-                        <div className="flex items-center justify-between text-sm">
-                          <div className="font-medium">
-                            {arrivedPast ? "Arrived" : "Estimated arrival"} {commodity.destination}
-                          </div>
-                          <div className="text-muted-foreground">{arrivedAt.toLocaleDateString()}</div>
-                        </div>
-                      </>
-                    )
-                  })()}
-                </div>
-              )}
-            </Card>
-
-            <Card className="p-6 border-2">
-              <h3 className="font-semibold mb-4 flex items-center">
-                <MapPin className="h-5 w-5 mr-2 text-amber-500" />
-                Shipping Route
-              </h3>
-              <div className="space-y-4">
-                <div className="flex items-center gap-4">
-                  <div className="h-3 w-3 rounded-full bg-emerald-500" />
-                  <div>
-                    <p className="font-semibold">Origin</p>
-                    <p className="text-sm text-muted-foreground">{commodity.origin}</p>
-                  </div>
-                </div>
-                <div className="ml-1.5 h-12 w-0.5 bg-border" />
-                <div className="flex items-center gap-4">
-                  <div className="h-3 w-3 rounded-full border-2 border-foreground" />
-                  <div>
-                    <p className="font-semibold">Destination</p>
-                    <p className="text-sm text-muted-foreground">{commodity.destination}</p>
-                  </div>
-                </div>
-              </div>
-            </Card>
-
-            <Card className="p-6 border-2">
-              <h3 className="font-semibold mb-4 flex items-center">
-                <Truck className="h-5 w-5 mr-2 text-amber-500" />
-                Shipping Manifest
-              </h3>
-              <div className="space-y-3">
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Shipment ID</span>
-                  <code className="text-sm bg-muted px-2 py-1 rounded">{commodity.shipmentId}</code>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Transport Method</span>
-                  <span className="font-semibold">{commodity.transportMethod}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Estimated Duration</span>
-                  <span className="font-semibold">{commodity.duration} days</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Insurance Provider</span>
-                  <span className="font-semibold">Lloyd's of London</span>
-                </div>
-              </div>
-            </Card>
-
-            <div className="bg-muted/50 rounded-lg p-4 flex items-start gap-3">
-              <MapPin className="h-5 w-5 text-muted-foreground mt-0.5" />
-              <div className="flex-1">
-                <p className="text-sm font-medium">Route Optimization</p>
-                <p className="text-sm text-muted-foreground mt-1">
-                  This shipment follows the most efficient trade route with minimal transit time and optimal customs
-                  clearance.
-                </p>
-              </div>
-            </div>
-          </TabsContent>
-
-          <TabsContent value="documents" className="space-y-4 mt-4">
-            {docsQuery.isLoading ? (
-              <Card className="p-6 border-2 text-sm text-muted-foreground">Loading documents…</Card>
-            ) : docsQuery.isError ? (
-              <Card className="p-6 border-2 text-sm text-muted-foreground">
-                {(docsQuery.error as Error).message === "Unauthorized" ? (
-                  <span>
-                    Please <Link className="underline" href="/login">log in</Link> to view verified deal documents.
-                  </span>
-                ) : (docsQuery.error as Error).message === "KYC approval required" ? (
-                  <span>
-                    KYC approval is required to view verified deal documents.{" "}
-                    <Link className="underline" href="/kyc-verification">Complete verification</Link>.
-                  </span>
+              <TabsContent value="documents" className="space-y-4 mt-4">
+                {docsQuery.isLoading ? (
+                  <Card className="p-6 border-2 text-sm text-muted-foreground">Loading documents…</Card>
+                ) : docsQuery.isError ? (
+                  <Card className="p-6 border-2 text-sm text-muted-foreground">
+                    {(docsQuery.error as Error).message === "Unauthorized" ? (
+                      <span>
+                        Please <Link className="underline" href="/login">log in</Link> to view verified deal documents.
+                      </span>
+                    ) : (docsQuery.error as Error).message === "KYC approval required" ? (
+                      <span>
+                        KYC approval is required to view verified deal documents.{" "}
+                        <Link className="underline" href="/kyc-verification">Complete verification</Link>.
+                      </span>
+                    ) : (
+                      <span>Failed to load documents.</span>
+                    )}
+                  </Card>
+                ) : (docsQuery.data?.length ?? 0) === 0 ? (
+                  <Card className="p-6 border-2 text-sm text-muted-foreground">No verified documents available yet.</Card>
                 ) : (
-                  <span>Failed to load documents.</span>
+                  <div className="space-y-3">
+                    {(docsQuery.data ?? []).map((d) => {
+                      const Icon = docIcon(d.type)
+                      return (
+                        <a
+                          key={d.id}
+                          href={d.url}
+                          target="_blank"
+                          rel="noreferrer"
+                          onClick={async (e) => {
+                            // Convert signed-url endpoint → expiring download link.
+                            if (!d.url.startsWith("/api/documents/")) return
+                            e.preventDefault()
+                            const res = await fetch(d.url)
+                            const json = await res.json()
+                            if (!res.ok) throw new Error(json.error || "Failed to get download link")
+                            window.open(json.data.url, "_blank", "noopener,noreferrer")
+                          }}
+                        >
+                          <Card className="p-6 border-2 hover:border-primary/50 transition-colors cursor-pointer">
+                            <div className="flex items-center gap-4">
+                              <div className="h-12 w-12 rounded-lg bg-primary/10 flex items-center justify-center">
+                                <Icon className="h-6 w-6 text-primary" />
+                              </div>
+                              <div className="flex-1 min-w-0">
+                                <h4 className="font-semibold truncate">{d.name}</h4>
+                                <p className="text-sm text-muted-foreground flex items-center gap-2">
+                                  {typeLabels[d.type]}
+                                  <span className="inline-flex items-center gap-1">
+                                    <LinkIcon className="h-4 w-4" />
+                                    Open
+                                  </span>
+                                </p>
+                              </div>
+                              <Badge className="bg-emerald-600">Verified</Badge>
+                            </div>
+                          </Card>
+                        </a>
+                      )
+                    })}
+                  </div>
                 )}
-              </Card>
-            ) : (docsQuery.data?.length ?? 0) === 0 ? (
-              <Card className="p-6 border-2 text-sm text-muted-foreground">No verified documents available yet.</Card>
-            ) : (
-              <div className="space-y-3">
-                {(docsQuery.data ?? []).map((d) => {
-                  const Icon = docIcon(d.type)
-                  return (
-                    <a
-                      key={d.id}
-                      href={d.url}
-                      target="_blank"
-                      rel="noreferrer"
-                      onClick={async (e) => {
-                        // Convert signed-url endpoint → expiring download link.
-                        if (!d.url.startsWith("/api/documents/")) return
-                        e.preventDefault()
-                        const res = await fetch(d.url)
-                        const json = await res.json()
-                        if (!res.ok) throw new Error(json.error || "Failed to get download link")
-                        window.open(json.data.url, "_blank", "noopener,noreferrer")
-                      }}
-                    >
-                      <Card className="p-6 border-2 hover:border-primary/50 transition-colors cursor-pointer">
-                        <div className="flex items-center gap-4">
-                          <div className="h-12 w-12 rounded-lg bg-primary/10 flex items-center justify-center">
-                            <Icon className="h-6 w-6 text-primary" />
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <h4 className="font-semibold truncate">{d.name}</h4>
-                            <p className="text-sm text-muted-foreground flex items-center gap-2">
-                              {typeLabels[d.type]}
-                              <span className="inline-flex items-center gap-1">
-                                <LinkIcon className="h-4 w-4" />
-                                Open
-                              </span>
-                            </p>
-                          </div>
-                          <Badge className="bg-emerald-600">Verified</Badge>
-                        </div>
-                      </Card>
-                    </a>
-                  )
-                })}
-              </div>
-            )}
-          </TabsContent>
+              </TabsContent>
             </Tabs>
           </>
         )}
