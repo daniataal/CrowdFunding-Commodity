@@ -110,7 +110,8 @@ export function EditDealForm({
 
   return (
     <form onSubmit={handleSubmit}>
-      <Card className="border-2">
+      <Card className="border border-white/10 bg-[#0A0A0A] relative overflow-hidden">
+        <div className="absolute top-0 right-0 w-64 h-64 bg-primary/5 rounded-full blur-[80px] pointer-events-none" />
         <CardHeader>
           <CardTitle>Edit Deal</CardTitle>
           <CardDescription>Update an existing commodity listing</CardDescription>

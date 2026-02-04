@@ -59,49 +59,54 @@ export function ApprovalsCard({ isAdmin }: { isAdmin: boolean }) {
   const items = (approvalsQuery.data ?? []).filter((a) => a.status === "PENDING")
 
   return (
-    <Card className="border-2 p-6">
-      <div className="font-semibold">Two-person approvals</div>
-      <div className="text-sm text-muted-foreground">High-risk admin actions require a second admin approval</div>
+    <Card className="border border-white/10 bg-[#0A0A0A] rounded-2xl relative overflow-hidden group hover:border-white/20 transition-all">
+      <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-full blur-[60px] group-hover:bg-primary/10 transition-colors" />
+      <div className="p-6 relative z-10 w-full">
+        <div className="font-bold text-white text-lg">Two-person approvals</div>
+        <div className="text-sm text-muted-foreground mt-1">High-risk admin actions require a second admin approval</div>
 
-      <div className="mt-4 space-y-2">
-        {approvalsQuery.isLoading ? (
-          <div className="text-sm text-muted-foreground">Loading approvals…</div>
-        ) : items.length === 0 ? (
-          <div className="text-sm text-muted-foreground">No pending approvals.</div>
-        ) : (
-          items.map((a) => (
-            <div key={a.id} className="rounded border p-3 flex items-start justify-between gap-3">
-              <div className="min-w-0">
-                <div className="font-medium">{a.action}</div>
-                <div className="text-xs text-muted-foreground">
-                  {new Date(a.createdAt).toLocaleString()} • requestedBy {a.requestedBy}
-                  {a.entityType && a.entityId ? ` • ${a.entityType}:${a.entityId}` : ""}
+        <div className="mt-6 space-y-2">
+          {approvalsQuery.isLoading ? (
+            <div className="text-sm text-muted-foreground">Loading approvals…</div>
+          ) : items.length === 0 ? (
+            <div className="text-sm text-muted-foreground">No pending approvals.</div>
+          ) : (
+            items.map((a) => (
+              <div key={a.id} className="rounded-xl border border-white/5 bg-white/[0.02] p-4 flex items-start justify-between gap-4 hover:bg-white/[0.04] transition-colors">
+                <div className="min-w-0">
+                  <div className="font-bold text-white text-base mb-1">{a.action}</div>
+                  <div className="text-xs text-muted-foreground font-mono">
+                    {new Date(a.createdAt).toLocaleString()} • requestedBy <span className="text-white">{a.requestedBy}</span>
+                    {a.entityType && a.entityId ? ` • ${a.entityType}:${a.entityId}` : ""}
+                  </div>
                 </div>
+
+                {isAdmin && (
+                  <div className="flex gap-2">
+                    <Button
+                      variant="outline"
+                      className="bg-emerald-500/10 border-emerald-500/20 text-emerald-500 hover:bg-emerald-500/20 hover:text-emerald-400"
+                      size="sm"
+                      disabled={approveMutation.isPending}
+                      onClick={() => approveMutation.mutate(a.id)}
+                    >
+                      Approve
+                    </Button>
+                    <Button
+                      variant="outline"
+                      className="bg-red-500/10 border-red-500/20 text-red-500 hover:bg-red-500/20 hover:text-red-400"
+                      size="sm"
+                      disabled={rejectMutation.isPending}
+                      onClick={() => rejectMutation.mutate(a.id)}
+                    >
+                      Reject
+                    </Button>
+                  </div>
+                )}
               </div>
-
-              {isAdmin && (
-                <div className="flex gap-2">
-                  <Button
-                    variant="outline"
-                    className="bg-transparent"
-                    disabled={approveMutation.isPending}
-                    onClick={() => approveMutation.mutate(a.id)}
-                  >
-                    Approve
-                  </Button>
-                  <Button
-                    variant="outline"
-                    className="bg-transparent text-red-500"
-                    disabled={rejectMutation.isPending}
-                    onClick={() => rejectMutation.mutate(a.id)}
-                  >
-                    Reject
-                  </Button>
-                </div>
-              )}
-            </div>
-          ))
-        )}
+            ))
+          )}
+        </div>
       </div>
     </Card>
   )

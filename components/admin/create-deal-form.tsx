@@ -472,7 +472,8 @@ export function CreateDealForm() {
         <Progress value={(currentStep / (STEPS.length - 1)) * 100} className="h-2" />
       </div>
 
-      <Card className="border-2">
+      <Card className="border border-white/10 bg-[#0A0A0A] relative overflow-hidden">
+        <div className="absolute top-0 right-0 w-64 h-64 bg-primary/5 rounded-full blur-[80px] pointer-events-none" />
         <CardHeader>
           <CardTitle>{STEPS[currentStep].title}</CardTitle>
           <CardDescription>Step {currentStep + 1} of {STEPS.length}</CardDescription>

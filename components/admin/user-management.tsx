@@ -206,10 +206,10 @@ export function UserManagement({ isAdmin }: { isAdmin: boolean }) {
       const res = disabled
         ? await fetch(`/api/admin/users/${userId}`, { method: "DELETE" })
         : await fetch(`/api/admin/users/${userId}`, {
-            method: "PATCH",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ disabled: false }),
-          })
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ disabled: false }),
+        })
       const json = await res.json().catch(() => ({}))
       if (!res.ok) throw new Error((json as any).error || "Update failed")
       return true
@@ -331,23 +331,24 @@ export function UserManagement({ isAdmin }: { isAdmin: boolean }) {
   }, [users, total])
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       <div className="flex items-start justify-between gap-4">
         <div>
-          <h2 className="text-2xl font-bold">User Management</h2>
+          <h2 className="text-3xl font-bold text-white">User Management</h2>
           <p className="text-muted-foreground">{summary}</p>
         </div>
 
         {isAdmin && (
-          <Button className="bg-emerald-600 hover:bg-emerald-700" onClick={() => setCreateOpen(true)}>
+          <Button className="bg-primary hover:bg-red-600 text-white shadow-lg shadow-red-500/20 rounded-xl" onClick={() => setCreateOpen(true)}>
             <UserPlus className="h-4 w-4 mr-2" />
             Add User
           </Button>
         )}
       </div>
 
-      <Card className="border-2 p-4">
-        <div className="grid grid-cols-1 lg:grid-cols-5 gap-3">
+      <Card className="border border-white/10 bg-[#0A0A0A] p-6 rounded-2xl relative overflow-hidden">
+        <div className="absolute top-0 right-0 w-64 h-64 bg-primary/5 rounded-full blur-[80px]" />
+        <div className="relative z-10 grid grid-cols-1 lg:grid-cols-5 gap-4">
           <div className="lg:col-span-2">
             <Label className="sr-only">Search</Label>
             <div className="relative">
@@ -358,7 +359,7 @@ export function UserManagement({ isAdmin }: { isAdmin: boolean }) {
                   setQ(e.target.value)
                   setPage(1)
                 }}
-                className="pl-9"
+                className="pl-9 bg-white/5 border-white/10 text-white placeholder:text-muted-foreground/50 rounded-xl"
                 placeholder="Search by name, email, or id…"
               />
             </div>
@@ -373,7 +374,7 @@ export function UserManagement({ isAdmin }: { isAdmin: boolean }) {
                 setPage(1)
               }}
             >
-              <SelectTrigger>
+              <SelectTrigger className="bg-white/5 border-white/10 text-white rounded-xl">
                 <SelectValue placeholder="Role" />
               </SelectTrigger>
               <SelectContent>
@@ -394,7 +395,7 @@ export function UserManagement({ isAdmin }: { isAdmin: boolean }) {
                 setPage(1)
               }}
             >
-              <SelectTrigger>
+              <SelectTrigger className="bg-white/5 border-white/10 text-white rounded-xl">
                 <SelectValue placeholder="KYC" />
               </SelectTrigger>
               <SelectContent>
@@ -416,7 +417,7 @@ export function UserManagement({ isAdmin }: { isAdmin: boolean }) {
                 setPage(1)
               }}
             >
-              <SelectTrigger>
+              <SelectTrigger className="bg-white/5 border-white/10 text-white rounded-xl">
                 <SelectValue placeholder="Status" />
               </SelectTrigger>
               <SelectContent>
@@ -428,13 +429,13 @@ export function UserManagement({ isAdmin }: { isAdmin: boolean }) {
           </div>
         </div>
 
-        <div className="mt-4 flex items-center justify-between gap-3">
+        <div className="mt-6 flex items-center justify-between gap-3 relative z-10">
           <div className="text-sm text-muted-foreground">
             Page {page} of {totalPages}
           </div>
           <div className="flex items-center gap-2">
             <Select value={String(pageSize)} onValueChange={(v) => setPageSize(Number(v))}>
-              <SelectTrigger className="w-[140px]">
+              <SelectTrigger className="w-[140px] bg-white/5 border-white/10 text-white rounded-xl">
                 <SelectValue placeholder="Page size" />
               </SelectTrigger>
               <SelectContent>
@@ -443,7 +444,7 @@ export function UserManagement({ isAdmin }: { isAdmin: boolean }) {
                 <SelectItem value="50">50 / page</SelectItem>
               </SelectContent>
             </Select>
-            <Button variant="outline" size="sm" onClick={() => setPage((p) => Math.max(1, p - 1))} disabled={page <= 1}>
+            <Button variant="outline" size="sm" onClick={() => setPage((p) => Math.max(1, p - 1))} disabled={page <= 1} className="border-white/10 text-white hover:bg-white/10 rounded-xl">
               Prev
             </Button>
             <Button
@@ -451,6 +452,7 @@ export function UserManagement({ isAdmin }: { isAdmin: boolean }) {
               size="sm"
               onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
               disabled={page >= totalPages}
+              className="border-white/10 text-white hover:bg-white/10 rounded-xl"
             >
               Next
             </Button>
@@ -458,61 +460,62 @@ export function UserManagement({ isAdmin }: { isAdmin: boolean }) {
         </div>
       </Card>
 
-      <Card className="border-2">
+      <Card className="border border-white/10 bg-[#0A0A0A] rounded-2xl overflow-hidden">
         {listQuery.isLoading ? (
-          <div className="p-6 text-sm text-muted-foreground flex items-center gap-2">
-            <Loader2 className="h-4 w-4 animate-spin" /> Loading users…
+          <div className="p-8 text-sm text-muted-foreground flex items-center gap-2 justify-center">
+            <Loader2 className="h-4 w-4 animate-spin text-primary" /> Loading users…
           </div>
         ) : listQuery.isError ? (
-          <div className="p-6 text-sm text-red-500">{(listQuery.error as Error).message}</div>
+          <div className="p-8 text-sm text-red-500 text-center">{(listQuery.error as Error).message}</div>
         ) : users.length === 0 ? (
-          <div className="p-6 text-sm text-muted-foreground">No users found.</div>
+          <div className="p-8 text-sm text-muted-foreground text-center">No users found.</div>
         ) : (
           <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Name</TableHead>
-                <TableHead>Email</TableHead>
-                <TableHead>Role</TableHead>
-                <TableHead>KYC</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead className="text-right">Wallet</TableHead>
-                <TableHead className="text-right">Investments</TableHead>
-                <TableHead>Joined</TableHead>
-                <TableHead>Actions</TableHead>
+            <TableHeader className="bg-white/[0.02] border-b border-white/5">
+              <TableRow className="hover:bg-transparent border-white/5">
+                <TableHead className="text-muted-foreground font-medium">Name</TableHead>
+                <TableHead className="text-muted-foreground font-medium">Email</TableHead>
+                <TableHead className="text-muted-foreground font-medium">Role</TableHead>
+                <TableHead className="text-muted-foreground font-medium">KYC</TableHead>
+                <TableHead className="text-muted-foreground font-medium">Status</TableHead>
+                <TableHead className="text-right text-muted-foreground font-medium">Wallet</TableHead>
+                <TableHead className="text-right text-muted-foreground font-medium">Investments</TableHead>
+                <TableHead className="text-muted-foreground font-medium">Joined</TableHead>
+                <TableHead className="text-muted-foreground font-medium">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {users.map((u) => (
-                <TableRow key={u.id} className="cursor-pointer" onClick={() => {
+                <TableRow key={u.id} className="cursor-pointer border-white/5 hover:bg-white/[0.03] transition-colors" onClick={() => {
                   setSelectedUserId(u.id)
                   setDetailOpen(true)
                 }}>
-                  <TableCell className="font-medium">{u.name}</TableCell>
-                  <TableCell>{u.email}</TableCell>
+                  <TableCell className="font-bold text-white">{u.name}</TableCell>
+                  <TableCell className="text-muted-foreground">{u.email}</TableCell>
                   <TableCell>
-                    <Badge variant="outline">{u.role}</Badge>
+                    <Badge variant="outline" className="border-white/10 text-muted-foreground bg-white/5">{u.role}</Badge>
                   </TableCell>
                   <TableCell>{kycBadge(u.kycStatus)}</TableCell>
                   <TableCell>
                     {u.disabled ? (
-                      <Badge variant="outline" className="border-red-500/50 text-red-500">
+                      <Badge variant="outline" className="border-red-500/20 text-red-500 bg-red-500/5">
                         Disabled
                       </Badge>
                     ) : (
-                      <Badge variant="outline" className="border-emerald-500/30 text-emerald-500">
+                      <Badge variant="outline" className="border-emerald-500/20 text-emerald-500 bg-emerald-500/5">
                         Active
                       </Badge>
                     )}
                   </TableCell>
-                  <TableCell className="text-right">{money(u.walletBalance)}</TableCell>
-                  <TableCell className="text-right">{u._count.investments}</TableCell>
-                  <TableCell>{new Date(u.createdAt).toLocaleDateString()}</TableCell>
+                  <TableCell className="text-right font-mono text-white">{money(u.walletBalance)}</TableCell>
+                  <TableCell className="text-right font-mono text-muted-foreground">{u._count.investments}</TableCell>
+                  <TableCell className="text-muted-foreground text-sm">{new Date(u.createdAt).toLocaleDateString()}</TableCell>
                   <TableCell onClick={(e) => e.stopPropagation()}>
                     <div className="flex items-center gap-2">
                       <Button
                         size="sm"
                         variant="outline"
+                        className="bg-transparent border-white/10 text-white hover:bg-white/10"
                         onClick={() => {
                           setSelectedUserId(u.id)
                           setDetailOpen(true)
@@ -522,13 +525,13 @@ export function UserManagement({ isAdmin }: { isAdmin: boolean }) {
                       </Button>
                       {isAdmin && (
                         <>
-                          <Button size="sm" variant="outline" onClick={() => setEditingUser(u)}>
+                          <Button size="sm" variant="outline" className="bg-transparent border-white/10 text-white hover:bg-white/10" onClick={() => setEditingUser(u)}>
                             Edit
                           </Button>
 
                           <AlertDialog>
                             <AlertDialogTrigger asChild>
-                              <Button size="sm" variant="outline" className="text-amber-500">
+                              <Button size="sm" variant="outline" className="bg-transparent border-amber-500/20 text-amber-500 hover:bg-amber-500/10">
                                 <KeyRound className="h-4 w-4 mr-1" />
                                 Reset PW
                               </Button>
@@ -544,7 +547,7 @@ export function UserManagement({ isAdmin }: { isAdmin: boolean }) {
                                 <AlertDialogCancel>Cancel</AlertDialogCancel>
                                 <AlertDialogAction
                                   onClick={() => resetPasswordMutation.mutate(u.id)}
-                                  className="bg-amber-600 hover:bg-amber-700"
+                                  className="bg-amber-600 hover:bg-amber-700 text-white"
                                 >
                                   Reset
                                 </AlertDialogAction>
@@ -554,7 +557,7 @@ export function UserManagement({ isAdmin }: { isAdmin: boolean }) {
 
                           <AlertDialog>
                             <AlertDialogTrigger asChild>
-                              <Button size="sm" variant="outline" className={u.disabled ? "text-emerald-500" : "text-red-500"}>
+                              <Button size="sm" variant="outline" className={`bg-transparent ${u.disabled ? "border-emerald-500/20 text-emerald-500 hover:bg-emerald-500/10" : "border-red-500/20 text-red-500 hover:bg-red-500/10"}`}>
                                 {u.disabled ? <UserCheck className="h-4 w-4 mr-1" /> : <UserX className="h-4 w-4 mr-1" />}
                                 {u.disabled ? "Enable" : "Disable"}
                               </Button>
@@ -572,7 +575,7 @@ export function UserManagement({ isAdmin }: { isAdmin: boolean }) {
                                 <AlertDialogCancel>Cancel</AlertDialogCancel>
                                 <AlertDialogAction
                                   onClick={() => disableMutation.mutate({ userId: u.id, disabled: !u.disabled })}
-                                  className={u.disabled ? "bg-emerald-600 hover:bg-emerald-700" : "bg-red-600 hover:bg-red-700"}
+                                  className={u.disabled ? "bg-emerald-600 hover:bg-emerald-700 text-white" : "bg-red-600 hover:bg-red-700 text-white"}
                                 >
                                   {u.disabled ? "Enable" : "Disable"}
                                 </AlertDialogAction>
@@ -625,77 +628,81 @@ export function UserManagement({ isAdmin }: { isAdmin: boolean }) {
             <div className="mt-6 text-sm text-muted-foreground">No user selected.</div>
           ) : (
             <div className="mt-6 space-y-4">
-              <Card className="border-2 p-4">
-                <div className="flex items-start justify-between gap-4">
-                  <div>
-                    <div className="text-lg font-semibold">{detailQuery.data.name}</div>
-                    <div className="text-sm text-muted-foreground">{detailQuery.data.email}</div>
-                    <div className="mt-2 flex flex-wrap gap-2 items-center">
-                      <Badge variant="outline">{detailQuery.data.role}</Badge>
+              <Card className="border border-white/10 p-6 bg-[#0A0A0A] relative overflow-hidden">
+                <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-full blur-[60px] pointer-events-none" />
+                <div className="flex items-start justify-between gap-6 relative z-10">
+                  <div className="flex-1">
+                    <div className="text-xl font-bold text-white mb-1 tracking-tight">{detailQuery.data.name}</div>
+                    <div className="text-sm text-muted-foreground mb-4 font-mono">{detailQuery.data.email}</div>
+                    <div className="flex flex-wrap gap-2 items-center">
+                      <Badge variant="outline" className="border-white/10 bg-white/5 text-muted-foreground font-mono">{detailQuery.data.role}</Badge>
                       {kycBadge(detailQuery.data.kycStatus)}
                       {detailQuery.data.disabled ? (
-                        <Badge variant="outline" className="border-red-500/50 text-red-500">
+                        <Badge variant="outline" className="border-red-500/20 text-red-500 bg-red-500/5">
                           Disabled
                         </Badge>
                       ) : (
-                        <Badge variant="outline" className="border-emerald-500/30 text-emerald-500">
+                        <Badge variant="outline" className="border-emerald-500/20 text-emerald-500 bg-emerald-500/5">
                           Active
                         </Badge>
                       )}
                     </div>
-                    <div className="mt-3 grid grid-cols-2 gap-3 text-sm">
-                      <div>
-                        <div className="text-muted-foreground">Wallet</div>
-                        <div className="font-medium">{money(detailQuery.data.walletBalance)}</div>
+                    <div className="mt-6 grid grid-cols-2 gap-4 text-sm">
+                      <div className="bg-white/5 p-3 rounded-lg border border-white/5">
+                        <div className="text-muted-foreground text-xs uppercase tracking-wider mb-1">Wallet</div>
+                        <div className="font-bold text-white text-lg">{money(detailQuery.data.walletBalance)}</div>
                       </div>
-                    <div>
-                      <div className="text-muted-foreground">Wallet status</div>
-                      <div className="font-medium">
-                        {(detailQuery.data as any).walletFrozen ? (
-                          <span className="text-red-500">Frozen</span>
-                        ) : (
-                          <span className="text-emerald-500">Active</span>
-                        )}
-                      </div>
-                    </div>
-                      <div>
-                        <div className="text-muted-foreground">Investments</div>
-                        <div className="font-medium">{detailQuery.data._count.investments}</div>
+                      <div className="bg-white/5 p-3 rounded-lg border border-white/5">
+                        <div className="text-muted-foreground text-xs uppercase tracking-wider mb-1">Wallet status</div>
+                        <div className="font-medium text-base">
+                          {(detailQuery.data as any).walletFrozen ? (
+                            <span className="text-red-500 flex items-center gap-1"><ShieldX className="h-4 w-4" /> Frozen</span>
+                          ) : (
+                            <span className="text-emerald-500 flex items-center gap-1"><ShieldCheck className="h-4 w-4" /> Active</span>
+                          )}
+                        </div>
                       </div>
                       <div>
-                        <div className="text-muted-foreground">Joined</div>
-                        <div className="font-medium">{new Date(detailQuery.data.createdAt).toLocaleString()}</div>
+                        <div className="text-muted-foreground text-xs">Investments</div>
+                        <div className="font-medium text-white">{detailQuery.data._count.investments}</div>
                       </div>
                       <div>
-                        <div className="text-muted-foreground">Updated</div>
-                        <div className="font-medium">{new Date(detailQuery.data.updatedAt).toLocaleString()}</div>
+                        <div className="text-muted-foreground text-xs">Joined</div>
+                        <div className="font-medium text-white">{new Date(detailQuery.data.createdAt).toLocaleDateString()}</div>
+                      </div>
+                      <div className="col-span-2">
+                        <div className="text-muted-foreground text-xs">Last Updated</div>
+                        <div className="font-medium text-white">{new Date(detailQuery.data.updatedAt).toLocaleString()}</div>
                       </div>
                     </div>
                   </div>
 
                   {isAdmin && (
                     <div className="flex flex-col gap-2 shrink-0">
-                      <Button variant="outline" onClick={() => setEditingUser(detailQuery.data)}>
+                      <Button variant="outline" size="sm" className="bg-transparent border-white/10 hover:bg-white/10 text-white" onClick={() => setEditingUser(detailQuery.data)}>
                         Edit
                       </Button>
 
-                    <Button
-                      variant="outline"
-                      className={(detailQuery.data as any).walletFrozen ? "text-emerald-500" : "text-red-500"}
-                      onClick={() => {
-                        if (!selectedId) return
-                        updateMutation.mutate({
-                          userId: selectedId,
-                          patch: { walletFrozen: !(detailQuery.data as any).walletFrozen } as any,
-                        })
-                      }}
-                      disabled={updateMutation.isPending}
-                    >
-                      {(detailQuery.data as any).walletFrozen ? "Unfreeze wallet" : "Freeze wallet"}
-                    </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className={(detailQuery.data as any).walletFrozen ? "bg-emerald-500/10 border-emerald-500/20 text-emerald-500 hover:bg-emerald-500/20" : "bg-red-500/10 border-red-500/20 text-red-500 hover:bg-red-500/20"}
+                        onClick={() => {
+                          if (!selectedId) return
+                          updateMutation.mutate({
+                            userId: selectedId,
+                            patch: { walletFrozen: !(detailQuery.data as any).walletFrozen } as any,
+                          })
+                        }}
+                        disabled={updateMutation.isPending}
+                      >
+                        {(detailQuery.data as any).walletFrozen ? "Unfreeze wallet" : "Freeze wallet"}
+                      </Button>
 
                       <Button
                         variant="outline"
+                        size="sm"
+                        className="bg-transparent border-white/10 hover:bg-white/10 text-white"
                         onClick={() => {
                           setWalletAdjustOpen(true)
                           setWalletAdjustAmount("")
@@ -709,23 +716,25 @@ export function UserManagement({ isAdmin }: { isAdmin: boolean }) {
 
                       <Button
                         variant="outline"
-                        className="text-amber-500"
+                        size="sm"
+                        className="bg-amber-500/10 border-amber-500/20 text-amber-500 hover:bg-amber-500/20"
                         onClick={() => selectedId && resetPasswordMutation.mutate(selectedId)}
                         disabled={resetPasswordMutation.isPending}
                       >
-                        <KeyRound className="h-4 w-4 mr-1" />
+                        <KeyRound className="h-3 w-3 mr-1" />
                         Reset PW
                       </Button>
 
                       <Button
                         variant="outline"
-                        className={detailQuery.data.disabled ? "text-emerald-500" : "text-red-500"}
+                        size="sm"
+                        className={detailQuery.data.disabled ? "bg-emerald-500/10 border-emerald-500/20 text-emerald-500 hover:bg-emerald-500/20" : "bg-red-500/10 border-red-500/20 text-red-500 hover:bg-red-500/20"}
                         onClick={() =>
                           selectedId && disableMutation.mutate({ userId: selectedId, disabled: !detailQuery.data.disabled })
                         }
                         disabled={disableMutation.isPending}
                       >
-                        {detailQuery.data.disabled ? <UserCheck className="h-4 w-4 mr-1" /> : <UserX className="h-4 w-4 mr-1" />}
+                        {detailQuery.data.disabled ? <UserCheck className="h-3 w-3 mr-1" /> : <UserX className="h-3 w-3 mr-1" />}
                         {detailQuery.data.disabled ? "Enable" : "Disable"}
                       </Button>
                     </div>
@@ -740,17 +749,17 @@ export function UserManagement({ isAdmin }: { isAdmin: boolean }) {
                 </TabsList>
 
                 <TabsContent value="kyc" className="mt-4 space-y-4">
-                  <Card className="border-2 p-4">
+                  <Card className="border border-white/10 p-6 bg-[#0A0A0A]">
                     <div className="flex items-start justify-between gap-4">
                       <div>
-                        <div className="font-semibold">KYC Review</div>
+                        <div className="font-semibold text-white">KYC Review</div>
                         <div className="text-sm text-muted-foreground">Documents submitted by the user</div>
                       </div>
                       {isAdmin && detailQuery.data.kycStatus === "PENDING" && (
                         <div className="flex items-center gap-2">
                           <Button
                             size="sm"
-                            className="bg-emerald-600 hover:bg-emerald-700"
+                            className="bg-emerald-600 hover:bg-emerald-700 text-white shadow-lg shadow-emerald-500/20"
                             onClick={() => selectedId && kycActionMutation.mutate({ userId: selectedId, action: "approve" })}
                             disabled={kycActionMutation.isPending}
                           >
@@ -760,7 +769,7 @@ export function UserManagement({ isAdmin }: { isAdmin: boolean }) {
                           <Button
                             size="sm"
                             variant="outline"
-                            className="text-red-500"
+                            className="bg-red-500/10 border-red-500/20 text-red-500 hover:bg-red-500/20"
                             onClick={() => setRejectOpen(true)}
                             disabled={kycActionMutation.isPending}
                           >
@@ -777,23 +786,25 @@ export function UserManagement({ isAdmin }: { isAdmin: boolean }) {
                       ) : (
                         <div className="space-y-2">
                           {detailQuery.data.kycDocuments.map((d) => (
-                            <Card key={d.id} className="border p-3">
+                            <Card key={d.id} className="border border-white/10 p-4 bg-white/[0.02] hover:bg-white/[0.04] transition-colors">
                               <div className="flex items-start justify-between gap-3">
                                 <div className="min-w-0">
-                                  <div className="font-medium truncate">{d.name}</div>
-                                  <div className="text-xs text-muted-foreground">
-                                    {typeLabels[d.type as DocumentType]} • {new Date(d.createdAt).toLocaleString()}
+                                  <div className="font-medium truncate text-white">{d.name}</div>
+                                  <div className="text-xs text-muted-foreground flex items-center gap-2 mt-1">
+                                    <Badge variant="outline" className="border-white/10 bg-white/5 text-muted-foreground text-[10px] h-5">{typeLabels[d.type as DocumentType]}</Badge>
+                                    <span>{new Date(d.createdAt).toLocaleString()}</span>
                                   </div>
-                                  <div className="mt-2 flex items-center gap-2">
+                                  <div className="mt-3 flex items-center gap-2">
                                     <Button
                                       size="sm"
                                       variant="outline"
+                                      className="h-7 text-xs bg-transparent border-white/10 hover:bg-white/10 text-white"
                                       onClick={() => setDocViewer({ url: d.url, name: d.name })}
                                     >
-                                      <ExternalLink className="h-4 w-4 mr-1" />
+                                      <ExternalLink className="h-3 w-3 mr-1" />
                                       View
                                     </Button>
-                                    <a className="text-sm text-primary underline underline-offset-4" href={d.url} target="_blank" rel="noreferrer">
+                                    <a className="text-xs text-muted-foreground hover:text-primary underline underline-offset-4" href={d.url} target="_blank" rel="noreferrer">
                                       Open in new tab
                                     </a>
                                   </div>
@@ -801,14 +812,15 @@ export function UserManagement({ isAdmin }: { isAdmin: boolean }) {
 
                                 <div className="flex items-center gap-2 shrink-0">
                                   {d.verified ? (
-                                    <Badge className="bg-emerald-600">Verified</Badge>
+                                    <Badge className="bg-emerald-600/20 text-emerald-500 border-emerald-600/30">Verified</Badge>
                                   ) : (
-                                    <Badge variant="outline">Unverified</Badge>
+                                    <Badge variant="outline" className="border-white/20 text-muted-foreground">Unverified</Badge>
                                   )}
                                   {isAdmin && (
                                     <Button
                                       size="sm"
                                       variant="outline"
+                                      className="h-7 text-xs bg-transparent border-white/10 hover:bg-white/10"
                                       onClick={() => verifyDocMutation.mutate({ docId: d.id, verified: !d.verified })}
                                       disabled={verifyDocMutation.isPending}
                                     >
@@ -826,8 +838,8 @@ export function UserManagement({ isAdmin }: { isAdmin: boolean }) {
                 </TabsContent>
 
                 <TabsContent value="audit" className="mt-4 space-y-3">
-                  <Card className="border-2 p-4">
-                    <div className="font-semibold">Audit trail</div>
+                  <Card className="border border-white/10 p-6 bg-[#0A0A0A]">
+                    <div className="font-semibold text-white">Audit trail</div>
                     <div className="text-sm text-muted-foreground">Recent actions on this user</div>
                   </Card>
                   {logsQuery.isLoading ? (
@@ -839,17 +851,17 @@ export function UserManagement({ isAdmin }: { isAdmin: boolean }) {
                   ) : (
                     <div className="space-y-2">
                       {(logsQuery.data ?? []).map((l) => (
-                        <Card key={l.id} className="border p-3">
+                        <Card key={l.id} className="border border-white/10 p-4 bg-white/[0.02]">
                           <div className="flex items-start justify-between gap-4">
-                            <div className="min-w-0">
-                              <div className="font-medium">{l.action}</div>
-                              <div className="text-xs text-muted-foreground">
+                            <div className="min-w-0 w-full">
+                              <div className="font-medium text-white">{l.action}</div>
+                              <div className="text-xs text-muted-foreground mt-1">
                                 {l.actor ? `${l.actor.name} (${l.actor.email})` : "Unknown actor"} •{" "}
                                 {new Date(l.createdAt).toLocaleString()}
                               </div>
                               {l.changes && (
-                                <pre className="mt-2 text-xs bg-muted/40 rounded p-2 overflow-x-auto">
-{JSON.stringify(l.changes, null, 2)}
+                                <pre className="mt-3 text-xs bg-black/50 border border-white/5 rounded-lg p-3 overflow-x-auto font-mono text-gray-300">
+                                  {JSON.stringify(l.changes, null, 2)}
                                 </pre>
                               )}
                             </div>

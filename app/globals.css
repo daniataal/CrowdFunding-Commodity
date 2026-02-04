@@ -141,32 +141,46 @@
 
 .shipment-marker {
   position: relative;
-  width: 30px;
-  height: 30px;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .shipment-marker::before {
   content: "";
   position: absolute;
-  inset: -6px;
+  inset: -8px;
   border-radius: 9999px;
-  background: rgba(16, 185, 129, 0.25);
-  animation: shipmentPulse 2.4s ease-in-out infinite;
+  background: currentColor;
+  opacity: 0.2;
+  animation: shipmentPulse 3s ease-in-out infinite;
 }
 
 .shipment-marker__icon {
-  position: absolute;
-  inset: 0;
-  border-radius: 9999px;
-  background: rgba(16, 185, 129, 0.9);
+  position: relative;
+  z-index: 10;
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.35);
 }
 
 .shipment-marker__icon svg {
-  width: 16px;
-  height: 16px;
-  color: white;
+  width: 100%;
+  height: 100%;
+}
+
+@keyframes shipmentPulse {
+
+  0%,
+  100% {
+    transform: scale(0.9);
+    opacity: 0.1;
+  }
+
+  50% {
+    transform: scale(1.1);
+    opacity: 0.3;
+  }
 }

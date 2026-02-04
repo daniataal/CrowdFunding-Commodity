@@ -178,399 +178,141 @@ export function DealDetailView({ commodity }: { commodity: MarketplaceCommodity 
   })
 
   return (
-    <div className="mx-auto max-w-5xl px-4 py-10">
-      <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
-        <div>
-          <div className="text-sm text-muted-foreground">
-            <Link className="underline" href="/marketplace">
-              Marketplace
-            </Link>{" "}
-            / Deal
-          </div>
-          <h1 className="mt-2 text-3xl font-bold">{commodity.name}</h1>
-          <div className="mt-3 flex flex-wrap gap-2">
-            <Badge variant="outline">{commodity.type}</Badge>
-            <Badge variant="outline">{commodity.risk} Risk</Badge>
-            <Badge variant="outline">{commodity.status}</Badge>
-          </div>
+    <div className="w-full max-w-2xl mx-auto pb-10">
+      <div className="mb-6">
+        <h1 className="text-3xl font-bold text-white tracking-tight leading-tight">{commodity.name}</h1>
+        <div className="mt-3 flex flex-wrap gap-2">
+          <Badge variant="outline" className="border-white/10 text-muted-foreground bg-white/5 uppercase tracking-wider text-[10px] px-2.5 py-1 rounded-md">
+            {commodity.type}
+          </Badge>
+          <Badge
+            variant="outline"
+            className={
+              commodity.risk === "Low"
+                ? "border-emerald-500/20 text-emerald-500 bg-emerald-500/5 px-2.5 py-1 rounded-md"
+                : commodity.risk === "Medium"
+                  ? "border-amber-500/20 text-amber-500 bg-amber-500/5 px-2.5 py-1 rounded-md"
+                  : "border-red-500/20 text-red-500 bg-red-500/5 px-2.5 py-1 rounded-md"
+            }
+          >
+            {commodity.risk} Risk
+          </Badge>
         </div>
-        {commodity.status !== "FUNDING" && (
-          <div className="flex gap-2">
-            <Button
-              variant="outline"
-              className="bg-transparent"
-              onClick={() => {
-                setDetailsTab("logistics")
-                setTimeout(() => {
-                  document.getElementById("logistics-map")?.scrollIntoView({ behavior: "smooth", block: "start" })
-                }, 0)
-              }}
-            >
-              Track Shipment
-            </Button>
-          </div>
-        )}
-        {!isAuthed && (
-          <div className="flex gap-2">
-            <Button asChild variant="outline" className="bg-transparent">
-              <Link href="/login">Login</Link>
-            </Button>
-            <Button asChild className="bg-emerald-600 hover:bg-emerald-700 text-white">
-              <Link href="/register">Create account</Link>
-            </Button>
-          </div>
-        )}
       </div>
 
-      <div className="grid gap-6 lg:grid-cols-[1fr_360px]">
-        <div className="space-y-6">
-          <Card className="border-2 bg-card/50 backdrop-blur p-6">
-            <div className="text-sm text-muted-foreground">{commodity.description}</div>
-            <div className="mt-5 space-y-2">
-              <div className="flex justify-between text-sm">
-                <span className="text-muted-foreground">Funding Progress</span>
-                <span className="font-semibold">{fundedPercentage.toFixed(0)}%</span>
+      <Tabs value={detailsTab} onValueChange={(v) => setDetailsTab(v as any)} className="w-full">
+        <TabsList className="grid w-full grid-cols-3 bg-white/5 border border-white/10 rounded-xl p-1 h-12">
+          <TabsTrigger value="financials" className="rounded-lg data-[state=active]:bg-white/[0.08] data-[state=active]:text-white">Financials</TabsTrigger>
+          <TabsTrigger value="logistics" className="rounded-lg data-[state=active]:bg-white/[0.08] data-[state=active]:text-white">Logistics</TabsTrigger>
+          <TabsTrigger value="documents" className="rounded-lg data-[state=active]:bg-white/[0.08] data-[state=active]:text-white">Documents</TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="financials" className="space-y-6 mt-6 animate-in fade-in slide-in-from-bottom-2 duration-300">
+          <Card className="p-6 border border-white/10 bg-[#0A0A0A] rounded-2xl">
+            <h3 className="font-semibold mb-6 flex items-center text-white text-lg">
+              <span className="text-amber-500 mr-2">$</span> Cost Breakdown
+            </h3>
+            <div className="space-y-5">
+              <div className="flex justify-between items-center text-sm">
+                <span className="text-muted-foreground">Total Required</span>
+                <span className="font-bold text-white text-base">${commodity.amountRequired.toLocaleString()}</span>
               </div>
-              <Progress value={fundedPercentage} className="h-2" />
-              <div className="flex justify-between text-xs text-muted-foreground">
-                <span>${commodity.currentAmount.toLocaleString()}</span>
-                <span>of ${commodity.amountRequired.toLocaleString()}</span>
+              <div className="flex justify-between items-center text-sm">
+                <span className="text-muted-foreground">Already Funded</span>
+                <span className="font-bold text-emerald-500 text-base">${commodity.currentAmount.toLocaleString()}</span>
+              </div>
+              <div className="flex justify-between items-center text-sm">
+                <span className="text-muted-foreground">Remaining</span>
+                <span className="font-bold text-white text-base">${remainingAmount.toLocaleString()}</span>
+              </div>
+
+              <div className="py-1">
+                <Progress value={fundedPercentage} className="h-2 bg-white/5 [&>div]:bg-[#ef5f54]" />
+              </div>
+
+              <div className="h-px bg-white/5 my-4" />
+
+              <div className="flex justify-between items-center text-sm">
+                <span className="text-muted-foreground">Insurance Coverage</span>
+                <span className="font-bold text-white">${commodity.insuranceValue ? commodity.insuranceValue.toLocaleString() : "—"}</span>
+              </div>
+              <div className="flex justify-between items-center text-sm">
+                <span className="text-muted-foreground">Target APY</span>
+                <span className="font-bold text-[#ef5f54] text-base">{commodity.targetApy}%</span>
+              </div>
+              <div className="flex justify-between items-center text-sm">
+                <span className="text-muted-foreground">Duration</span>
+                <span className="font-bold text-white text-base">{commodity.duration} days</span>
               </div>
             </div>
           </Card>
 
-          <Tabs value={detailsTab} onValueChange={(v) => setDetailsTab(v as any)}>
-            <TabsList className="grid w-full grid-cols-3">
-              <TabsTrigger value="financials">Financials</TabsTrigger>
-              <TabsTrigger value="logistics">Logistics</TabsTrigger>
-              <TabsTrigger value="documents">Documents</TabsTrigger>
-            </TabsList>
+          <Card className="border border-white/10 bg-[#0A0A0A] p-6 relative overflow-hidden rounded-2xl">
+            <div className="absolute -top-24 -right-24 w-64 h-64 bg-[#ef5f54]/10 rounded-full blur-[80px] pointer-events-none" />
 
-            <TabsContent value="financials" className="space-y-4 mt-4">
-              <Card className="p-6 border-2">
-                <h3 className="font-semibold mb-4 flex items-center">
-                  <DollarSign className="h-5 w-5 mr-2 text-emerald-500" />
-                  Deal financials
-                </h3>
-                <div className="space-y-3">
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">Total Required</span>
-                    <span className="font-semibold">${commodity.amountRequired.toLocaleString()}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">Already Funded</span>
-                    <span className="font-semibold text-emerald-500">${commodity.currentAmount.toLocaleString()}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">Remaining</span>
-                    <span className="font-semibold">${remainingAmount.toLocaleString()}</span>
-                  </div>
-                  <div className="flex justify-between pt-2 border-t">
-                    <span className="text-muted-foreground">Insurance Coverage</span>
-                    <span className="font-semibold">
-                      {commodity.insuranceValue ? `$${commodity.insuranceValue.toLocaleString()}` : "—"}
-                    </span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">Target APY</span>
-                    <span className="font-semibold text-emerald-500">{commodity.targetApy}%</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">Duration</span>
-                    <span className="font-semibold">{commodity.duration} days</span>
-                  </div>
-                </div>
-              </Card>
-
-              {commodity.type === "Metals" && (
-                <MetalsValueCalculator
-                  grossWeightTroyOz={commodity.grossWeightTroyOz ?? null}
-                  purityPercent={commodity.purityPercent ?? null}
-                  metalLabel={commodity.name}
-                />
-              )}
-            </TabsContent>
-
-            <TabsContent value="logistics" className="space-y-4 mt-4">
-              <Card id="logistics-map" className="p-6 border-2">
-                <h3 className="font-semibold mb-4">Logistics Map</h3>
-                {hasCoords ? (
-                  <ShipmentMap
-                    originCoordinates={{ lat: commodity.originLat as number, lng: commodity.originLng as number }}
-                    destinationCoordinates={{ lat: commodity.destLat as number, lng: commodity.destLng as number }}
-                    departureDate={effectiveDepartureDate}
-                    arrivalDate={effectiveArrivalDate}
-                    vesselName={vesselName}
-                    vehicleType={vehicleType}
-                  />
-                ) : (
-                  <div className="text-sm text-muted-foreground">
-                    This deal is missing coordinates. Add origin/destination coordinates in the Admin deal editor to
-                    enable map tracking.
-                  </div>
-                )}
-                <div className="mt-4 space-y-2">
-                  {shipmentEventsQuery.isError ? (
-                    <div className="text-sm text-muted-foreground">
-                      {(shipmentEventsQuery.error as Error).message === "Unauthorized" ? (
-                        <span>
-                          Please <Link className="underline" href="/login">log in</Link> to view shipment tracking.
-                        </span>
-                      ) : (shipmentEventsQuery.error as Error).message === "KYC approval required" ? (
-                        <span>
-                          KYC approval is required to view shipment tracking.{" "}
-                          <Link className="underline" href="/kyc-verification">Complete verification</Link>.
-                        </span>
-                      ) : (
-                        <span>Shipment events unavailable.</span>
-                      )}
-                    </div>
-                  ) : null}
-
-                  {(() => {
-                    const events = shipmentEventsQuery.data ?? []
-                    const departed = events.find((e) => e.type === "DEPARTED")
-                    const arrived = [...events].reverse().find((e) => e.type === "ARRIVED")
-                    const now = new Date()
-                    const departedAt = departed ? new Date(departed.occurredAt) : departureDate
-                    const arrivedAt = arrived ? new Date(arrived.occurredAt) : arrivalDate
-                    const arrivedPast = Boolean(arrived && arrivedAt <= now)
-                    const inTransitState = now < departedAt ? "Pending" : arrivedPast ? "Completed" : "Active"
-                    return (
-                      <>
-                        <div className="flex items-center justify-between text-sm">
-                          <div className="font-medium">Departed {commodity.origin}</div>
-                          <div className="text-muted-foreground">{departedAt.toLocaleDateString()}</div>
-                        </div>
-                        <div className="flex items-center justify-between text-sm">
-                          <div className="font-medium">Currently in transit</div>
-                          <div className="text-muted-foreground">{inTransitState}</div>
-                        </div>
-                        <div className="flex items-center justify-between text-sm">
-                          <div className="font-medium">
-                            {arrivedPast ? "Arrived" : "Estimated arrival"} {commodity.destination}
-                          </div>
-                          <div className="text-muted-foreground">{arrivedAt.toLocaleDateString()}</div>
-                        </div>
-                      </>
-                    )
-                  })()}
-                </div>
-              </Card>
-
-              <Card className="p-6 border-2">
-                <h3 className="font-semibold mb-4 flex items-center">
-                  <MapPin className="h-5 w-5 mr-2 text-amber-500" />
-                  Shipping route
-                </h3>
-                <div className="space-y-4">
-                  <div className="flex items-center gap-4">
-                    <div className="h-3 w-3 rounded-full bg-emerald-500" />
-                    <div>
-                      <p className="font-semibold">Origin</p>
-                      <p className="text-sm text-muted-foreground">{commodity.origin}</p>
-                    </div>
-                  </div>
-                  <div className="ml-1.5 h-12 w-0.5 bg-border" />
-                  <div className="flex items-center gap-4">
-                    <div className="h-3 w-3 rounded-full border-2 border-foreground" />
-                    <div>
-                      <p className="font-semibold">Destination</p>
-                      <p className="text-sm text-muted-foreground">{commodity.destination}</p>
-                    </div>
-                  </div>
-                </div>
-              </Card>
-
-              <Card className="p-6 border-2">
-                <h3 className="font-semibold mb-4 flex items-center">
-                  <Truck className="h-5 w-5 mr-2 text-amber-500" />
-                  Shipping manifest
-                </h3>
-                <div className="space-y-3">
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">Shipment ID</span>
-                    <code className="text-sm bg-muted px-2 py-1 rounded">{commodity.shipmentId ?? "—"}</code>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">Transport Method</span>
-                    <span className="font-semibold">{commodity.transportMethod ?? "—"}</span>
-                  </div>
-                </div>
-              </Card>
-            </TabsContent>
-
-            <TabsContent value="documents" className="space-y-4 mt-4">
-              {docsQuery.isLoading ? (
-                <Card className="p-6 border-2 text-sm text-muted-foreground">Loading documents…</Card>
-              ) : docsQuery.isError ? (
-                <Card className="p-6 border-2 text-sm text-muted-foreground">
-                  {(docsQuery.error as Error).message === "Unauthorized" ? (
-                    <span>
-                      Please <Link className="underline" href="/login">log in</Link> to view verified deal documents.
-                    </span>
-                  ) : (docsQuery.error as Error).message === "KYC approval required" ? (
-                    <span>
-                      KYC approval is required to view verified deal documents.{" "}
-                      <Link className="underline" href="/kyc-verification">Complete verification</Link>.
-                    </span>
-                  ) : (
-                    <span>Failed to load documents.</span>
-                  )}
-                </Card>
-              ) : (docsQuery.data?.length ?? 0) === 0 ? (
-                <Card className="p-6 border-2 text-sm text-muted-foreground">No verified documents available yet.</Card>
-              ) : (
-                <div className="space-y-3">
-                  {(docsQuery.data ?? []).map((d) => {
-                    const Icon = docIcon(d.type)
-                    return (
-                      <a
-                        key={d.id}
-                        href={d.url}
-                        target="_blank"
-                        rel="noreferrer"
-                        onClick={async (e) => {
-                          // Convert signed-url endpoint → expiring download link.
-                          if (!d.url.startsWith("/api/documents/")) return
-                          e.preventDefault()
-                          const res = await fetch(d.url)
-                          const json = await res.json()
-                          if (!res.ok) throw new Error(json.error || "Failed to get download link")
-                          window.open(json.data.url, "_blank", "noopener,noreferrer")
-                        }}
-                      >
-                        <Card className="p-6 border-2 hover:border-primary/50 transition-colors cursor-pointer">
-                          <div className="flex items-center gap-4">
-                            <div className="h-12 w-12 rounded-lg bg-primary/10 flex items-center justify-center">
-                              <Icon className="h-6 w-6 text-primary" />
-                            </div>
-                            <div className="flex-1 min-w-0">
-                              <h4 className="font-semibold truncate">{d.name}</h4>
-                              <p className="text-sm text-muted-foreground flex items-center gap-2">
-                                {typeLabels[d.type]}
-                                <span className="inline-flex items-center gap-1">
-                                  <LinkIcon className="h-4 w-4" />
-                                  Open
-                                </span>
-                              </p>
-                            </div>
-                            <Badge className="bg-emerald-600">Verified</Badge>
-                          </div>
-                        </Card>
-                      </a>
-                    )
-                  })}
-                </div>
-              )}
-            </TabsContent>
-          </Tabs>
-        </div>
-
-        <div className="space-y-4">
-          <Card className="border-2 bg-card/50 backdrop-blur p-6">
-            <h3 className="font-semibold mb-4 flex items-center">
-              <TrendingUp className="h-5 w-5 mr-2 text-emerald-500" />
-              Invest
+            <h3 className="font-semibold mb-6 flex items-center text-white text-lg relative z-10">
+              <TrendingUp className="h-5 w-5 mr-3 text-[#ef5f54]" />
+              Investment Calculator
             </h3>
 
             {!isAuthed && (
-              <Alert className="mb-4">
-                <AlertDescription>
-                  Please <Link className="underline" href="/login">log in</Link> to invest.
+              <Alert className="mb-4 border-white/10 bg-white/5 relative z-10 rounded-xl">
+                <AlertDescription className="text-white">
+                  Please <Link className="underline hover:text-[#ef5f54]" href="/login">log in</Link> to invest.
                 </AlertDescription>
               </Alert>
             )}
 
             {isAuthed && !kycApproved && (
-              <Alert className="mb-4 border-amber-500/20 bg-amber-500/10">
+              <Alert className="mb-4 border-amber-500/20 bg-amber-500/10 backdrop-blur-sm relative z-10 rounded-xl">
                 <AlertDescription className="text-amber-500">
-                  KYC approval is required before investing.{" "}
-                  <Link className="underline" href="/kyc-verification">
-                    Complete verification
-                  </Link>
-                  .
+                  KYC approval is required before investing.
                 </AlertDescription>
               </Alert>
             )}
 
-            <div className="space-y-4">
+            <div className="space-y-6 relative z-10">
               <div>
-                <Label htmlFor="amount">Investment Amount ($)</Label>
+                <Label htmlFor="amount" className="text-white font-medium mb-2 block">Investment Amount ($)</Label>
                 <Input
                   id="amount"
                   type="number"
                   placeholder="10000"
                   value={investAmount}
                   onChange={(e) => setInvestAmount(e.target.value)}
-                  className="mt-2"
+                  className="bg-white/5 border-white/10 text-white placeholder:text-muted-foreground/30 h-12 rounded-xl focus:border-[#ef5f54]/50 focus:ring-[#ef5f54]/20"
                   disabled={!isAuthed || !kycApproved}
                 />
-                <div className="mt-2 text-xs text-muted-foreground">
-                  Min ${minInvestment.toLocaleString()}
-                  {maxInvestment !== null ? ` • Max $${maxInvestment.toLocaleString()}` : ""} • Remaining $
-                  {remainingAmount.toLocaleString()}
-                </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-4 p-4 bg-background rounded-lg">
+              <div className="grid grid-cols-2 gap-4 p-5 bg-black/40 rounded-xl border border-white/5">
                 <div>
-                  <p className="text-sm text-muted-foreground">Projected Return</p>
-                  <p className="text-2xl font-bold text-emerald-500">${projectedReturn}</p>
+                  <div className="text-sm text-muted-foreground mb-1">Projected Return</div>
+                  <div className="text-2xl font-bold text-[#ef5f54] flex items-center gap-2">
+                    <span className="text-lg">✨</span> ${projectedReturn}
+                  </div>
                 </div>
                 <div>
-                  <p className="text-sm text-muted-foreground">Total Value</p>
-                  <p className="text-2xl font-bold">
+                  <div className="text-sm text-muted-foreground mb-1">Total Value</div>
+                  <div className="text-2xl font-bold text-white">
                     $
                     {investAmount
                       ? (Number.parseFloat(investAmount) + Number.parseFloat(projectedReturn)).toFixed(2)
                       : "0.00"}
-                  </p>
+                  </div>
                 </div>
               </div>
 
-              <div className="rounded-lg border p-4">
-                <div className="flex items-center justify-between text-sm">
-                  <span className="text-muted-foreground">Platform fee</span>
-                  <span className="font-medium">{(platformFeeBps / 100).toFixed(2)}%</span>
-                </div>
-                <div className="mt-2 space-y-1 text-sm">
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">Principal</span>
-                    <span className="font-medium">${isAmountValid ? amountNum.toFixed(2) : "0.00"}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">Fee</span>
-                    <span className="font-medium">${fee.toFixed(2)}</span>
-                  </div>
-                  <div className="flex justify-between border-t pt-2">
-                    <span className="text-muted-foreground">Total wallet debit</span>
-                    <span className="font-semibold">${totalDebit.toFixed(2)}</span>
-                  </div>
-                </div>
-                {(minViolation || maxViolation || remainingViolation) && (
-                  <div className="mt-2 text-xs text-red-500">
-                    {minViolation && `Below minimum ($${minInvestment.toLocaleString()}). `}
-                    {maxViolation && maxInvestment !== null && `Above maximum ($${maxInvestment.toLocaleString()}). `}
-                    {remainingViolation && "Exceeds remaining funding."}
-                  </div>
-                )}
-              </div>
-
-              <div className="space-y-3 rounded-lg border p-4">
+              <div className="space-y-3 pt-2">
                 <div className="flex items-start gap-3">
                   <Checkbox
                     checked={ackRisk}
                     onCheckedChange={(v) => setAckRisk(Boolean(v))}
                     disabled={!isAuthed || !kycApproved}
-                    aria-label="Acknowledge risk disclosure"
+                    className="border-white/20 data-[state=checked]:bg-[#ef5f54] data-[state=checked]:border-[#ef5f54] rounded mt-0.5"
                   />
-                  <div className="text-sm">
-                    I have read and understand the{" "}
-                    <Link className="underline" href="/legal/risk-disclosure" target="_blank">
-                      Risk Disclosure
-                    </Link>
-                    .
+                  <div className="text-sm text-muted-foreground leading-tight">
+                    I accept the <Link className="text-white hover:underline" href="/legal/risk-disclosure">Risk Disclosure</Link>
                   </div>
                 </div>
                 <div className="flex items-start gap-3">
@@ -578,42 +320,145 @@ export function DealDetailView({ commodity }: { commodity: MarketplaceCommodity 
                     checked={ackTerms}
                     onCheckedChange={(v) => setAckTerms(Boolean(v))}
                     disabled={!isAuthed || !kycApproved}
-                    aria-label="Accept terms of service"
+                    className="border-white/20 data-[state=checked]:bg-[#ef5f54] data-[state=checked]:border-[#ef5f54] rounded mt-0.5"
                   />
-                  <div className="text-sm">
-                    I agree to the{" "}
-                    <Link className="underline" href="/legal/terms" target="_blank">
-                      Terms of Service
-                    </Link>
-                    .
+                  <div className="text-sm text-muted-foreground leading-tight">
+                    I agree to the <Link className="text-white hover:underline" href="/legal/terms">Terms of Service</Link>
                   </div>
                 </div>
               </div>
 
-              {investMutation.error && <div className="text-sm text-red-500">{(investMutation.error as Error).message}</div>}
-
               <Button
-                className="w-full bg-emerald-600 hover:bg-emerald-700 text-white"
-                size="lg"
+                className="w-full bg-[#ef5f54] hover:bg-[#d64f44] text-white font-bold h-12 text-base rounded-xl shadow-[0_4px_20px_rgba(239,95,84,0.25)] transition-all hover:scale-[1.01] active:scale-[0.99]"
                 onClick={() => investMutation.mutate()}
-                disabled={
-                  !isAuthed ||
-                  !kycApproved ||
-                  investMutation.isPending ||
-                  !ackRisk ||
-                  !ackTerms ||
-                  !isAmountValid ||
-                  minViolation ||
-                  maxViolation ||
-                  remainingViolation
-                }
+                disabled={!isAuthed || !kycApproved || investMutation.isPending || !ackRisk || !ackTerms || !isAmountValid}
               >
-                {investMutation.isPending ? "Investing..." : "Invest Now"}
+                {investMutation.isPending ? "Processing..." : "Invest Now"}
               </Button>
             </div>
           </Card>
-        </div>
-      </div>
+
+          {commodity.type === "Metals" && (
+            <MetalsValueCalculator
+              grossWeightTroyOz={commodity.grossWeightTroyOz ?? null}
+              purityPercent={commodity.purityPercent ?? null}
+              metalLabel={commodity.name}
+            />
+          )}
+        </TabsContent>
+
+        <TabsContent value="logistics" className="space-y-6 mt-6 animate-in fade-in slide-in-from-bottom-2 duration-300">
+          <Card className="p-6 border border-white/10 bg-[#0A0A0A] rounded-2xl">
+            <h3 className="font-semibold mb-6 flex items-center text-white text-lg">
+              <MapPin className="h-5 w-5 mr-3 text-amber-500" />
+              Shipping Route
+            </h3>
+
+            <div className="relative pl-2 py-2 mb-8">
+              {/* Vertical line */}
+              <div className="absolute left-[11px] top-4 bottom-4 w-0.5 bg-gradient-to-b from-emerald-500 via-white/20 to-emerald-500/50" />
+
+              <div className="relative mb-10 flex items-start gap-6">
+                <div className="relative z-10 h-6 w-6 rounded-full bg-[#0A0A0A] border-4 border-emerald-500 shadow-[0_0_15px_rgba(16,185,129,0.4)] shrink-0" />
+                <div>
+                  <div className="font-bold text-white text-lg mb-1">Origin</div>
+                  <div className="text-muted-foreground text-sm">{commodity.origin}</div>
+                  <div className="text-xs text-muted-foreground/50 mt-1">Departed: {effectiveDepartureDate.toLocaleDateString()}</div>
+                </div>
+              </div>
+
+              <div className="relative flex items-start gap-6">
+                <div className="relative z-10 h-6 w-6 rounded-full bg-[#0A0A0A] border-4 border-[#ef5f54] shadow-[0_0_15px_rgba(239,95,84,0.4)] shrink-0" />
+                <div>
+                  <div className="font-bold text-white text-lg mb-1">Destination</div>
+                  <div className="text-muted-foreground text-sm">{commodity.destination}</div>
+                  <div className="text-xs text-muted-foreground/50 mt-1">Arrival: {effectiveArrivalDate.toLocaleDateString()}</div>
+                </div>
+              </div>
+            </div>
+
+            {hasCoords && (
+              <div className="rounded-xl overflow-hidden border border-white/10 h-64 mt-6 relative shadow-2xl">
+                <div className="absolute inset-0 bg-gradient-to-t from-[#0A0A0A] via-transparent to-transparent pointer-events-none z-10" />
+                <ShipmentMap
+                  originCoordinates={{ lat: commodity.originLat as number, lng: commodity.originLng as number }}
+                  destinationCoordinates={{ lat: commodity.destLat as number, lng: commodity.destLng as number }}
+                  departureDate={effectiveDepartureDate}
+                  arrivalDate={effectiveArrivalDate}
+                  vesselName={vesselName}
+                  vehicleType={vehicleType}
+                />
+              </div>
+            )}
+          </Card>
+
+          <Card className="p-6 border border-white/10 bg-[#0A0A0A] rounded-2xl">
+            <h3 className="font-semibold mb-6 flex items-center text-white text-lg">
+              <Truck className="h-5 w-5 mr-3 text-amber-500" />
+              Shipping Manifest
+            </h3>
+            <div className="grid grid-cols-1 gap-4">
+              <div className="flex justify-between items-center p-3 rounded-lg bg-white/5 border border-white/5">
+                <span className="text-muted-foreground text-sm">Shipment ID</span>
+                <code className="text-sm font-mono text-white tracking-wider">{commodity.shipmentId ?? "PENDING"}</code>
+              </div>
+              <div className="flex justify-between items-center p-3 rounded-lg bg-white/5 border border-white/5">
+                <span className="text-muted-foreground text-sm">Transport Method</span>
+                <span className="font-bold text-white text-sm uppercase tracking-wide">{commodity.transportMethod ?? "Standard"}</span>
+              </div>
+              <div className="flex justify-between items-center p-3 rounded-lg bg-white/5 border border-white/5">
+                <span className="text-muted-foreground text-sm">Estimated Duration</span>
+                <span className="font-bold text-white text-sm">{commodity.duration} days</span>
+              </div>
+              <div className="flex justify-between items-center p-3 rounded-lg bg-white/5 border border-white/5">
+                <span className="text-muted-foreground text-sm">Insurance Provider</span>
+                <span className="font-bold text-white text-sm">Lloyd's of London</span>
+              </div>
+            </div>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="documents" className="space-y-4 mt-6 animate-in fade-in slide-in-from-bottom-2 duration-300">
+          {docsQuery.isLoading ? (
+            <div className="flex items-center justify-center p-12 text-sm text-muted-foreground">Loading documents...</div>
+          ) : docsQuery.data && docsQuery.data.length > 0 ? (
+            docsQuery.data.map((d) => {
+              const Icon = docIcon(d.type)
+              return (
+                <a
+                  key={d.id}
+                  href={d.url}
+                  target="_blank"
+                  rel="noreferrer"
+                  onClick={async (e) => {
+                    if (!d.url.startsWith("/api/documents/")) return
+                    e.preventDefault()
+                    const res = await fetch(d.url)
+                    const json = await res.json()
+                    if (json?.data?.url) window.open(json.data.url, "_blank", "noopener,noreferrer")
+                  }}
+                  className="block group"
+                >
+                  <Card className="p-5 border border-white/10 bg-[#0A0A0A] hover:bg-white/[0.03] hover:border-white/20 transition-all rounded-2xl flex items-center gap-5">
+                    <div className="h-12 w-12 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center group-hover:scale-105 transition-transform shrink-0">
+                      <Icon className="h-6 w-6 text-[#ef5f54]" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <h4 className="font-bold text-white text-base truncate mb-1 group-hover:text-[#ef5f54] transition-colors">{d.name}</h4>
+                      <p className="text-sm text-muted-foreground">{typeLabels[d.type]}</p>
+                    </div>
+                    <Badge className={d.verified ? "bg-emerald-500/10 text-emerald-500 border-emerald-500/20" : "bg-white/5 text-muted-foreground border-white/10"}>
+                      {d.verified ? "Verified" : "Active"}
+                    </Badge>
+                  </Card>
+                </a>
+              )
+            })
+          ) : (
+            <div className="text-center p-12 text-muted-foreground border border-white/10 rounded-2xl border-dashed">No documents avaliable</div>
+          )}
+        </TabsContent>
+      </Tabs>
     </div>
   )
 }

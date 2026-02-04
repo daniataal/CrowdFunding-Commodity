@@ -61,68 +61,73 @@ export default async function SystemHealthPage() {
   ]
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       <div>
-        <h2 className="text-2xl font-bold">System Health</h2>
+        <h2 className="text-3xl font-bold text-white mb-2">System Health</h2>
         <p className="text-muted-foreground">Platform statistics and health metrics</p>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         {stats.map((stat) => {
           const Icon = stat.icon
           return (
-            <Card key={stat.title} className="border-2">
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">{stat.title}</CardTitle>
-                <Icon className="h-4 w-4 text-muted-foreground" />
+            <Card key={stat.title} className="border border-white/10 bg-[#0A0A0A] p-6 relative overflow-hidden group hover:border-white/20 transition-all">
+              <div className="absolute top-0 right-0 w-24 h-24 bg-primary/5 rounded-full blur-[50px] group-hover:bg-primary/10 transition-colors" />
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 p-0 mb-4 relative z-10">
+                <CardTitle className="text-sm font-medium text-muted-foreground">{stat.title}</CardTitle>
+                <div className="p-2 rounded-lg bg-white/5 border border-white/5">
+                  <Icon className="h-4 w-4 text-white" />
+                </div>
               </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">{stat.value}</div>
+              <CardContent className="p-0 relative z-10">
+                <div className="text-2xl font-bold text-white">{stat.value}</div>
               </CardContent>
             </Card>
           )
         })}
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <Card className="border-2">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        <Card className="border border-white/10 bg-[#0A0A0A] rounded-2xl relative overflow-hidden">
           <CardHeader>
-            <CardTitle>Active Deals</CardTitle>
-            <CardDescription>Currently funding or in transit</CardDescription>
+            <CardTitle className="text-white">Active Deals</CardTitle>
+            <CardDescription className="text-muted-foreground">Currently funding or in transit</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold">{activeDeals}</div>
+            <div className="text-4xl font-bold text-emerald-400">{activeDeals}</div>
             <p className="text-sm text-muted-foreground mt-2">Commodities actively trading</p>
           </CardContent>
         </Card>
 
-        <Card className="border-2">
+        <Card className="border border-white/10 bg-[#0A0A0A] rounded-2xl relative overflow-hidden">
           <CardHeader>
-            <CardTitle>Pending KYC</CardTitle>
-            <CardDescription>Users awaiting verification</CardDescription>
+            <CardTitle className="text-white">Pending KYC</CardTitle>
+            <CardDescription className="text-muted-foreground">Users awaiting verification</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold">{pendingKyc}</div>
+            <div className={`text-4xl font-bold ${pendingKyc > 0 ? "text-amber-500" : "text-muted-foreground"}`}>{pendingKyc}</div>
             <p className="text-sm text-muted-foreground mt-2">Requires admin review</p>
           </CardContent>
         </Card>
       </div>
 
-      <Card className="border-2">
+      <Card className="border border-white/10 bg-[#0A0A0A] rounded-2xl relative overflow-hidden">
         <CardHeader>
-          <CardTitle>Transaction Statistics</CardTitle>
-          <CardDescription>Platform transaction metrics</CardDescription>
+          <CardTitle className="text-white">Transaction Statistics</CardTitle>
+          <CardDescription className="text-muted-foreground">Platform transaction metrics</CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="text-2xl font-bold">{totalTransactions}</div>
+          <div className="text-4xl font-bold text-white">{totalTransactions}</div>
           <p className="text-sm text-muted-foreground mt-2">Total transactions processed</p>
         </CardContent>
       </Card>
 
-      <LogisticsSyncCard isAdmin={isAdmin} />
-      <JobsCard isAdmin={isAdmin} />
-      <AlertsCard isAdmin={isAdmin} />
-      <ApprovalsCard isAdmin={isAdmin} />
+      <div className="space-y-8">
+        <LogisticsSyncCard isAdmin={isAdmin} />
+        <JobsCard isAdmin={isAdmin} />
+        <AlertsCard isAdmin={isAdmin} />
+        <ApprovalsCard isAdmin={isAdmin} />
+      </div>
     </div>
   )
 }
