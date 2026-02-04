@@ -40,6 +40,7 @@ services:
       DATABASE_URL: postgresql://postgres:commodity_password@postgres:5432/commodity_crowdfunding?schema=public
       # Secrets should be passed via .env file on the server
       AUTH_SECRET: ${AUTH_SECRET}
+      NEXTAUTH_SECRET: ${AUTH_SECRET}
       NEXTAUTH_URL: ${NEXTAUTH_URL}
       AUTH_TRUST_HOST: "true"
       NODE_ENV: production
