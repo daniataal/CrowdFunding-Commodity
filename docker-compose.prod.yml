@@ -53,7 +53,7 @@ services:
       redis:
         condition: service_healthy
     # Run migrations on start (using db push for schema sync without migrations)
-    command: sh -c "/app/node_modules/.bin/prisma db push && node server.js"
+    command: sh -c "/app/node_modules/.bin/prisma db push --skip-generate && node server.js"
 
 volumes:
   postgres_data:
