@@ -79,6 +79,7 @@ jobs:
             DOCKER_IMAGE_NAME=${{ env.DOCKER_IMAGE }}
             DATABASE_URL=postgresql://postgres:${{ secrets.POSTGRES_PASSWORD }}@postgres:5432/commodity_crowdfunding?schema=public
             AUTH_SECRET=${{ secrets.AUTH_SECRET }}
+            NEXTAUTH_SECRET=${{ secrets.AUTH_SECRET }}
             NEXTAUTH_URL=http://151.145.85.174
             POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }}
             NODE_ENV=production
