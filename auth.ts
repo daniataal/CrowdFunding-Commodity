@@ -16,6 +16,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
   // but still use localhost. Auth.js will throw UntrustedHost unless you opt in.
   // Prefer enabling via env var rather than always-on in real production.
   trustHost: process.env.AUTH_TRUST_HOST === "true",
+  secret: process.env.AUTH_SECRET,
   providers: [
     Credentials({
       async authorize(credentials) {
