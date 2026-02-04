@@ -11,18 +11,18 @@ export function LogisticsSyncCard({ isAdmin }: { isAdmin: boolean }) {
   const [result, setResult] = useState<Array<{ id: string; shipmentId: string; events: any[] }> | null>(null)
 
   return (
-    <Card className="border border-white/10 bg-[#0A0A0A] rounded-2xl relative overflow-hidden group hover:border-white/20 transition-all">
+    <Card className="border-border bg-card rounded-2xl relative overflow-hidden group hover:shadow-sm transition-all">
       <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-full blur-[60px] group-hover:bg-primary/10 transition-colors" />
       <div className="p-6 relative z-10 w-full">
         <div className="flex items-start justify-between gap-4">
           <div>
-            <div className="font-bold text-white text-lg">Logistics Sync (Placeholder)</div>
+            <div className="font-bold text-foreground text-lg">Logistics Sync (Placeholder)</div>
             <div className="text-sm text-muted-foreground mt-1">
               Simulates pulling shipment events from MarineTraffic (or similar). In production this would be cron-driven.
             </div>
           </div>
           <Button
-            className="bg-primary hover:bg-red-600 text-white shadow-lg shadow-red-500/20 rounded-xl"
+            className="bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg shadow-primary/20 rounded-xl font-bold"
             disabled={!isAdmin || isSyncing}
             onClick={async () => {
               setError(null)
@@ -48,7 +48,7 @@ export function LogisticsSyncCard({ isAdmin }: { isAdmin: boolean }) {
         )}
 
         {error && (
-          <Alert variant="destructive" className="mt-4 border-red-900/50 bg-red-900/10 text-red-500">
+          <Alert variant="destructive" className="mt-4">
             <AlertDescription>{error}</AlertDescription>
           </Alert>
         )}
@@ -56,7 +56,7 @@ export function LogisticsSyncCard({ isAdmin }: { isAdmin: boolean }) {
         {result && (
           <div className="mt-4 space-y-2 text-sm">
             <div className="text-muted-foreground">Updated deals: {result.length}</div>
-            <div className="max-h-56 overflow-auto rounded-xl border border-white/10 p-4 bg-black/50 text-emerald-400 font-mono">
+            <div className="max-h-56 overflow-auto rounded-xl border border-border p-4 bg-muted font-mono text-foreground">
               <pre className="text-xs">{JSON.stringify(result, null, 2)}</pre>
             </div>
           </div>

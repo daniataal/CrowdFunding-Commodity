@@ -59,10 +59,10 @@ export function ApprovalsCard({ isAdmin }: { isAdmin: boolean }) {
   const items = (approvalsQuery.data ?? []).filter((a) => a.status === "PENDING")
 
   return (
-    <Card className="border border-white/10 bg-[#0A0A0A] rounded-2xl relative overflow-hidden group hover:border-white/20 transition-all">
+    <Card className="border-border bg-card rounded-2xl relative overflow-hidden group hover:shadow-sm transition-all">
       <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-full blur-[60px] group-hover:bg-primary/10 transition-colors" />
       <div className="p-6 relative z-10 w-full">
-        <div className="font-bold text-white text-lg">Two-person approvals</div>
+        <div className="font-bold text-foreground text-lg">Two-person approvals</div>
         <div className="text-sm text-muted-foreground mt-1">High-risk admin actions require a second admin approval</div>
 
         <div className="mt-6 space-y-2">
@@ -72,11 +72,11 @@ export function ApprovalsCard({ isAdmin }: { isAdmin: boolean }) {
             <div className="text-sm text-muted-foreground">No pending approvals.</div>
           ) : (
             items.map((a) => (
-              <div key={a.id} className="rounded-xl border border-white/5 bg-white/[0.02] p-4 flex items-start justify-between gap-4 hover:bg-white/[0.04] transition-colors">
+              <div key={a.id} className="rounded-xl border border-border/50 bg-muted/20 p-4 flex items-start justify-between gap-4 hover:bg-muted/40 transition-colors">
                 <div className="min-w-0">
-                  <div className="font-bold text-white text-base mb-1">{a.action}</div>
+                  <div className="font-bold text-foreground text-base mb-1">{a.action}</div>
                   <div className="text-xs text-muted-foreground font-mono">
-                    {new Date(a.createdAt).toLocaleString()} • requestedBy <span className="text-white">{a.requestedBy}</span>
+                    {new Date(a.createdAt).toLocaleString()} • requestedBy <span className="text-foreground">{a.requestedBy}</span>
                     {a.entityType && a.entityId ? ` • ${a.entityType}:${a.entityId}` : ""}
                   </div>
                 </div>
@@ -85,7 +85,7 @@ export function ApprovalsCard({ isAdmin }: { isAdmin: boolean }) {
                   <div className="flex gap-2">
                     <Button
                       variant="outline"
-                      className="bg-emerald-500/10 border-emerald-500/20 text-emerald-500 hover:bg-emerald-500/20 hover:text-emerald-400"
+                      className="bg-primary/10 border-primary/20 text-primary hover:bg-primary/20 hover:text-primary"
                       size="sm"
                       disabled={approveMutation.isPending}
                       onClick={() => approveMutation.mutate(a.id)}

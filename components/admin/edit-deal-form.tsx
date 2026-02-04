@@ -110,7 +110,7 @@ export function EditDealForm({
 
   return (
     <form onSubmit={handleSubmit}>
-      <Card className="border border-white/10 bg-[#0A0A0A] relative overflow-hidden">
+      <Card className="border-border bg-card relative overflow-hidden shadow-sm">
         <div className="absolute top-0 right-0 w-64 h-64 bg-primary/5 rounded-full blur-[80px] pointer-events-none" />
         <CardHeader>
           <CardTitle>Edit Deal</CardTitle>
@@ -126,13 +126,13 @@ export function EditDealForm({
           <div className="grid gap-4 md:grid-cols-2">
             <div className="space-y-2">
               <Label htmlFor="name">Deal Name</Label>
-              <Input id="name" value={formData.name} onChange={(e) => setFormData({ ...formData, name: e.target.value })} />
+              <Input id="name" value={formData.name} onChange={(e) => setFormData({ ...formData, name: e.target.value })} className="bg-background border-border" />
             </div>
 
             <div className="space-y-2">
               <Label>Commodity Type</Label>
               <Select value={formData.type} onValueChange={(value) => setFormData({ ...formData, type: value })}>
-                <SelectTrigger>
+                <SelectTrigger className="bg-background border-border">
                   <SelectValue placeholder="Select type" />
                 </SelectTrigger>
                 <SelectContent>
@@ -146,7 +146,7 @@ export function EditDealForm({
             <div className="space-y-2">
               <Label>Risk Level</Label>
               <Select value={formData.risk} onValueChange={(value) => setFormData({ ...formData, risk: value })}>
-                <SelectTrigger>
+                <SelectTrigger className="bg-background border-border">
                   <SelectValue placeholder="Select risk" />
                 </SelectTrigger>
                 <SelectContent>
@@ -164,6 +164,7 @@ export function EditDealForm({
                 type="number"
                 value={formData.targetApy}
                 onChange={(e) => setFormData({ ...formData, targetApy: e.target.value })}
+                className="bg-background border-border"
               />
             </div>
 
@@ -174,6 +175,7 @@ export function EditDealForm({
                 type="number"
                 value={formData.duration}
                 onChange={(e) => setFormData({ ...formData, duration: e.target.value })}
+                className="bg-background border-border"
               />
             </div>
 
@@ -184,6 +186,7 @@ export function EditDealForm({
                 type="number"
                 value={formData.amountRequired}
                 onChange={(e) => setFormData({ ...formData, amountRequired: e.target.value })}
+                className="bg-background border-border"
               />
             </div>
 
@@ -195,6 +198,7 @@ export function EditDealForm({
                 step="0.01"
                 value={formData.minInvestment}
                 onChange={(e) => setFormData({ ...formData, minInvestment: e.target.value })}
+                className="bg-background border-border"
               />
             </div>
 
@@ -207,6 +211,7 @@ export function EditDealForm({
                 value={formData.maxInvestment as any}
                 onChange={(e) => setFormData({ ...formData, maxInvestment: e.target.value })}
                 placeholder="(optional)"
+                className="bg-background border-border"
               />
               <div className="text-xs text-muted-foreground">Leave blank for no maximum per investor.</div>
             </div>
@@ -218,6 +223,7 @@ export function EditDealForm({
                 type="number"
                 value={formData.platformFeeBps}
                 onChange={(e) => setFormData({ ...formData, platformFeeBps: e.target.value })}
+                className="bg-background border-border"
               />
               <div className="text-xs text-muted-foreground">Basis points. 150 = 1.50%.</div>
             </div>
@@ -229,6 +235,7 @@ export function EditDealForm({
                 type="date"
                 value={formData.maturityDate as any}
                 onChange={(e) => setFormData({ ...formData, maturityDate: e.target.value })}
+                className="bg-background border-border"
               />
             </div>
           </div>
@@ -240,13 +247,14 @@ export function EditDealForm({
               value={formData.description}
               onChange={(e) => setFormData({ ...formData, description: e.target.value })}
               rows={4}
+              className="bg-background border-border"
             />
           </div>
 
           <div className="grid gap-4 md:grid-cols-2">
             <div className="space-y-2">
               <Label htmlFor="origin">Origin</Label>
-              <Input id="origin" value={formData.origin} onChange={(e) => setFormData({ ...formData, origin: e.target.value })} />
+              <Input id="origin" value={formData.origin} onChange={(e) => setFormData({ ...formData, origin: e.target.value })} className="bg-background border-border" />
             </div>
             <div className="space-y-2">
               <Label htmlFor="destination">Destination</Label>
@@ -254,6 +262,7 @@ export function EditDealForm({
                 id="destination"
                 value={formData.destination}
                 onChange={(e) => setFormData({ ...formData, destination: e.target.value })}
+                className="bg-background border-border"
               />
             </div>
           </div>
@@ -268,7 +277,7 @@ export function EditDealForm({
               <div className="space-y-2">
                 <Label>Form</Label>
                 <Select value={formData.metalForm} onValueChange={(v) => setFormData({ ...formData, metalForm: v })}>
-                  <SelectTrigger>
+                  <SelectTrigger className="bg-background border-border">
                     <SelectValue placeholder="Select form" />
                   </SelectTrigger>
                   <SelectContent>
@@ -287,12 +296,13 @@ export function EditDealForm({
                   step="0.01"
                   value={formData.purityPercent as any}
                   onChange={(e) => setFormData({ ...formData, purityPercent: e.target.value })}
+                  className="bg-background border-border"
                 />
               </div>
 
               <div className="space-y-2">
                 <Label htmlFor="karat">Karat (optional)</Label>
-                <Input id="karat" type="number" value={formData.karat as any} onChange={(e) => setFormData({ ...formData, karat: e.target.value })} />
+                <Input id="karat" type="number" value={formData.karat as any} onChange={(e) => setFormData({ ...formData, karat: e.target.value })} className="bg-background border-border" />
               </div>
 
               <div className="space-y-2">
@@ -303,12 +313,13 @@ export function EditDealForm({
                   step="0.0001"
                   value={formData.grossWeightTroyOz as any}
                   onChange={(e) => setFormData({ ...formData, grossWeightTroyOz: e.target.value })}
+                  className="bg-background border-border"
                 />
               </div>
 
               <div className="space-y-2">
                 <Label htmlFor="refineryName">Destination refinery</Label>
-                <Input id="refineryName" value={formData.refineryName} onChange={(e) => setFormData({ ...formData, refineryName: e.target.value })} />
+                <Input id="refineryName" value={formData.refineryName} onChange={(e) => setFormData({ ...formData, refineryName: e.target.value })} className="bg-background border-border" />
               </div>
 
               <div className="space-y-2 md:col-span-2">
@@ -317,12 +328,13 @@ export function EditDealForm({
                   id="refineryLocation"
                   value={formData.refineryLocation}
                   onChange={(e) => setFormData({ ...formData, refineryLocation: e.target.value })}
+                  className="bg-background border-border"
                 />
               </div>
             </div>
           )}
 
-          <div className="rounded-lg border bg-muted/20 p-3 flex items-center justify-between gap-3">
+          <div className="rounded-lg border border-border bg-muted/20 p-3 flex items-center justify-between gap-3">
             <div className="text-sm">
               <div className="font-medium">Coordinates</div>
               <div className="text-xs text-muted-foreground">Auto-fill from origin/destination names.</div>
@@ -330,7 +342,7 @@ export function EditDealForm({
             <Button
               type="button"
               variant="outline"
-              className="bg-transparent"
+              className="bg-transparent border-border hover:bg-muted text-foreground"
               disabled={isLoading || isGeocoding || !formData.origin.trim() || !formData.destination.trim()}
               onClick={async () => {
                 setIsGeocoding(true)
@@ -371,6 +383,7 @@ export function EditDealForm({
                 step="0.0001"
                 value={formData.originLat as any}
                 onChange={(e) => setFormData({ ...formData, originLat: e.target.value })}
+                className="bg-background border-border"
               />
             </div>
             <div className="space-y-2">
@@ -381,6 +394,7 @@ export function EditDealForm({
                 step="0.0001"
                 value={formData.originLng as any}
                 onChange={(e) => setFormData({ ...formData, originLng: e.target.value })}
+                className="bg-background border-border"
               />
             </div>
             <div className="space-y-2">
@@ -391,6 +405,7 @@ export function EditDealForm({
                 step="0.0001"
                 value={formData.destLat as any}
                 onChange={(e) => setFormData({ ...formData, destLat: e.target.value })}
+                className="bg-background border-border"
               />
             </div>
             <div className="space-y-2">
@@ -401,6 +416,7 @@ export function EditDealForm({
                 step="0.0001"
                 value={formData.destLng as any}
                 onChange={(e) => setFormData({ ...formData, destLng: e.target.value })}
+                className="bg-background border-border"
               />
             </div>
           </div>
@@ -412,6 +428,7 @@ export function EditDealForm({
                 id="shipmentId"
                 value={formData.shipmentId as any}
                 onChange={(e) => setFormData({ ...formData, shipmentId: e.target.value })}
+                className="bg-background border-border"
               />
             </div>
             <div className="space-y-2">
@@ -421,6 +438,7 @@ export function EditDealForm({
                 type="number"
                 value={formData.insuranceValue as any}
                 onChange={(e) => setFormData({ ...formData, insuranceValue: e.target.value })}
+                className="bg-background border-border"
               />
             </div>
             <div className="space-y-2">
@@ -429,6 +447,7 @@ export function EditDealForm({
                 id="transportMethod"
                 value={formData.transportMethod as any}
                 onChange={(e) => setFormData({ ...formData, transportMethod: e.target.value })}
+                className="bg-background border-border"
               />
             </div>
             <div className="space-y-2">
@@ -438,11 +457,12 @@ export function EditDealForm({
                 type="number"
                 value={formData.riskScore as any}
                 onChange={(e) => setFormData({ ...formData, riskScore: e.target.value })}
+                className="bg-background border-border"
               />
             </div>
           </div>
 
-          <Button type="submit" disabled={isLoading} className="bg-emerald-600 hover:bg-emerald-700 text-white">
+          <Button type="submit" disabled={isLoading} className="bg-primary hover:bg-primary/90 text-primary-foreground font-bold shadow-lg shadow-primary/20">
             {isLoading ? (
               <>
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />

@@ -83,14 +83,14 @@ export function MarketplaceView({
       {/* Filters Sidebar */}
       <aside className="lg:w-72 space-y-6">
         {canCreateListing && (
-          <Card className="p-6 border border-white/10 bg-[#0A0A0A] rounded-2xl relative overflow-hidden group">
+          <Card className="p-6 border-border bg-gradient-to-br from-primary/10 to-primary/5 rounded-2xl relative overflow-hidden group border border-primary/20">
             <div className="absolute top-0 right-0 w-20 h-20 bg-primary/20 rounded-full blur-[40px]" />
             <div className="flex items-center justify-between relative z-10">
               <div>
-                <div className="font-bold text-white text-lg">Admin</div>
+                <div className="font-bold text-foreground text-lg">Admin</div>
                 <div className="text-xs text-muted-foreground mt-1">Create listing</div>
               </div>
-              <Button asChild className="bg-primary hover:bg-red-600 text-white shadow-lg shadow-red-500/20">
+              <Button asChild className="bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg shadow-primary/20">
                 <Link href="/admin/deals/new">
                   <Plus className="h-4 w-4" />
                 </Link>
@@ -98,16 +98,16 @@ export function MarketplaceView({
             </div>
           </Card>
         )}
-        <Card className="p-6 border border-white/10 bg-[#0A0A0A] rounded-2xl">
-          <h3 className="font-bold mb-4 text-white text-lg">Commodity Type</h3>
+        <Card className="p-6 border-border bg-card rounded-2xl shadow-sm">
+          <h3 className="font-semibold mb-4 text-foreground text-lg">Commodity Type</h3>
           <div className="space-y-2">
             {["All", "Agriculture", "Energy", "Metals"].map((type) => (
               <button
                 key={type}
                 onClick={() => setFilterType(type)}
                 className={`w-full text-left px-4 py-3 rounded-xl text-sm font-medium transition-all ${filterType === type
-                  ? "bg-primary text-white shadow-lg shadow-red-500/20"
-                  : "text-muted-foreground hover:bg-white/5 hover:text-white"
+                  ? "bg-primary text-primary-foreground shadow-lg shadow-primary/25"
+                  : "text-muted-foreground hover:bg-muted hover:text-foreground"
                   }`}
               >
                 {type}
@@ -116,16 +116,16 @@ export function MarketplaceView({
           </div>
         </Card>
 
-        <Card className="p-6 border border-white/10 bg-[#0A0A0A] rounded-2xl">
-          <h3 className="font-bold mb-4 text-white text-lg">Risk Level</h3>
+        <Card className="p-6 border-border bg-card rounded-2xl shadow-sm">
+          <h3 className="font-semibold mb-4 text-foreground text-lg">Risk Level</h3>
           <div className="space-y-2">
             {["All", "Low", "Medium", "High"].map((risk) => (
               <button
                 key={risk}
                 onClick={() => setFilterRisk(risk)}
                 className={`w-full text-left px-4 py-3 rounded-xl text-sm font-medium transition-all ${filterRisk === risk
-                  ? "bg-white/10 text-white border border-white/10"
-                  : "text-muted-foreground hover:bg-white/5 hover:text-white"
+                  ? "bg-muted text-foreground border border-border"
+                  : "text-muted-foreground hover:bg-muted hover:text-foreground"
                   }`}
               >
                 {risk}
@@ -139,11 +139,11 @@ export function MarketplaceView({
       <div className="flex-1">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {isEmpty && (
-            <Card className="p-12 border border-white/10 bg-[#0A0A0A] md:col-span-2 text-center rounded-2xl border-dashed">
-              <div className="mx-auto w-16 h-16 bg-white/5 rounded-full flex items-center justify-center mb-4">
+            <Card className="p-12 border border-border bg-muted/10 md:col-span-2 text-center rounded-2xl border-dashed">
+              <div className="mx-auto w-16 h-16 bg-muted rounded-full flex items-center justify-center mb-4">
                 <Boxes className="h-8 w-8 text-muted-foreground" />
               </div>
-              <h3 className="text-xl font-bold text-white mb-2">No deals found</h3>
+              <h3 className="text-xl font-bold text-foreground mb-2">No deals found</h3>
               <div className="text-muted-foreground">Try adjusting your filters to see more opportunities.</div>
             </Card>
           )}
@@ -154,38 +154,38 @@ export function MarketplaceView({
             return (
               <Card
                 key={commodity.id}
-                className="p-6 border border-white/10 bg-[#0A0A0A] rounded-2xl relative overflow-hidden group hover:border-primary/50 hover:shadow-[0_0_40px_rgba(239,68,68,0.15)] transition-all duration-500 cursor-pointer"
+                className="p-6 border-border bg-card rounded-2xl relative overflow-hidden group hover:border-primary/50 hover:shadow-lg hover:shadow-primary/5 transition-all duration-300 cursor-pointer"
                 onClick={() => onSelectAsset(commodity)}
               >
-                <div className="absolute top-0 right-0 w-32 h-32 bg-white/5 rounded-full blur-[60px] group-hover:bg-primary/10 transition-colors" />
+                <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-full blur-[60px] group-hover:bg-primary/10 transition-colors" />
 
                 <div className="relative z-10">
                   <div className="flex items-start justify-between mb-6">
-                    <div className="h-14 w-14 rounded-xl bg-white/5 flex items-center justify-center border border-white/10 group-hover:border-primary/50 group-hover:bg-primary/10 transition-colors">
-                      <Icon className="h-7 w-7 text-white group-hover:text-primary transition-colors" />
+                    <div className="h-14 w-14 rounded-xl bg-muted/50 flex items-center justify-center border border-border group-hover:border-primary/50 group-hover:bg-primary/10 transition-colors">
+                      <Icon className="h-7 w-7 text-muted-foreground group-hover:text-primary transition-colors" />
                     </div>
                     <Badge
                       variant="outline"
                       className={
                         commodity.risk === "Low"
-                          ? "border-emerald-500/30 text-emerald-400 bg-emerald-500/5 px-3 py-1"
+                          ? "border-green-500/30 text-green-500 bg-green-500/5"
                           : commodity.risk === "Medium"
-                            ? "border-orange-500/30 text-orange-400 bg-orange-500/5 px-3 py-1"
-                            : "border-red-500/30 text-red-400 bg-red-500/5 px-3 py-1"
+                            ? "border-orange-500/30 text-orange-500 bg-orange-500/5"
+                            : "border-primary/30 text-primary bg-primary/5"
                       }
                     >
                       {commodity.risk} Risk
                     </Badge>
                   </div>
 
-                  <h3 className="text-xl font-bold mb-2 text-white group-hover:text-primary transition-colors pr-8">
+                  <h3 className="text-xl font-bold mb-2 text-foreground group-hover:text-primary transition-colors pr-8">
                     {commodity.name}
                   </h3>
 
                   {commodity.type === "Metals" && (
                     <div className="mb-4 flex flex-wrap gap-2">
-                      {commodity.metalForm && <span className="text-[10px] bg-white/5 border border-white/10 px-2 py-1 rounded text-muted-foreground uppercase tracking-wider">{commodity.metalForm}</span>}
-                      {commodity.purityPercent && <span className="text-[10px] bg-white/5 border border-white/10 px-2 py-1 rounded text-muted-foreground uppercase tracking-wider">{commodity.purityPercent}% Purity</span>}
+                      {commodity.metalForm && <span className="text-[10px] bg-muted border border-border px-2 py-1 rounded text-muted-foreground uppercase tracking-wider">{commodity.metalForm}</span>}
+                      {commodity.purityPercent && <span className="text-[10px] bg-muted border border-border px-2 py-1 rounded text-muted-foreground uppercase tracking-wider">{commodity.purityPercent}% Purity</span>}
                     </div>
                   )}
 
@@ -194,35 +194,35 @@ export function MarketplaceView({
                   )}
 
                   <div className="grid grid-cols-3 gap-4 mb-6">
-                    <div className="bg-white/[0.02] p-3 rounded-xl border border-white/5">
+                    <div className="bg-muted/30 p-3 rounded-xl border border-border/50">
                       <div className="flex items-center text-primary mb-1">
                         <TrendingUp className="h-3 w-3 mr-1" />
                         <span className="text-[10px] font-bold uppercase tracking-wider">APY</span>
                       </div>
-                      <p className="text-xl font-bold text-white">{commodity.targetApy}%</p>
+                      <p className="text-xl font-bold text-foreground">{commodity.targetApy}%</p>
                     </div>
-                    <div className="bg-white/[0.02] p-3 rounded-xl border border-white/5">
+                    <div className="bg-muted/30 p-3 rounded-xl border border-border/50">
                       <div className="flex items-center text-muted-foreground mb-1">
                         <Clock className="h-3 w-3 mr-1" />
                         <span className="text-[10px] font-bold uppercase tracking-wider">Term</span>
                       </div>
-                      <p className="text-xl font-bold text-white">{commodity.duration}d</p>
+                      <p className="text-xl font-bold text-foreground">{commodity.duration}d</p>
                     </div>
-                    <div className="bg-white/[0.02] p-3 rounded-xl border border-white/5">
+                    <div className="bg-muted/30 p-3 rounded-xl border border-border/50">
                       <div className="flex items-center text-muted-foreground mb-1">
                         <Shield className="h-3 w-3 mr-1" />
                         <span className="text-[10px] font-bold uppercase tracking-wider">Safe</span>
                       </div>
-                      <p className="text-xl font-bold text-white">{commodity.insuranceValue ? "Yes" : "No"}</p>
+                      <p className="text-xl font-bold text-foreground">{commodity.insuranceValue ? "Yes" : "No"}</p>
                     </div>
                   </div>
 
                   <div className="space-y-3">
                     <div className="flex justify-between text-xs font-medium">
                       <span className="text-muted-foreground">Funding Progress</span>
-                      <span className="font-bold text-white">{fundedPercentage.toFixed(0)}%</span>
+                      <span className="font-bold text-foreground">{fundedPercentage.toFixed(0)}%</span>
                     </div>
-                    <Progress value={fundedPercentage} className="h-2 bg-white/5" />
+                    <Progress value={fundedPercentage} className="h-2 bg-muted" />
                     <div className="flex justify-between text-xs text-muted-foreground font-mono">
                       <span>${commodity.currentAmount.toLocaleString()}</span>
                       <span>of ${commodity.amountRequired.toLocaleString()}</span>
@@ -230,7 +230,7 @@ export function MarketplaceView({
                   </div>
 
                   <Button
-                    className="w-full mt-6 bg-primary hover:bg-red-600 text-white font-bold shadow-lg shadow-red-500/20 h-12 rounded-xl"
+                    className="w-full mt-6 bg-primary hover:bg-primary/90 text-primary-foreground font-bold shadow-lg shadow-primary/20 h-12 rounded-xl"
                     onClick={(e) => {
                       e.stopPropagation()
                       onSelectAsset(commodity)

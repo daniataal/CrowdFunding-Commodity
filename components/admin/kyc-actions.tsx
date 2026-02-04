@@ -32,7 +32,7 @@ export function ApproveKycButton({ userId }: { userId: string }) {
     <Button
       size="sm"
       variant="outline"
-      className="bg-emerald-500/10 text-emerald-500 border-emerald-500/20 hover:bg-emerald-500/20"
+      className="bg-primary/10 text-primary border-primary/20 hover:bg-primary/20"
       onClick={handleApprove}
       disabled={isLoading}
     >

@@ -458,21 +458,21 @@ export function CreateDealForm() {
           {STEPS.map((step, i) => (
             <div key={step.id} className="flex flex-col items-center flex-1">
               <div
-                className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold transition-colors ${i <= currentStep ? "bg-emerald-600 text-white" : "bg-muted text-muted-foreground"
+                className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold transition-colors ${i <= currentStep ? "bg-primary text-primary-foreground shadow-lg shadow-primary/25" : "bg-muted text-muted-foreground"
                   }`}
               >
                 {i + 1}
               </div>
-              <span className={`text-xs mt-2 ${i <= currentStep ? "text-emerald-700 font-medium" : "text-muted-foreground"}`}>
+              <span className={`text-xs mt-2 ${i <= currentStep ? "text-primary font-medium" : "text-muted-foreground"}`}>
                 {step.title}
               </span>
             </div>
           ))}
         </div>
-        <Progress value={(currentStep / (STEPS.length - 1)) * 100} className="h-2" />
+        <Progress value={(currentStep / (STEPS.length - 1)) * 100} className="h-2 bg-muted/30" />
       </div>
 
-      <Card className="border border-white/10 bg-[#0A0A0A] relative overflow-hidden">
+      <Card className="border-border bg-card relative overflow-hidden shadow-sm">
         <div className="absolute top-0 right-0 w-64 h-64 bg-primary/5 rounded-full blur-[80px] pointer-events-none" />
         <CardHeader>
           <CardTitle>{STEPS[currentStep].title}</CardTitle>
@@ -493,6 +493,7 @@ export function CreateDealForm() {
             variant="outline"
             onClick={handleBack}
             disabled={currentStep === 0 || isLoading}
+            className="bg-background hover:bg-muted"
           >
             <ChevronLeft className="h-4 w-4 mr-2" /> Back
           </Button>
@@ -500,7 +501,7 @@ export function CreateDealForm() {
           <Button
             onClick={handleNext}
             disabled={!formData.templateKey || isLoading}
-            className="bg-emerald-600 hover:bg-emerald-700 w-32"
+            className="bg-primary hover:bg-primary/90 text-primary-foreground w-32 shadow-lg shadow-primary/20"
           >
             {isLoading ? <Loader2 className="animate-spin h-4 w-4" /> : currentStep === STEPS.length - 1 ? "Publish Deal" : <span className="flex items-center">Next <ChevronRight className="ml-2 h-4 w-4" /></span>}
           </Button>

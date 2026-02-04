@@ -334,19 +334,19 @@ export function UserManagement({ isAdmin }: { isAdmin: boolean }) {
     <div className="space-y-8">
       <div className="flex items-start justify-between gap-4">
         <div>
-          <h2 className="text-3xl font-bold text-white">User Management</h2>
+          <h2 className="text-3xl font-bold tracking-tight text-foreground">User Management</h2>
           <p className="text-muted-foreground">{summary}</p>
         </div>
 
         {isAdmin && (
-          <Button className="bg-primary hover:bg-red-600 text-white shadow-lg shadow-red-500/20 rounded-xl" onClick={() => setCreateOpen(true)}>
+          <Button className="bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg shadow-primary/20 rounded-xl" onClick={() => setCreateOpen(true)}>
             <UserPlus className="h-4 w-4 mr-2" />
             Add User
           </Button>
         )}
       </div>
 
-      <Card className="border border-white/10 bg-[#0A0A0A] p-6 rounded-2xl relative overflow-hidden">
+      <Card className="border-border bg-card p-6 rounded-2xl relative overflow-hidden shadow-sm">
         <div className="absolute top-0 right-0 w-64 h-64 bg-primary/5 rounded-full blur-[80px]" />
         <div className="relative z-10 grid grid-cols-1 lg:grid-cols-5 gap-4">
           <div className="lg:col-span-2">
@@ -359,7 +359,7 @@ export function UserManagement({ isAdmin }: { isAdmin: boolean }) {
                   setQ(e.target.value)
                   setPage(1)
                 }}
-                className="pl-9 bg-white/5 border-white/10 text-white placeholder:text-muted-foreground/50 rounded-xl"
+                className="pl-9 bg-background border-border text-foreground placeholder:text-muted-foreground/50 rounded-xl"
                 placeholder="Search by name, email, or id…"
               />
             </div>
@@ -374,7 +374,7 @@ export function UserManagement({ isAdmin }: { isAdmin: boolean }) {
                 setPage(1)
               }}
             >
-              <SelectTrigger className="bg-white/5 border-white/10 text-white rounded-xl">
+              <SelectTrigger className="bg-background border-border text-foreground rounded-xl">
                 <SelectValue placeholder="Role" />
               </SelectTrigger>
               <SelectContent>
@@ -395,7 +395,7 @@ export function UserManagement({ isAdmin }: { isAdmin: boolean }) {
                 setPage(1)
               }}
             >
-              <SelectTrigger className="bg-white/5 border-white/10 text-white rounded-xl">
+              <SelectTrigger className="bg-background border-border text-foreground rounded-xl">
                 <SelectValue placeholder="KYC" />
               </SelectTrigger>
               <SelectContent>
@@ -417,7 +417,7 @@ export function UserManagement({ isAdmin }: { isAdmin: boolean }) {
                 setPage(1)
               }}
             >
-              <SelectTrigger className="bg-white/5 border-white/10 text-white rounded-xl">
+              <SelectTrigger className="bg-background border-border text-foreground rounded-xl">
                 <SelectValue placeholder="Status" />
               </SelectTrigger>
               <SelectContent>
@@ -435,7 +435,7 @@ export function UserManagement({ isAdmin }: { isAdmin: boolean }) {
           </div>
           <div className="flex items-center gap-2">
             <Select value={String(pageSize)} onValueChange={(v) => setPageSize(Number(v))}>
-              <SelectTrigger className="w-[140px] bg-white/5 border-white/10 text-white rounded-xl">
+              <SelectTrigger className="w-[140px] bg-background border-border text-foreground rounded-xl">
                 <SelectValue placeholder="Page size" />
               </SelectTrigger>
               <SelectContent>
@@ -444,7 +444,7 @@ export function UserManagement({ isAdmin }: { isAdmin: boolean }) {
                 <SelectItem value="50">50 / page</SelectItem>
               </SelectContent>
             </Select>
-            <Button variant="outline" size="sm" onClick={() => setPage((p) => Math.max(1, p - 1))} disabled={page <= 1} className="border-white/10 text-white hover:bg-white/10 rounded-xl">
+            <Button variant="outline" size="sm" onClick={() => setPage((p) => Math.max(1, p - 1))} disabled={page <= 1} className="border-border text-foreground hover:bg-muted rounded-xl">
               Prev
             </Button>
             <Button
@@ -452,7 +452,7 @@ export function UserManagement({ isAdmin }: { isAdmin: boolean }) {
               size="sm"
               onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
               disabled={page >= totalPages}
-              className="border-white/10 text-white hover:bg-white/10 rounded-xl"
+              className="border-border text-foreground hover:bg-muted rounded-xl"
             >
               Next
             </Button>
@@ -460,7 +460,7 @@ export function UserManagement({ isAdmin }: { isAdmin: boolean }) {
         </div>
       </Card>
 
-      <Card className="border border-white/10 bg-[#0A0A0A] rounded-2xl overflow-hidden">
+      <Card className="border-border bg-card rounded-2xl overflow-hidden shadow-sm">
         {listQuery.isLoading ? (
           <div className="p-8 text-sm text-muted-foreground flex items-center gap-2 justify-center">
             <Loader2 className="h-4 w-4 animate-spin text-primary" /> Loading users…
@@ -471,8 +471,8 @@ export function UserManagement({ isAdmin }: { isAdmin: boolean }) {
           <div className="p-8 text-sm text-muted-foreground text-center">No users found.</div>
         ) : (
           <Table>
-            <TableHeader className="bg-white/[0.02] border-b border-white/5">
-              <TableRow className="hover:bg-transparent border-white/5">
+            <TableHeader className="bg-muted/50 border-b border-border/50">
+              <TableRow className="hover:bg-transparent border-border/50">
                 <TableHead className="text-muted-foreground font-medium">Name</TableHead>
                 <TableHead className="text-muted-foreground font-medium">Email</TableHead>
                 <TableHead className="text-muted-foreground font-medium">Role</TableHead>
@@ -486,14 +486,14 @@ export function UserManagement({ isAdmin }: { isAdmin: boolean }) {
             </TableHeader>
             <TableBody>
               {users.map((u) => (
-                <TableRow key={u.id} className="cursor-pointer border-white/5 hover:bg-white/[0.03] transition-colors" onClick={() => {
+                <TableRow key={u.id} className="cursor-pointer border-border/50 hover:bg-muted/30 transition-colors" onClick={() => {
                   setSelectedUserId(u.id)
                   setDetailOpen(true)
                 }}>
-                  <TableCell className="font-bold text-white">{u.name}</TableCell>
+                  <TableCell className="font-semibold text-foreground">{u.name}</TableCell>
                   <TableCell className="text-muted-foreground">{u.email}</TableCell>
                   <TableCell>
-                    <Badge variant="outline" className="border-white/10 text-muted-foreground bg-white/5">{u.role}</Badge>
+                    <Badge variant="outline" className="border-border text-muted-foreground bg-muted/50">{u.role}</Badge>
                   </TableCell>
                   <TableCell>{kycBadge(u.kycStatus)}</TableCell>
                   <TableCell>
@@ -507,7 +507,7 @@ export function UserManagement({ isAdmin }: { isAdmin: boolean }) {
                       </Badge>
                     )}
                   </TableCell>
-                  <TableCell className="text-right font-mono text-white">{money(u.walletBalance)}</TableCell>
+                  <TableCell className="text-right font-mono text-foreground">{money(u.walletBalance)}</TableCell>
                   <TableCell className="text-right font-mono text-muted-foreground">{u._count.investments}</TableCell>
                   <TableCell className="text-muted-foreground text-sm">{new Date(u.createdAt).toLocaleDateString()}</TableCell>
                   <TableCell onClick={(e) => e.stopPropagation()}>
@@ -515,7 +515,7 @@ export function UserManagement({ isAdmin }: { isAdmin: boolean }) {
                       <Button
                         size="sm"
                         variant="outline"
-                        className="bg-transparent border-white/10 text-white hover:bg-white/10"
+                        className="bg-transparent border-border text-foreground hover:bg-muted"
                         onClick={() => {
                           setSelectedUserId(u.id)
                           setDetailOpen(true)
@@ -525,7 +525,7 @@ export function UserManagement({ isAdmin }: { isAdmin: boolean }) {
                       </Button>
                       {isAdmin && (
                         <>
-                          <Button size="sm" variant="outline" className="bg-transparent border-white/10 text-white hover:bg-white/10" onClick={() => setEditingUser(u)}>
+                          <Button size="sm" variant="outline" className="bg-transparent border-border text-foreground hover:bg-muted" onClick={() => setEditingUser(u)}>
                             Edit
                           </Button>
 
@@ -628,14 +628,14 @@ export function UserManagement({ isAdmin }: { isAdmin: boolean }) {
             <div className="mt-6 text-sm text-muted-foreground">No user selected.</div>
           ) : (
             <div className="mt-6 space-y-4">
-              <Card className="border border-white/10 p-6 bg-[#0A0A0A] relative overflow-hidden">
+              <Card className="border-border p-6 bg-card relative overflow-hidden shadow-sm">
                 <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-full blur-[60px] pointer-events-none" />
                 <div className="flex items-start justify-between gap-6 relative z-10">
                   <div className="flex-1">
-                    <div className="text-xl font-bold text-white mb-1 tracking-tight">{detailQuery.data.name}</div>
+                    <div className="text-xl font-bold text-foreground mb-1 tracking-tight">{detailQuery.data.name}</div>
                     <div className="text-sm text-muted-foreground mb-4 font-mono">{detailQuery.data.email}</div>
                     <div className="flex flex-wrap gap-2 items-center">
-                      <Badge variant="outline" className="border-white/10 bg-white/5 text-muted-foreground font-mono">{detailQuery.data.role}</Badge>
+                      <Badge variant="outline" className="border-border bg-muted/5 text-muted-foreground font-mono">{detailQuery.data.role}</Badge>
                       {kycBadge(detailQuery.data.kycStatus)}
                       {detailQuery.data.disabled ? (
                         <Badge variant="outline" className="border-red-500/20 text-red-500 bg-red-500/5">
@@ -648,11 +648,11 @@ export function UserManagement({ isAdmin }: { isAdmin: boolean }) {
                       )}
                     </div>
                     <div className="mt-6 grid grid-cols-2 gap-4 text-sm">
-                      <div className="bg-white/5 p-3 rounded-lg border border-white/5">
+                      <div className="bg-muted/30 p-3 rounded-lg border border-border/50">
                         <div className="text-muted-foreground text-xs uppercase tracking-wider mb-1">Wallet</div>
-                        <div className="font-bold text-white text-lg">{money(detailQuery.data.walletBalance)}</div>
+                        <div className="font-bold text-foreground text-lg">{money(detailQuery.data.walletBalance)}</div>
                       </div>
-                      <div className="bg-white/5 p-3 rounded-lg border border-white/5">
+                      <div className="bg-muted/30 p-3 rounded-lg border border-border/50">
                         <div className="text-muted-foreground text-xs uppercase tracking-wider mb-1">Wallet status</div>
                         <div className="font-medium text-base">
                           {(detailQuery.data as any).walletFrozen ? (
@@ -664,22 +664,22 @@ export function UserManagement({ isAdmin }: { isAdmin: boolean }) {
                       </div>
                       <div>
                         <div className="text-muted-foreground text-xs">Investments</div>
-                        <div className="font-medium text-white">{detailQuery.data._count.investments}</div>
+                        <div className="font-medium text-foreground">{detailQuery.data._count.investments}</div>
                       </div>
                       <div>
                         <div className="text-muted-foreground text-xs">Joined</div>
-                        <div className="font-medium text-white">{new Date(detailQuery.data.createdAt).toLocaleDateString()}</div>
+                        <div className="font-medium text-foreground">{new Date(detailQuery.data.createdAt).toLocaleDateString()}</div>
                       </div>
                       <div className="col-span-2">
                         <div className="text-muted-foreground text-xs">Last Updated</div>
-                        <div className="font-medium text-white">{new Date(detailQuery.data.updatedAt).toLocaleString()}</div>
+                        <div className="font-medium text-foreground">{new Date(detailQuery.data.updatedAt).toLocaleString()}</div>
                       </div>
                     </div>
                   </div>
 
                   {isAdmin && (
                     <div className="flex flex-col gap-2 shrink-0">
-                      <Button variant="outline" size="sm" className="bg-transparent border-white/10 hover:bg-white/10 text-white" onClick={() => setEditingUser(detailQuery.data)}>
+                      <Button variant="outline" size="sm" className="bg-transparent border-border hover:bg-muted text-foreground" onClick={() => setEditingUser(detailQuery.data)}>
                         Edit
                       </Button>
 
@@ -702,7 +702,7 @@ export function UserManagement({ isAdmin }: { isAdmin: boolean }) {
                       <Button
                         variant="outline"
                         size="sm"
-                        className="bg-transparent border-white/10 hover:bg-white/10 text-white"
+                        className="bg-transparent border-border hover:bg-muted text-foreground"
                         onClick={() => {
                           setWalletAdjustOpen(true)
                           setWalletAdjustAmount("")
@@ -743,23 +743,23 @@ export function UserManagement({ isAdmin }: { isAdmin: boolean }) {
               </Card>
 
               <Tabs defaultValue="kyc">
-                <TabsList className="grid w-full grid-cols-2">
-                  <TabsTrigger value="kyc">KYC</TabsTrigger>
-                  <TabsTrigger value="audit">Audit log</TabsTrigger>
+                <TabsList className="grid w-full grid-cols-2 bg-muted/50 p-1">
+                  <TabsTrigger value="kyc" className="data-[state=active]:bg-background data-[state=active]:shadow-sm">KYC</TabsTrigger>
+                  <TabsTrigger value="audit" className="data-[state=active]:bg-background data-[state=active]:shadow-sm">Audit log</TabsTrigger>
                 </TabsList>
 
                 <TabsContent value="kyc" className="mt-4 space-y-4">
-                  <Card className="border border-white/10 p-6 bg-[#0A0A0A]">
+                  <Card className="border-border p-6 bg-card shadow-sm">
                     <div className="flex items-start justify-between gap-4">
                       <div>
-                        <div className="font-semibold text-white">KYC Review</div>
+                        <div className="font-semibold text-foreground">KYC Review</div>
                         <div className="text-sm text-muted-foreground">Documents submitted by the user</div>
                       </div>
                       {isAdmin && detailQuery.data.kycStatus === "PENDING" && (
                         <div className="flex items-center gap-2">
                           <Button
                             size="sm"
-                            className="bg-emerald-600 hover:bg-emerald-700 text-white shadow-lg shadow-emerald-500/20"
+                            className="bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg shadow-primary/20"
                             onClick={() => selectedId && kycActionMutation.mutate({ userId: selectedId, action: "approve" })}
                             disabled={kycActionMutation.isPending}
                           >
@@ -786,19 +786,19 @@ export function UserManagement({ isAdmin }: { isAdmin: boolean }) {
                       ) : (
                         <div className="space-y-2">
                           {detailQuery.data.kycDocuments.map((d) => (
-                            <Card key={d.id} className="border border-white/10 p-4 bg-white/[0.02] hover:bg-white/[0.04] transition-colors">
+                            <Card key={d.id} className="border-border p-4 bg-muted/30 hover:bg-muted/50 transition-colors">
                               <div className="flex items-start justify-between gap-3">
                                 <div className="min-w-0">
-                                  <div className="font-medium truncate text-white">{d.name}</div>
+                                  <div className="font-medium truncate text-foreground">{d.name}</div>
                                   <div className="text-xs text-muted-foreground flex items-center gap-2 mt-1">
-                                    <Badge variant="outline" className="border-white/10 bg-white/5 text-muted-foreground text-[10px] h-5">{typeLabels[d.type as DocumentType]}</Badge>
+                                    <Badge variant="outline" className="border-border bg-muted text-muted-foreground text-[10px] h-5">{typeLabels[d.type as DocumentType]}</Badge>
                                     <span>{new Date(d.createdAt).toLocaleString()}</span>
                                   </div>
                                   <div className="mt-3 flex items-center gap-2">
                                     <Button
                                       size="sm"
                                       variant="outline"
-                                      className="h-7 text-xs bg-transparent border-white/10 hover:bg-white/10 text-white"
+                                      className="h-7 text-xs bg-transparent border-border hover:bg-muted text-foreground"
                                       onClick={() => setDocViewer({ url: d.url, name: d.name })}
                                     >
                                       <ExternalLink className="h-3 w-3 mr-1" />
@@ -814,13 +814,13 @@ export function UserManagement({ isAdmin }: { isAdmin: boolean }) {
                                   {d.verified ? (
                                     <Badge className="bg-emerald-600/20 text-emerald-500 border-emerald-600/30">Verified</Badge>
                                   ) : (
-                                    <Badge variant="outline" className="border-white/20 text-muted-foreground">Unverified</Badge>
+                                    <Badge variant="outline" className="border-border text-muted-foreground">Unverified</Badge>
                                   )}
                                   {isAdmin && (
                                     <Button
                                       size="sm"
                                       variant="outline"
-                                      className="h-7 text-xs bg-transparent border-white/10 hover:bg-white/10"
+                                      className="h-7 text-xs bg-transparent border-border hover:bg-muted"
                                       onClick={() => verifyDocMutation.mutate({ docId: d.id, verified: !d.verified })}
                                       disabled={verifyDocMutation.isPending}
                                     >
@@ -838,29 +838,29 @@ export function UserManagement({ isAdmin }: { isAdmin: boolean }) {
                 </TabsContent>
 
                 <TabsContent value="audit" className="mt-4 space-y-3">
-                  <Card className="border border-white/10 p-6 bg-[#0A0A0A]">
-                    <div className="font-semibold text-white">Audit trail</div>
+                  <Card className="border-border p-6 bg-card shadow-sm">
+                    <div className="font-semibold text-foreground">Audit trail</div>
                     <div className="text-sm text-muted-foreground">Recent actions on this user</div>
                   </Card>
                   {logsQuery.isLoading ? (
-                    <Card className="border-2 p-4 text-sm text-muted-foreground">Loading audit logs…</Card>
+                    <Card className="border-border p-4 text-sm text-muted-foreground bg-muted/30">Loading audit logs…</Card>
                   ) : logsQuery.isError ? (
-                    <Card className="border-2 p-4 text-sm text-red-500">{(logsQuery.error as Error).message}</Card>
+                    <Card className="border-border p-4 text-sm text-red-500 bg-muted/30">{(logsQuery.error as Error).message}</Card>
                   ) : (logsQuery.data?.length ?? 0) === 0 ? (
-                    <Card className="border-2 p-4 text-sm text-muted-foreground">No audit logs yet.</Card>
+                    <Card className="border-border p-4 text-sm text-muted-foreground bg-muted/30">No audit logs yet.</Card>
                   ) : (
                     <div className="space-y-2">
                       {(logsQuery.data ?? []).map((l) => (
-                        <Card key={l.id} className="border border-white/10 p-4 bg-white/[0.02]">
+                        <Card key={l.id} className="border-border p-4 bg-muted/30">
                           <div className="flex items-start justify-between gap-4">
                             <div className="min-w-0 w-full">
-                              <div className="font-medium text-white">{l.action}</div>
+                              <div className="font-medium text-foreground">{l.action}</div>
                               <div className="text-xs text-muted-foreground mt-1">
                                 {l.actor ? `${l.actor.name} (${l.actor.email})` : "Unknown actor"} •{" "}
                                 {new Date(l.createdAt).toLocaleString()}
                               </div>
                               {l.changes && (
-                                <pre className="mt-3 text-xs bg-black/50 border border-white/5 rounded-lg p-3 overflow-x-auto font-mono text-gray-300">
+                                <pre className="mt-3 text-xs bg-muted border border-border rounded-lg p-3 overflow-x-auto font-mono text-muted-foreground">
                                   {JSON.stringify(l.changes, null, 2)}
                                 </pre>
                               )}
@@ -899,7 +899,7 @@ export function UserManagement({ isAdmin }: { isAdmin: boolean }) {
           </DialogHeader>
           <div className="space-y-2">
             <Label>Reason (optional)</Label>
-            <Input value={rejectReason} onChange={(e) => setRejectReason(e.target.value)} placeholder="e.g. Document is blurry / missing address…" />
+            <Input value={rejectReason} onChange={(e) => setRejectReason(e.target.value)} placeholder="e.g. Document is blurry / missing address…" className="bg-background border-border" />
             <div className="text-xs text-muted-foreground">This will be recorded in the audit log.</div>
           </div>
           <DialogFooter>
@@ -907,7 +907,7 @@ export function UserManagement({ isAdmin }: { isAdmin: boolean }) {
               Cancel
             </Button>
             <Button
-              className="bg-red-600 hover:bg-red-700"
+              className="bg-red-600 hover:bg-red-700 text-white"
               onClick={() => {
                 if (!selectedId) return
                 kycActionMutation.mutate({ userId: selectedId, action: "reject", reason: rejectReason.trim() || undefined })
@@ -935,7 +935,7 @@ export function UserManagement({ isAdmin }: { isAdmin: boolean }) {
               <div className="space-y-2">
                 <Label>Type</Label>
                 <Select value={walletAdjustType} onValueChange={(v) => setWalletAdjustType(v as any)}>
-                  <SelectTrigger>
+                  <SelectTrigger className="bg-background border-border">
                     <SelectValue placeholder="Select type" />
                   </SelectTrigger>
                   <SelectContent>
@@ -956,12 +956,13 @@ export function UserManagement({ isAdmin }: { isAdmin: boolean }) {
                   value={walletAdjustAmount}
                   onChange={(e) => setWalletAdjustAmount(e.target.value)}
                   placeholder="Use negative to debit"
+                  className="bg-background border-border"
                 />
               </div>
             </div>
             <div className="space-y-2">
               <Label>Reason</Label>
-              <Input value={walletAdjustReason} onChange={(e) => setWalletAdjustReason(e.target.value)} placeholder="e.g. Bank transfer failed; reversing deposit" />
+              <Input value={walletAdjustReason} onChange={(e) => setWalletAdjustReason(e.target.value)} placeholder="e.g. Bank transfer failed; reversing deposit" className="bg-background border-border" />
               <div className="text-xs text-muted-foreground">This will be recorded in the audit log.</div>
             </div>
           </div>
@@ -970,7 +971,7 @@ export function UserManagement({ isAdmin }: { isAdmin: boolean }) {
               Cancel
             </Button>
             <Button
-              className="bg-emerald-600 hover:bg-emerald-700"
+              className="bg-primary hover:bg-primary/90 text-primary-foreground"
               onClick={() => {
                 if (!selectedId) return
                 const amt = Number.parseFloat(walletAdjustAmount)
@@ -1070,16 +1071,16 @@ function CreateOrEditUserDialog({
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
               <div>
                 <Label>Email</Label>
-                <Input value={email} onChange={(e) => setEmail(e.target.value)} placeholder="user@example.com" />
+                <Input value={email} onChange={(e) => setEmail(e.target.value)} placeholder="user@example.com" className="bg-background border-border" />
               </div>
               <div>
                 <Label>Name</Label>
-                <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="Full name" />
+                <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="Full name" className="bg-background border-border" />
               </div>
               <div>
                 <Label>Role</Label>
                 <Select value={role} onValueChange={(v) => setRole(v as UserRole)}>
-                  <SelectTrigger>
+                  <SelectTrigger className="bg-background border-border">
                     <SelectValue placeholder="Role" />
                   </SelectTrigger>
                   <SelectContent>
@@ -1092,7 +1093,7 @@ function CreateOrEditUserDialog({
               <div>
                 <Label>KYC Status</Label>
                 <Select value={kycStatus} onValueChange={(v) => setKycStatus(v as KycStatus)}>
-                  <SelectTrigger>
+                  <SelectTrigger className="bg-background border-border">
                     <SelectValue placeholder="KYC status" />
                   </SelectTrigger>
                   <SelectContent>
@@ -1105,11 +1106,11 @@ function CreateOrEditUserDialog({
               </div>
               <div>
                 <Label>Phone (optional)</Label>
-                <Input value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="+1…" />
+                <Input value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="+1…" className="bg-background border-border" />
               </div>
               <div>
                 <Label>Company (optional)</Label>
-                <Input value={company} onChange={(e) => setCompany(e.target.value)} placeholder="Company name" />
+                <Input value={company} onChange={(e) => setCompany(e.target.value)} placeholder="Company name" className="bg-background border-border" />
               </div>
             </div>
             <div className="text-xs text-muted-foreground">
@@ -1123,7 +1124,7 @@ function CreateOrEditUserDialog({
             Cancel
           </Button>
           <Button
-            className="bg-emerald-600 hover:bg-emerald-700"
+            className="bg-primary hover:bg-primary/90 text-primary-foreground"
             disabled={!canSave || isSaving}
             onClick={() => {
               if (!isAdmin) return

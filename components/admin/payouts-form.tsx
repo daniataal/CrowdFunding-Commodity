@@ -48,80 +48,84 @@ export function PayoutsForm({
 
   return (
     <div className="space-y-4">
-      <Card className="border-2 p-6">
-        <div className="text-lg font-semibold">Distribute Payouts</div>
-        <div className="text-sm text-muted-foreground">
-          Pro-rata distribution across {investorCount.toLocaleString()} investors. Executed atomically in one DB
-          transaction.
-        </div>
-
-        {dealStatus !== "RELEASED" && (
-          <Alert className="mt-4 border-amber-500/20 bg-amber-500/10">
-            <AlertDescription className="text-amber-500">
-              Deal status is <span className="font-medium">{dealStatus}</span>. Payouts are normally distributed after{" "}
-              <span className="font-medium">RELEASED</span>.
-            </AlertDescription>
-          </Alert>
-        )}
-
-        <div className="mt-4 grid gap-4 md:grid-cols-2">
-          <div className="space-y-2">
-            <Label>Total invested</Label>
-            <div className="font-medium">${totalInvested.toLocaleString(undefined, { maximumFractionDigits: 2 })}</div>
+      <Card className="border-border p-6 bg-card relative overflow-hidden shadow-sm">
+        <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-full blur-[60px] pointer-events-none" />
+        <div className="relative z-10">
+          <div className="text-lg font-semibold text-foreground">Distribute Payouts</div>
+          <div className="text-sm text-muted-foreground">
+            Pro-rata distribution across {investorCount.toLocaleString()} investors. Executed atomically in one DB
+            transaction.
           </div>
-          <div className="space-y-2">
-            <Label>Deal</Label>
-            <div className="font-medium">{dealName}</div>
-          </div>
-        </div>
 
-        <div className="mt-6 space-y-2">
-          <Label htmlFor="totalPayout">Total payout pool ($)</Label>
-          <Input
-            id="totalPayout"
-            type="number"
-            step="0.01"
-            value={totalPayout}
-            onChange={(e) => setTotalPayout(e.target.value)}
-            placeholder="e.g. 525000"
-          />
-          <div className="flex items-start gap-3 pt-2">
-            <Checkbox checked={markSettled} onCheckedChange={(v) => setMarkSettled(Boolean(v))} />
-            <div className="text-sm">
-              Mark deal as <span className="font-medium">SETTLED</span> after distribution.
+          {dealStatus !== "RELEASED" && (
+            <Alert className="mt-4 border-amber-500/20 bg-amber-500/10">
+              <AlertDescription className="text-amber-500">
+                Deal status is <span className="font-medium">{dealStatus}</span>. Payouts are normally distributed after{" "}
+                <span className="font-medium">RELEASED</span>.
+              </AlertDescription>
+            </Alert>
+          )}
+
+          <div className="mt-4 grid gap-4 md:grid-cols-2">
+            <div className="space-y-2">
+              <Label>Total invested</Label>
+              <div className="font-medium text-foreground">${totalInvested.toLocaleString(undefined, { maximumFractionDigits: 2 })}</div>
+            </div>
+            <div className="space-y-2">
+              <Label>Deal</Label>
+              <div className="font-medium text-foreground">{dealName}</div>
             </div>
           </div>
-          <div className="flex items-start gap-3 pt-2">
-            <Checkbox checked={force} onCheckedChange={(v) => setForce(Boolean(v))} />
-            <div className="text-sm">
-              Force payout even if deal is not <span className="font-medium">ARRIVED</span> (admin override).
+
+          <div className="mt-6 space-y-2">
+            <Label htmlFor="totalPayout">Total payout pool ($)</Label>
+            <Input
+              id="totalPayout"
+              type="number"
+              step="0.01"
+              value={totalPayout}
+              onChange={(e) => setTotalPayout(e.target.value)}
+              placeholder="e.g. 525000"
+              className="bg-background border-border"
+            />
+            <div className="flex items-start gap-3 pt-2">
+              <Checkbox checked={markSettled} onCheckedChange={(v) => setMarkSettled(Boolean(v))} className="border-border data-[state=checked]:bg-primary data-[state=checked]:text-primary-foreground" />
+              <div className="text-sm text-foreground">
+                Mark deal as <span className="font-medium">SETTLED</span> after distribution.
+              </div>
+            </div>
+            <div className="flex items-start gap-3 pt-2">
+              <Checkbox checked={force} onCheckedChange={(v) => setForce(Boolean(v))} className="border-border data-[state=checked]:bg-primary data-[state=checked]:text-primary-foreground" />
+              <div className="text-sm text-foreground">
+                Force payout even if deal is not <span className="font-medium">ARRIVED</span> (admin override).
+              </div>
             </div>
           </div>
-        </div>
 
-        {mutation.error && (
-          <Alert variant="destructive" className="mt-4">
-            <AlertDescription>{(mutation.error as Error).message}</AlertDescription>
-          </Alert>
-        )}
+          {mutation.error && (
+            <Alert variant="destructive" className="mt-4">
+              <AlertDescription>{(mutation.error as Error).message}</AlertDescription>
+            </Alert>
+          )}
 
-        {mutation.data && (
-          <Alert className="mt-4 border-emerald-500/20 bg-emerald-500/10">
-            <AlertDescription className="text-emerald-500">
-              Distributed ${mutation.data.totalPayout.toLocaleString()} across {mutation.data.investors.toLocaleString()}{" "}
-              investors.
-            </AlertDescription>
-          </Alert>
-        )}
+          {mutation.data && (
+            <Alert className="mt-4 border-emerald-500/20 bg-emerald-500/10">
+              <AlertDescription className="text-emerald-500">
+                Distributed ${mutation.data.totalPayout.toLocaleString()} across {mutation.data.investors.toLocaleString()}{" "}
+                investors.
+              </AlertDescription>
+            </Alert>
+          )}
 
-        <div className="mt-6 flex gap-2">
-          <Button
-            className="bg-emerald-600 hover:bg-emerald-700 text-white"
-            onClick={() => mutation.mutate()}
-            disabled={mutation.isPending || (dealStatus !== "RELEASED" && !force)}
-          >
-            {mutation.isPending ? "Distributing..." : "Distribute Payouts"}
-          </Button>
+          <div className="mt-6 flex gap-2">
+            <Button
+              className="bg-primary hover:bg-primary/90 text-primary-foreground font-bold shadow-lg shadow-primary/20"
+              onClick={() => mutation.mutate()}
+              disabled={mutation.isPending || (dealStatus !== "RELEASED" && !force)}
+            >
+              {mutation.isPending ? "Distributing..." : "Distribute Payouts"}
+            </Button>
+          </div>
         </div>
       </Card>
     </div>

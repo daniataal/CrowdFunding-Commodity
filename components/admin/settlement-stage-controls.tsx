@@ -45,7 +45,7 @@ export function SettlementStageControls({
       <div className="flex flex-wrap gap-2">
         <Button
           variant="outline"
-          className="bg-transparent"
+          className="bg-transparent border-border hover:bg-primary/10 hover:text-primary hover:border-primary/30"
           disabled={!canManage || isSaving || !canInspect}
           onClick={() => postStage("INSPECTED")}
         >
@@ -53,7 +53,7 @@ export function SettlementStageControls({
         </Button>
         <Button
           variant="outline"
-          className="bg-transparent"
+          className="bg-transparent border-border hover:bg-primary/10 hover:text-primary hover:border-primary/30"
           disabled={!canManage || isSaving || !canRelease}
           onClick={() => postStage("RELEASED")}
         >

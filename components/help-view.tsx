@@ -102,7 +102,7 @@ export function HelpView() {
   return (
     <div className="mx-auto max-w-5xl space-y-8">
       <div className="mb-8">
-        <h1 className="text-3xl font-bold text-white mb-2">Help & Support</h1>
+        <h1 className="text-3xl font-bold tracking-tight mb-2">Help & Support</h1>
         <p className="text-muted-foreground">Get answers and reach out for assistance</p>
       </div>
 
@@ -114,27 +114,27 @@ export function HelpView() {
             placeholder="Search for help articles..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="h-14 pl-12 pr-4 bg-[#0A0A0A] border-white/10 text-white placeholder:text-muted-foreground/50 rounded-xl focus-visible:ring-primary/50 text-lg"
+            className="h-14 pl-12 pr-4 bg-background border-border text-lg shadow-sm focus-visible:ring-primary/50"
           />
         </div>
       </div>
 
       <Tabs defaultValue="faq" className="space-y-8">
-        <TabsList className="grid w-full grid-cols-3 bg-[#0A0A0A] border border-white/10 p-1 h-auto rounded-xl gap-1">
-          <TabsTrigger value="faq" className="h-10 rounded-lg data-[state=active]:bg-primary data-[state=active]:text-white">FAQs</TabsTrigger>
-          <TabsTrigger value="contact" className="h-10 rounded-lg data-[state=active]:bg-primary data-[state=active]:text-white">Contact Us</TabsTrigger>
-          <TabsTrigger value="resources" className="h-10 rounded-lg data-[state=active]:bg-primary data-[state=active]:text-white">Resources</TabsTrigger>
+        <TabsList className="grid w-full grid-cols-3 bg-muted/50 p-1 h-auto rounded-xl gap-1">
+          <TabsTrigger value="faq" className="h-10 rounded-lg data-[state=active]:bg-background data-[state=active]:shadow-sm">FAQs</TabsTrigger>
+          <TabsTrigger value="contact" className="h-10 rounded-lg data-[state=active]:bg-background data-[state=active]:shadow-sm">Contact Us</TabsTrigger>
+          <TabsTrigger value="resources" className="h-10 rounded-lg data-[state=active]:bg-background data-[state=active]:shadow-sm">Resources</TabsTrigger>
         </TabsList>
 
         <TabsContent value="faq" className="space-y-6">
           {faqs.map((category, idx) => {
             const Icon = category.icon
             return (
-              <Card key={idx} className="border border-white/10 bg-[#0A0A0A] rounded-2xl relative overflow-hidden">
-                <CardHeader className="border-b border-white/5 bg-white/[0.02]">
-                  <CardTitle className="flex items-center gap-3 text-white">
-                    <div className="p-2 rounded-lg bg-emerald-500/10">
-                      <Icon className="h-5 w-5 text-emerald-500" />
+              <Card key={idx} className="border-border bg-card shadow-sm">
+                <CardHeader className="border-b border-border/50 bg-muted/30">
+                  <CardTitle className="flex items-center gap-3">
+                    <div className="p-2 rounded-lg bg-accent/10">
+                      <Icon className="h-5 w-5 text-accent" />
                     </div>
                     {category.category}
                   </CardTitle>
@@ -142,8 +142,8 @@ export function HelpView() {
                 <CardContent className="p-0">
                   <Accordion type="single" collapsible className="w-full">
                     {category.questions.map((item, qIdx) => (
-                      <AccordionItem key={qIdx} value={`item-${idx}-${qIdx}`} className="border-b border-white/5 last:border-0 px-6">
-                        <AccordionTrigger className="text-left text-white hover:text-primary transition-colors py-4 text-base">{item.q}</AccordionTrigger>
+                      <AccordionItem key={qIdx} value={`item-${idx}-${qIdx}`} className="border-b border-border/50 last:border-0 px-6">
+                        <AccordionTrigger className="text-left hover:text-primary transition-colors py-4 text-base">{item.q}</AccordionTrigger>
                         <AccordionContent className="text-muted-foreground pb-4 leading-relaxed">{item.a}</AccordionContent>
                       </AccordionItem>
                     ))}
@@ -162,19 +162,19 @@ export function HelpView() {
               { title: "Phone Support", icon: Phone, desc: "Speak with a specialist", action: "Call Now", onClick: () => toast({ title: "Phone support", description: "Phone calling isn’t available from the web app yet.", }) },
               { title: "Help Center", icon: HelpCircle, desc: "Browse knowledge base", action: "Visit Help Center", onClick: () => toast({ title: "Help Center", description: "The help center is coming soon.", }) }
             ].map((item, i) => (
-              <Card key={i} className="border border-white/10 bg-[#0A0A0A] rounded-2xl relative overflow-hidden group hover:border-emerald-500/50 transition-all">
+              <Card key={i} className="border-border bg-card group hover:border-primary/50 transition-all shadow-sm">
                 <CardHeader>
-                  <CardTitle className="flex items-center gap-3 text-white">
-                    <div className="p-2 rounded-lg bg-emerald-500/10 group-hover:bg-emerald-500/20 transition-colors">
-                      <item.icon className="h-5 w-5 text-emerald-500" />
+                  <CardTitle className="flex items-center gap-3">
+                    <div className="p-2 rounded-lg bg-primary/10 group-hover:bg-primary/20 transition-colors">
+                      <item.icon className="h-5 w-5 text-primary" />
                     </div>
                     {item.title}
                   </CardTitle>
-                  <CardDescription className="text-muted-foreground">{item.desc}</CardDescription>
+                  <CardDescription>{item.desc}</CardDescription>
                 </CardHeader>
                 <CardContent>
                   <Button
-                    className={`w-full ${i === 0 ? "bg-emerald-600 hover:bg-emerald-500 text-white shadow-lg shadow-emerald-500/20" : "bg-white/5 border border-white/10 text-white hover:bg-white/10"}`}
+                    className={`w-full ${i === 0 ? "bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg shadow-primary/20" : "bg-muted text-foreground hover:bg-muted/80"}`}
                     onClick={item.onClick}
                   >
                     {item.action}
@@ -188,36 +188,36 @@ export function HelpView() {
             ))}
           </div>
 
-          <Card className="border border-white/10 bg-[#0A0A0A] rounded-2xl">
+          <Card className="border-border bg-card shadow-sm">
             <CardHeader>
-              <CardTitle className="text-white">Send us a message</CardTitle>
-              <CardDescription className="text-muted-foreground">Fill out the form and we'll get back to you shortly</CardDescription>
+              <CardTitle>Send us a message</CardTitle>
+              <CardDescription>Fill out the form and we'll get back to you shortly</CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
               <div className="grid gap-6 sm:grid-cols-2">
                 <div className="space-y-2">
-                  <label className="text-sm font-medium text-white">Name</label>
-                  <Input placeholder="John Doe" className="bg-white/5 border-white/10 text-white" />
+                  <label className="text-sm font-medium">Name</label>
+                  <Input placeholder="John Doe" className="bg-background border-border" />
                 </div>
                 <div className="space-y-2">
-                  <label className="text-sm font-medium text-white">Email</label>
-                  <Input type="email" placeholder="john@example.com" className="bg-white/5 border-white/10 text-white" />
+                  <label className="text-sm font-medium">Email</label>
+                  <Input type="email" placeholder="john@example.com" className="bg-background border-border" />
                 </div>
               </div>
               <div className="space-y-2">
-                <label className="text-sm font-medium text-white">Subject</label>
-                <Input placeholder="How can we help?" className="bg-white/5 border-white/10 text-white" />
+                <label className="text-sm font-medium">Subject</label>
+                <Input placeholder="How can we help?" className="bg-background border-border" />
               </div>
               <div className="space-y-2">
-                <label className="text-sm font-medium text-white">Message</label>
+                <label className="text-sm font-medium">Message</label>
                 <textarea
                   rows={5}
-                  className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white placeholder:text-muted-foreground/50 focus-visible:outline-none focus:ring-2 focus:ring-primary/50"
+                  className="w-full rounded-md border border-border bg-background px-4 py-3 text-sm placeholder:text-muted-foreground/50 focus-visible:outline-none focus:ring-2 focus:ring-primary/50"
                   placeholder="Describe your issue or question..."
                 />
               </div>
               <Button
-                className="w-full bg-primary hover:bg-red-600 text-white font-bold h-12 rounded-xl shadow-lg shadow-red-500/20"
+                className="w-full bg-primary hover:bg-primary/90 text-primary-foreground font-bold h-12 shadow-lg shadow-primary/20"
                 onClick={() =>
                   toast({
                     title: "Message sent",
@@ -241,16 +241,16 @@ export function HelpView() {
               { title: "API Documentation", desc: "For developers", action: "View Docs" },
               { title: "Video Tutorials", desc: "Platform tutorials", action: "Watch Now" }
             ].map((item, i) => (
-              <Card key={i} className="border border-white/10 bg-[#0A0A0A] rounded-2xl group hover:border-primary/50 transition-all">
+              <Card key={i} className="border-border bg-card group hover:border-primary/50 transition-all shadow-sm">
                 <CardHeader>
-                  <FileText className="mb-4 h-8 w-8 text-primary group-hover:text-white transition-colors" />
-                  <CardTitle className="text-white group-hover:text-primary transition-colors">{item.title}</CardTitle>
-                  <CardDescription className="text-muted-foreground">{item.desc}</CardDescription>
+                  <FileText className="mb-4 h-8 w-8 text-primary group-hover:scale-110 transition-transform" />
+                  <CardTitle className="group-hover:text-primary transition-colors">{item.title}</CardTitle>
+                  <CardDescription>{item.desc}</CardDescription>
                 </CardHeader>
                 <CardContent>
                   <Button
                     variant="outline"
-                    className="w-full bg-white/5 border-white/10 text-white hover:bg-primary hover:border-primary hover:text-white transition-all"
+                    className="w-full bg-background border-border hover:bg-primary hover:text-primary-foreground transition-all"
                     onClick={() =>
                       toast({
                         title: "Resource",

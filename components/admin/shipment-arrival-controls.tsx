@@ -23,7 +23,7 @@ export function ShipmentArrivalControls({
       <div className="flex flex-wrap gap-2">
         <Button
           variant="outline"
-          className="bg-transparent"
+          className="bg-transparent border-border hover:bg-muted text-foreground"
           disabled={!canManage || isSaving || currentStatus === "FUNDING"}
           onClick={async () => {
             setIsSaving(true)
@@ -48,7 +48,7 @@ export function ShipmentArrivalControls({
         </Button>
 
         <Button
-          className="bg-emerald-600 hover:bg-emerald-700 text-white"
+          className="bg-primary hover:bg-primary/90 text-primary-foreground font-bold shadow-lg shadow-primary/20"
           disabled={!canManage || isSaving || currentStatus === "FUNDING"}
           onClick={async () => {
             setIsSaving(true)

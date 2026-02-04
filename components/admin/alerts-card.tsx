@@ -45,12 +45,12 @@ export function AlertsCard({ isAdmin }: { isAdmin: boolean }) {
   const items = alertsQuery.data ?? []
 
   return (
-    <Card className="border border-white/10 bg-[#0A0A0A] rounded-2xl relative overflow-hidden group hover:border-white/20 transition-all">
+    <Card className="border-border bg-card rounded-2xl relative overflow-hidden group hover:shadow-sm transition-all">
       <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-full blur-[60px] group-hover:bg-primary/10 transition-colors" />
       <div className="p-6 relative z-10 w-full">
         <div className="flex items-start justify-between gap-4">
           <div>
-            <div className="font-bold text-white text-lg">System Alerts</div>
+            <div className="font-bold text-foreground text-lg">System Alerts</div>
             <div className="text-sm text-muted-foreground mt-1">Operational warnings and compliance queues</div>
           </div>
         </div>
@@ -62,7 +62,7 @@ export function AlertsCard({ isAdmin }: { isAdmin: boolean }) {
             <div className="text-sm text-muted-foreground">No alerts.</div>
           ) : (
             items.map((a) => (
-              <div key={a.id} className="rounded-xl border border-white/5 bg-white/[0.02] p-4 flex items-start justify-between gap-4 hover:bg-white/[0.04] transition-colors">
+              <div key={a.id} className="rounded-xl border border-border/50 bg-muted/20 p-4 flex items-start justify-between gap-4 hover:bg-muted/40 transition-colors">
                 <div className="min-w-0">
                   <div className="flex items-center gap-3">
                     <span
@@ -75,7 +75,7 @@ export function AlertsCard({ isAdmin }: { isAdmin: boolean }) {
                     >
                       {a.severity}
                     </span>
-                    <span className="font-bold text-white">{a.title}</span>
+                    <span className="font-bold text-foreground">{a.title}</span>
                     {a.resolvedAt ? <span className="text-xs text-muted-foreground">(resolved)</span> : null}
                   </div>
                   <div className="text-sm text-muted-foreground mt-2 leading-relaxed">{a.message}</div>
@@ -88,7 +88,7 @@ export function AlertsCard({ isAdmin }: { isAdmin: boolean }) {
                 {isAdmin && !a.resolvedAt && (
                   <Button
                     variant="outline"
-                    className="bg-transparent border-white/10 text-white hover:bg-emerald-500/10 hover:text-emerald-500 hover:border-emerald-500/50"
+                    className="bg-transparent border-border text-foreground hover:bg-primary/10 hover:text-primary hover:border-primary/50"
                     size="sm"
                     onClick={() => resolveMutation.mutate(a.id)}
                     disabled={resolveMutation.isPending}
