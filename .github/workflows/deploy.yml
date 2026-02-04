@@ -78,7 +78,7 @@ jobs:
             echo "DOCKER_IMAGE_NAME=${{ env.DOCKER_IMAGE }}" > .env
             echo "DATABASE_URL=postgresql://postgres:${{ secrets.POSTGRES_PASSWORD }}@postgres:5432/commodity_crowdfunding?schema=public" >> .env
             echo "AUTH_SECRET=${{ secrets.AUTH_SECRET }}" >> .env
-            echo "NEXTAUTH_URL=https://${{ secrets.DOMAIN_NAME }}" >> .env
+            echo "NEXTAUTH_URL=http://151.145.85.174" >> .env
             echo "POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }}" >> .env
             echo "NODE_ENV=production" >> .env
             
