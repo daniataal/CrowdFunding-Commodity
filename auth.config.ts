@@ -1,6 +1,8 @@
 import type { NextAuthConfig } from "next-auth"
 
 export const authConfig = {
+  secret: process.env.AUTH_SECRET,
+  trustHost: true,
   pages: {
     signIn: "/login",
     signOut: "/login",
@@ -9,9 +11,9 @@ export const authConfig = {
   callbacks: {
     authorized({ auth, request: { nextUrl } }) {
       const isLoggedIn = !!auth?.user
-      const isOnAuthPage = nextUrl.pathname.startsWith("/login") || 
-                          nextUrl.pathname.startsWith("/register") ||
-                          nextUrl.pathname.startsWith("/forgot-password")
+      const isOnAuthPage = nextUrl.pathname.startsWith("/login") ||
+        nextUrl.pathname.startsWith("/register") ||
+        nextUrl.pathname.startsWith("/forgot-password")
       const isOnAdminPage = nextUrl.pathname.startsWith("/admin")
       const isOnPublicPage =
         nextUrl.pathname === "/" ||
@@ -68,7 +70,7 @@ export const authConfig = {
         session.user.id = token.id as string
         session.user.role = token.role as any
         session.user.kycStatus = token.kycStatus as any
-        ;(session.user as any).avatar = (token as any).avatar ?? null
+          ; (session.user as any).avatar = (token as any).avatar ?? null
       }
       return session
     },
