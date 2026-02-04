@@ -5,7 +5,7 @@
   "scripts": {
     "build": "prisma generate && next build",
     "dev": "next dev --webpack --disable-source-maps",
-    "lint": "eslint .",
+    "lint": "next lint",
     "start": "next start",
     "db:generate": "prisma generate",
     "db:push": "prisma db push",
