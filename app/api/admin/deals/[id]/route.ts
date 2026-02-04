@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
 import { requireDbRole } from "@/lib/authz"
 import { z } from "zod"
+import { geocodePlace } from "@/lib/geocoding"
 
 const updateSchema = z.object({
   name: z.string().min(1).optional(),
@@ -9,6 +10,13 @@ const updateSchema = z.object({
   risk: z.enum(["Low", "Medium", "High"]).optional(),
   targetApy: z.union([z.string(), z.number()]).optional(),
   duration: z.union([z.string(), z.number()]).optional(),
+  minInvestment: z.union([z.string(), z.number()]).optional(),
+  maxInvestment: z.union([z.string(), z.number()]).nullable().optional(),
+  platformFeeBps: z.union([z.string(), z.number()]).optional(),
+  originLat: z.union([z.string(), z.number()]).nullable().optional(),
+  originLng: z.union([z.string(), z.number()]).nullable().optional(),
+  destLat: z.union([z.string(), z.number()]).nullable().optional(),
+  destLng: z.union([z.string(), z.number()]).nullable().optional(),
   amountRequired: z.union([z.string(), z.number()]).optional(),
   description: z.string().min(1).optional(),
   origin: z.string().min(1).optional(),
@@ -17,7 +25,14 @@ const updateSchema = z.object({
   insuranceValue: z.union([z.string(), z.number()]).nullable().optional(),
   transportMethod: z.string().nullable().optional(),
   riskScore: z.union([z.string(), z.number()]).nullable().optional(),
-  status: z.enum(["FUNDING", "ACTIVE", "IN_TRANSIT", "SETTLED", "CANCELLED"]).optional(),
+  maturityDate: z.union([z.string(), z.date()]).nullable().optional(),
+  status: z.enum(["FUNDING", "ACTIVE", "IN_TRANSIT", "ARRIVED", "INSPECTED", "RELEASED", "SETTLED", "CANCELLED"]).optional(),
+  metalForm: z.union([z.string(), z.null()]).optional(),
+  purityPercent: z.union([z.string(), z.number()]).nullable().optional(),
+  karat: z.union([z.string(), z.number()]).nullable().optional(),
+  grossWeightTroyOz: z.union([z.string(), z.number()]).nullable().optional(),
+  refineryName: z.union([z.string(), z.null()]).optional(),
+  refineryLocation: z.union([z.string(), z.null()]).optional(),
 })
 
 export async function GET(_request: NextRequest, context: { params: Promise<{ id: string }> }) {
@@ -36,6 +51,13 @@ export async function GET(_request: NextRequest, context: { params: Promise<{ id
     data: {
       ...commodity,
       targetApy: Number(commodity.targetApy),
+      minInvestment: Number((commodity as any).minInvestment),
+      maxInvestment: (commodity as any).maxInvestment === null ? null : Number((commodity as any).maxInvestment),
+      platformFeeBps: (commodity as any).platformFeeBps,
+      originLat: (commodity as any).originLat ?? null,
+      originLng: (commodity as any).originLng ?? null,
+      destLat: (commodity as any).destLat ?? null,
+      destLng: (commodity as any).destLng ?? null,
       amountRequired: Number(commodity.amountRequired),
       currentAmount: Number(commodity.currentAmount),
       insuranceValue: commodity.insuranceValue === null ? null : Number(commodity.insuranceValue),
@@ -55,6 +77,18 @@ export async function PATCH(request: NextRequest, context: { params: Promise<{ i
   const body = await request.json()
   const validated = updateSchema.parse(body)
 
+  // If origin/destination change and coordinates weren't explicitly set, attempt to auto-geocode.
+  const shouldGeocodeOrigin =
+    validated.origin !== undefined && validated.origin.trim().length > 0 && validated.originLat === undefined && validated.originLng === undefined
+  const shouldGeocodeDest =
+    validated.destination !== undefined &&
+    validated.destination.trim().length > 0 &&
+    validated.destLat === undefined &&
+    validated.destLng === undefined
+
+  const inferredOrigin = shouldGeocodeOrigin ? await geocodePlace(validated.origin as string) : null
+  const inferredDest = shouldGeocodeDest ? await geocodePlace(validated.destination as string) : null
+
   const updated = await prisma.commodity.update({
     where: { id },
     data: {
@@ -63,6 +97,31 @@ export async function PATCH(request: NextRequest, context: { params: Promise<{ i
       ...(validated.risk !== undefined ? { risk: validated.risk } : {}),
       ...(validated.targetApy !== undefined ? { targetApy: Number(validated.targetApy) } : {}),
       ...(validated.duration !== undefined ? { duration: Number(validated.duration) } : {}),
+      ...(validated.minInvestment !== undefined ? { minInvestment: Number(validated.minInvestment) } : {}),
+      ...(validated.maxInvestment !== undefined
+        ? { maxInvestment: validated.maxInvestment === null ? null : Number(validated.maxInvestment) }
+        : {}),
+      ...(validated.platformFeeBps !== undefined ? { platformFeeBps: Number(validated.platformFeeBps) } : {}),
+      ...(validated.originLat !== undefined
+        ? { originLat: validated.originLat === null ? null : Number(validated.originLat) }
+        : inferredOrigin
+          ? { originLat: inferredOrigin.lat }
+          : {}),
+      ...(validated.originLng !== undefined
+        ? { originLng: validated.originLng === null ? null : Number(validated.originLng) }
+        : inferredOrigin
+          ? { originLng: inferredOrigin.lng }
+          : {}),
+      ...(validated.destLat !== undefined
+        ? { destLat: validated.destLat === null ? null : Number(validated.destLat) }
+        : inferredDest
+          ? { destLat: inferredDest.lat }
+          : {}),
+      ...(validated.destLng !== undefined
+        ? { destLng: validated.destLng === null ? null : Number(validated.destLng) }
+        : inferredDest
+          ? { destLng: inferredDest.lng }
+          : {}),
       ...(validated.amountRequired !== undefined ? { amountRequired: Number(validated.amountRequired) } : {}),
       ...(validated.description !== undefined ? { description: validated.description } : {}),
       ...(validated.origin !== undefined ? { origin: validated.origin } : {}),
@@ -73,7 +132,20 @@ export async function PATCH(request: NextRequest, context: { params: Promise<{ i
         : {}),
       ...(validated.transportMethod !== undefined ? { transportMethod: validated.transportMethod } : {}),
       ...(validated.riskScore !== undefined ? { riskScore: validated.riskScore === null ? null : Number(validated.riskScore) } : {}),
+      ...(validated.maturityDate !== undefined
+        ? { maturityDate: validated.maturityDate === null ? null : new Date(validated.maturityDate as any) }
+        : {}),
       ...(validated.status !== undefined ? { status: validated.status } : {}),
+      ...(validated.metalForm !== undefined ? { metalForm: validated.metalForm } : {}),
+      ...(validated.purityPercent !== undefined
+        ? { purityPercent: validated.purityPercent === null ? null : Number(validated.purityPercent) }
+        : {}),
+      ...(validated.karat !== undefined ? { karat: validated.karat === null ? null : Number(validated.karat) } : {}),
+      ...(validated.grossWeightTroyOz !== undefined
+        ? { grossWeightTroyOz: validated.grossWeightTroyOz === null ? null : Number(validated.grossWeightTroyOz) }
+        : {}),
+      ...(validated.refineryName !== undefined ? { refineryName: validated.refineryName } : {}),
+      ...(validated.refineryLocation !== undefined ? { refineryLocation: validated.refineryLocation } : {}),
     },
   })
 

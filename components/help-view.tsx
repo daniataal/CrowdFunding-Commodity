@@ -100,48 +100,51 @@ export function HelpView() {
   ]
 
   return (
-    <div className="mx-auto max-w-5xl">
+    <div className="mx-auto max-w-5xl space-y-8">
       <div className="mb-8">
-        <h1 className="text-3xl font-bold text-foreground">Help & Support</h1>
+        <h1 className="text-3xl font-bold tracking-tight mb-2">Help & Support</h1>
         <p className="text-muted-foreground">Get answers and reach out for assistance</p>
       </div>
 
-      <div className="mb-8">
+      <div className="relative group">
+        <div className="absolute inset-0 bg-primary/20 rounded-xl blur-xl opacity-0 group-hover:opacity-100 transition-opacity" />
         <div className="relative">
-          <Search className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-muted-foreground" />
+          <Search className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-muted-foreground" />
           <Input
             placeholder="Search for help articles..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="h-12 pl-10 pr-4"
+            className="h-14 pl-12 pr-4 bg-background border-border text-lg shadow-sm focus-visible:ring-primary/50"
           />
         </div>
       </div>
 
-      <Tabs defaultValue="faq" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-3">
-          <TabsTrigger value="faq">FAQs</TabsTrigger>
-          <TabsTrigger value="contact">Contact Us</TabsTrigger>
-          <TabsTrigger value="resources">Resources</TabsTrigger>
+      <Tabs defaultValue="faq" className="space-y-8">
+        <TabsList className="grid w-full grid-cols-3 bg-muted/50 p-1 h-auto rounded-xl gap-1">
+          <TabsTrigger value="faq" className="h-10 rounded-lg data-[state=active]:bg-background data-[state=active]:shadow-sm">FAQs</TabsTrigger>
+          <TabsTrigger value="contact" className="h-10 rounded-lg data-[state=active]:bg-background data-[state=active]:shadow-sm">Contact Us</TabsTrigger>
+          <TabsTrigger value="resources" className="h-10 rounded-lg data-[state=active]:bg-background data-[state=active]:shadow-sm">Resources</TabsTrigger>
         </TabsList>
 
         <TabsContent value="faq" className="space-y-6">
           {faqs.map((category, idx) => {
             const Icon = category.icon
             return (
-              <Card key={idx}>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Icon className="h-5 w-5 text-emerald-500" />
+              <Card key={idx} className="border-border bg-card shadow-sm">
+                <CardHeader className="border-b border-border/50 bg-muted/30">
+                  <CardTitle className="flex items-center gap-3">
+                    <div className="p-2 rounded-lg bg-accent/10">
+                      <Icon className="h-5 w-5 text-accent" />
+                    </div>
                     {category.category}
                   </CardTitle>
                 </CardHeader>
-                <CardContent>
+                <CardContent className="p-0">
                   <Accordion type="single" collapsible className="w-full">
                     {category.questions.map((item, qIdx) => (
-                      <AccordionItem key={qIdx} value={`item-${idx}-${qIdx}`}>
-                        <AccordionTrigger className="text-left">{item.q}</AccordionTrigger>
-                        <AccordionContent className="text-muted-foreground">{item.a}</AccordionContent>
+                      <AccordionItem key={qIdx} value={`item-${idx}-${qIdx}`} className="border-b border-border/50 last:border-0 px-6">
+                        <AccordionTrigger className="text-left hover:text-primary transition-colors py-4 text-base">{item.q}</AccordionTrigger>
+                        <AccordionContent className="text-muted-foreground pb-4 leading-relaxed">{item.a}</AccordionContent>
                       </AccordionItem>
                     ))}
                   </Accordion>
@@ -151,147 +154,70 @@ export function HelpView() {
           })}
         </TabsContent>
 
-        <TabsContent value="contact" className="space-y-6">
-          <div className="grid gap-4 md:grid-cols-2">
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <MessageCircle className="h-5 w-5 text-emerald-500" />
-                  Live Chat
-                </CardTitle>
-                <CardDescription>Get instant help from our support team</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <Button
-                  className="w-full bg-emerald-600 hover:bg-emerald-500"
-                  onClick={() =>
-                    toast({
-                      title: "Live chat",
-                      description: "Live chat isn’t enabled in this deployment yet.",
-                    })
-                  }
-                >
-                  Start Chat
-                </Button>
-                <p className="mt-3 text-center text-xs text-muted-foreground">Average response time: 2 minutes</p>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Mail className="h-5 w-5 text-emerald-500" />
-                  Email Support
-                </CardTitle>
-                <CardDescription>Send us a detailed message</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <Button
-                  variant="outline"
-                  className="w-full bg-transparent"
-                  onClick={() => {
-                    window.location.href = "mailto:support@commodityflow.com"
-                  }}
-                >
-                  Send Email
-                </Button>
-                <p className="mt-3 text-center text-xs text-muted-foreground">
-                  support@commodityflow.com
-                  <br />
-                  Response within 24 hours
-                </p>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Phone className="h-5 w-5 text-emerald-500" />
-                  Phone Support
-                </CardTitle>
-                <CardDescription>Speak with a specialist</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <Button
-                  variant="outline"
-                  className="w-full bg-transparent"
-                  onClick={() =>
-                    toast({
-                      title: "Phone support",
-                      description: "Phone calling isn’t available from the web app yet.",
-                    })
-                  }
-                >
-                  Call Now
-                </Button>
-                <p className="mt-3 text-center text-xs text-muted-foreground">
-                  +1 (888) 555-0123
-                  <br />
-                  Mon-Fri, 9AM-6PM EST
-                </p>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <HelpCircle className="h-5 w-5 text-emerald-500" />
-                  Help Center
-                </CardTitle>
-                <CardDescription>Browse our knowledge base</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <Button
-                  variant="outline"
-                  className="w-full bg-transparent"
-                  onClick={() =>
-                    toast({
-                      title: "Help Center",
-                      description: "The help center is coming soon.",
-                    })
-                  }
-                >
-                  Visit Help Center
-                </Button>
-                <p className="mt-3 text-center text-xs text-muted-foreground">
-                  300+ articles and guides
-                  <br />
-                  Available 24/7
-                </p>
-              </CardContent>
-            </Card>
+        <TabsContent value="contact" className="space-y-8">
+          <div className="grid gap-6 md:grid-cols-2">
+            {[
+              { title: "Live Chat", icon: MessageCircle, desc: "Get instant help", action: "Start Chat", onClick: () => toast({ title: "Live chat", description: "Live chat isn’t enabled in this deployment yet.", }) },
+              { title: "Email Support", icon: Mail, desc: "Send us a message", action: "Send Email", onClick: () => { window.location.href = "mailto:support@commodityflow.com" } },
+              { title: "Phone Support", icon: Phone, desc: "Speak with a specialist", action: "Call Now", onClick: () => toast({ title: "Phone support", description: "Phone calling isn’t available from the web app yet.", }) },
+              { title: "Help Center", icon: HelpCircle, desc: "Browse knowledge base", action: "Visit Help Center", onClick: () => toast({ title: "Help Center", description: "The help center is coming soon.", }) }
+            ].map((item, i) => (
+              <Card key={i} className="border-border bg-card group hover:border-primary/50 transition-all shadow-sm">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-3">
+                    <div className="p-2 rounded-lg bg-primary/10 group-hover:bg-primary/20 transition-colors">
+                      <item.icon className="h-5 w-5 text-primary" />
+                    </div>
+                    {item.title}
+                  </CardTitle>
+                  <CardDescription>{item.desc}</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <Button
+                    className={`w-full ${i === 0 ? "bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg shadow-primary/20" : "bg-muted text-foreground hover:bg-muted/80"}`}
+                    onClick={item.onClick}
+                  >
+                    {item.action}
+                  </Button>
+                  {(i === 0) && <p className="mt-3 text-center text-xs text-muted-foreground">Average response time: 2 minutes</p>}
+                  {(i === 1) && <p className="mt-3 text-center text-xs text-muted-foreground">Response within 24 hours</p>}
+                  {(i === 2) && <p className="mt-3 text-center text-xs text-muted-foreground">Mon-Fri, 9AM-6PM EST</p>}
+                  {(i === 3) && <p className="mt-3 text-center text-xs text-muted-foreground">Available 24/7</p>}
+                </CardContent>
+              </Card>
+            ))}
           </div>
 
-          <Card>
+          <Card className="border-border bg-card shadow-sm">
             <CardHeader>
               <CardTitle>Send us a message</CardTitle>
               <CardDescription>Fill out the form and we'll get back to you shortly</CardDescription>
             </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="grid gap-4 sm:grid-cols-2">
+            <CardContent className="space-y-6">
+              <div className="grid gap-6 sm:grid-cols-2">
                 <div className="space-y-2">
                   <label className="text-sm font-medium">Name</label>
-                  <Input placeholder="John Doe" />
+                  <Input placeholder="John Doe" className="bg-background border-border" />
                 </div>
                 <div className="space-y-2">
                   <label className="text-sm font-medium">Email</label>
-                  <Input type="email" placeholder="john@example.com" />
+                  <Input type="email" placeholder="john@example.com" className="bg-background border-border" />
                 </div>
               </div>
               <div className="space-y-2">
                 <label className="text-sm font-medium">Subject</label>
-                <Input placeholder="How can we help?" />
+                <Input placeholder="How can we help?" className="bg-background border-border" />
               </div>
               <div className="space-y-2">
                 <label className="text-sm font-medium">Message</label>
                 <textarea
                   rows={5}
-                  className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                  className="w-full rounded-md border border-border bg-background px-4 py-3 text-sm placeholder:text-muted-foreground/50 focus-visible:outline-none focus:ring-2 focus:ring-primary/50"
                   placeholder="Describe your issue or question..."
                 />
               </div>
               <Button
-                className="w-full bg-emerald-600 hover:bg-emerald-500"
+                className="w-full bg-primary hover:bg-primary/90 text-primary-foreground font-bold h-12 shadow-lg shadow-primary/20"
                 onClick={() =>
                   toast({
                     title: "Message sent",
@@ -306,120 +232,37 @@ export function HelpView() {
         </TabsContent>
 
         <TabsContent value="resources" className="space-y-6">
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            <Card>
-              <CardHeader>
-                <FileText className="mb-2 h-8 w-8 text-emerald-500" />
-                <CardTitle>Getting Started Guide</CardTitle>
-                <CardDescription>Complete walkthrough for new investors</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <Button
-                  variant="outline"
-                  className="w-full bg-transparent"
-                  onClick={() =>
-                    toast({
-                      title: "Download",
-                      description: "Downloads aren’t enabled yet for this deployment.",
-                    })
-                  }
-                >
-                  Download PDF
-                </Button>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <FileText className="mb-2 h-8 w-8 text-emerald-500" />
-                <CardTitle>Investment Strategies</CardTitle>
-                <CardDescription>Learn about diversification and risk management</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <Button
-                  variant="outline"
-                  className="w-full bg-transparent"
-                  onClick={() =>
-                    toast({
-                      title: "Download",
-                      description: "Downloads aren’t enabled yet for this deployment.",
-                    })
-                  }
-                >
-                  Download PDF
-                </Button>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <FileText className="mb-2 h-8 w-8 text-emerald-500" />
-                <CardTitle>Tax Guide</CardTitle>
-                <CardDescription>Understanding commodity investment taxation</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <Button
-                  variant="outline"
-                  className="w-full bg-transparent"
-                  onClick={() =>
-                    toast({
-                      title: "Download",
-                      description: "Downloads aren’t enabled yet for this deployment.",
-                    })
-                  }
-                >
-                  Download PDF
-                </Button>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <FileText className="mb-2 h-8 w-8 text-emerald-500" />
-                <CardTitle>Risk Disclosure</CardTitle>
-                <CardDescription>Important information about investment risks</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <Button
-                  variant="outline"
-                  className="w-full bg-transparent"
-                  onClick={() =>
-                    toast({
-                      title: "Download",
-                      description: "Downloads aren’t enabled yet for this deployment.",
-                    })
-                  }
-                >
-                  Download PDF
-                </Button>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <FileText className="mb-2 h-8 w-8 text-emerald-500" />
-                <CardTitle>API Documentation</CardTitle>
-                <CardDescription>For developers building integrations</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <Button variant="outline" className="w-full bg-transparent">
-                  View Docs
-                </Button>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <FileText className="mb-2 h-8 w-8 text-emerald-500" />
-                <CardTitle>Video Tutorials</CardTitle>
-                <CardDescription>Step-by-step platform tutorials</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <Button variant="outline" className="w-full bg-transparent">
-                  Watch Now
-                </Button>
-              </CardContent>
-            </Card>
+          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+            {[
+              { title: "Getting Started Guide", desc: "Complete walkthrough", action: "Download PDF" },
+              { title: "Investment Strategies", desc: "Diversification & risk", action: "Download PDF" },
+              { title: "Tax Guide", desc: "Investment taxation", action: "Download PDF" },
+              { title: "Risk Disclosure", desc: "Important risk info", action: "Download PDF" },
+              { title: "API Documentation", desc: "For developers", action: "View Docs" },
+              { title: "Video Tutorials", desc: "Platform tutorials", action: "Watch Now" }
+            ].map((item, i) => (
+              <Card key={i} className="border-border bg-card group hover:border-primary/50 transition-all shadow-sm">
+                <CardHeader>
+                  <FileText className="mb-4 h-8 w-8 text-primary group-hover:scale-110 transition-transform" />
+                  <CardTitle className="group-hover:text-primary transition-colors">{item.title}</CardTitle>
+                  <CardDescription>{item.desc}</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <Button
+                    variant="outline"
+                    className="w-full bg-background border-border hover:bg-primary hover:text-primary-foreground transition-all"
+                    onClick={() =>
+                      toast({
+                        title: "Resource",
+                        description: "Resources aren’t enabled yet for this deployment.",
+                      })
+                    }
+                  >
+                    {item.action}
+                  </Button>
+                </CardContent>
+              </Card>
+            ))}
           </div>
         </TabsContent>
       </Tabs>

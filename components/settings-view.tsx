@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useMemo, useRef, useState } from "react"
 import { useSession } from "next-auth/react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -10,18 +10,25 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Switch } from "@/components/ui/switch"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Separator } from "@/components/ui/separator"
-import { User, Lock, Bell, Palette, Shield, CreditCard, Save, Upload } from "lucide-react"
+import { User, Lock, Bell, Palette, Shield, CreditCard, Save, Upload, FileText, Loader2 } from "lucide-react"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
-import type { UserProfile, WalletTransaction } from "@/lib/domain"
+import type { CommodityDocument, KycStatus, UserProfile, WalletTransaction } from "@/lib/domain"
 import { useToast } from "@/components/ui/use-toast"
+import { Badge } from "@/components/ui/badge"
+import { Alert, AlertDescription } from "@/components/ui/alert"
 
-export function SettingsView({ defaultTab = "profile" }: { defaultTab?: "profile" | "security" | "notifications" | "preferences" | "billing" }) {
-  const { data: session } = useSession()
+export function SettingsView({
+  defaultTab = "profile",
+}: {
+  defaultTab?: "profile" | "kyc" | "security" | "notifications" | "preferences" | "billing"
+}) {
+  const { data: session, update } = useSession()
   const user = session?.user
   const [isSaving, setIsSaving] = useState(false)
   const qc = useQueryClient()
   const { toast } = useToast()
+  const avatarInputRef = useRef<HTMLInputElement | null>(null)
 
   // Profile state
   const [name, setName] = useState(user?.name || "")
@@ -48,6 +55,11 @@ export function SettingsView({ defaultTab = "profile" }: { defaultTab?: "profile
   const [timezone, setTimezone] = useState("America/New_York")
   const [language, setLanguage] = useState("en")
 
+  // KYC state
+  const [idFile, setIdFile] = useState<File | null>(null)
+  const [addressFile, setAddressFile] = useState<File | null>(null)
+  const [kycError, setKycError] = useState("")
+
   const profileQuery = useQuery({
     queryKey: ["user", "profile"],
     queryFn: async () => {
@@ -55,6 +67,16 @@ export function SettingsView({ defaultTab = "profile" }: { defaultTab?: "profile
       const json = await res.json()
       if (!res.ok) throw new Error(json.error || "Failed to load profile")
       return json.data as UserProfile
+    },
+  })
+
+  const kycDocsQuery = useQuery({
+    queryKey: ["user", "kyc", "documents"],
+    queryFn: async () => {
+      const res = await fetch("/api/user/kyc")
+      const json = await res.json()
+      if (!res.ok) throw new Error(json.error || "Failed to load KYC documents")
+      return json.data as CommodityDocument[]
     },
   })
 
@@ -140,6 +162,75 @@ export function SettingsView({ defaultTab = "profile" }: { defaultTab?: "profile
     },
   })
 
+  const uploadAvatarMutation = useMutation({
+    mutationFn: async (file: File) => {
+      if (!file.type.startsWith("image/")) throw new Error("Photo must be an image")
+      if (file.size > 2 * 1024 * 1024) throw new Error("Max size is 2MB")
+
+      const formData = new FormData()
+      formData.append("avatar", file)
+      const res = await fetch("/api/user/avatar", { method: "POST", body: formData })
+      const json = await res.json().catch(() => ({}))
+      if (!res.ok) throw new Error((json as any).error || "Failed to upload photo")
+      return (json as any).data as { avatar: string }
+    },
+    onSuccess: async (data) => {
+      await qc.invalidateQueries({ queryKey: ["user", "profile"] })
+      await update({ avatar: data.avatar })
+      toast({ title: "Photo updated", description: "Your profile photo has been updated." })
+    },
+    onError: (e) => {
+      toast({ title: "Upload failed", description: (e as Error).message, variant: "destructive" })
+    },
+  })
+
+  const uploadKycMutation = useMutation({
+    mutationFn: async () => {
+      if (!idFile || !addressFile) throw new Error("Please upload both documents")
+      const formData = new FormData()
+      formData.append("idDocument", idFile)
+      formData.append("addressDocument", addressFile)
+      const res = await fetch("/api/kyc/upload", { method: "POST", body: formData })
+      const json = await res.json().catch(() => ({}))
+      if (!res.ok) throw new Error((json as any).error || "Failed to upload documents")
+      return true
+    },
+    onSuccess: async () => {
+      setIdFile(null)
+      setAddressFile(null)
+      setKycError("")
+      await Promise.all([qc.invalidateQueries({ queryKey: ["user", "profile"] }), qc.invalidateQueries({ queryKey: ["user", "kyc", "documents"] })])
+      await update({ kycStatus: "PENDING" })
+      toast({ title: "KYC submitted", description: "Your documents were submitted for review." })
+    },
+    onError: (e) => {
+      setKycError((e as Error).message)
+      toast({ title: "KYC upload failed", description: (e as Error).message, variant: "destructive" })
+    },
+  })
+
+  const kycStatus = (profileQuery.data?.kycStatus ?? session?.user?.kycStatus ?? "NOT_STARTED") as KycStatus
+  // IMPORTANT: if a file input is disabled, our Input component sets `pointer-events-none`,
+  // which prevents the OS file picker from opening. Match /kyc-verification: only lock when APPROVED.
+  const kycFilePickDisabled = kycStatus === "APPROVED"
+  const kycSubmitDisabled = kycStatus === "APPROVED"
+
+  const kycStatusBadge = useMemo(() => {
+    const cls =
+      kycStatus === "APPROVED"
+        ? "border-emerald-500/50 text-emerald-500"
+        : kycStatus === "PENDING"
+          ? "border-amber-500/50 text-amber-500"
+          : kycStatus === "REJECTED"
+            ? "border-red-500/50 text-red-500"
+            : "border-slate-500/30 text-muted-foreground"
+    return (
+      <Badge variant="outline" className={cls}>
+        {kycStatus}
+      </Badge>
+    )
+  }, [kycStatus])
+
   const handleSave = async () => {
     setIsSaving(true)
     try {
@@ -182,25 +273,29 @@ export function SettingsView({ defaultTab = "profile" }: { defaultTab?: "profile
         <p className="text-muted-foreground">Manage your account settings and preferences</p>
       </div>
 
-      <Tabs defaultValue={defaultTab} className="space-y-6">
-        <TabsList className="grid w-full grid-cols-2 lg:grid-cols-5">
-          <TabsTrigger value="profile" className="gap-2">
+      <Tabs defaultValue={defaultTab} className="space-y-8">
+        <TabsList className="grid w-full grid-cols-2 lg:grid-cols-6 bg-[#0A0A0A] border border-white/10 p-1 h-auto rounded-xl gap-1">
+          <TabsTrigger value="profile" className="gap-2 data-[state=active]:bg-primary data-[state=active]:text-white h-10 rounded-lg">
             <User className="h-4 w-4" />
             <span className="hidden sm:inline">Profile</span>
           </TabsTrigger>
-          <TabsTrigger value="security" className="gap-2">
+          <TabsTrigger value="kyc" className="gap-2 data-[state=active]:bg-primary data-[state=active]:text-white h-10 rounded-lg">
+            <Shield className="h-4 w-4" />
+            <span className="hidden sm:inline">KYC</span>
+          </TabsTrigger>
+          <TabsTrigger value="security" className="gap-2 data-[state=active]:bg-primary data-[state=active]:text-white h-10 rounded-lg">
             <Lock className="h-4 w-4" />
             <span className="hidden sm:inline">Security</span>
           </TabsTrigger>
-          <TabsTrigger value="notifications" className="gap-2">
+          <TabsTrigger value="notifications" className="gap-2 data-[state=active]:bg-primary data-[state=active]:text-white h-10 rounded-lg">
             <Bell className="h-4 w-4" />
             <span className="hidden sm:inline">Notifications</span>
           </TabsTrigger>
-          <TabsTrigger value="preferences" className="gap-2">
+          <TabsTrigger value="preferences" className="gap-2 data-[state=active]:bg-primary data-[state=active]:text-white h-10 rounded-lg">
             <Palette className="h-4 w-4" />
             <span className="hidden sm:inline">Preferences</span>
           </TabsTrigger>
-          <TabsTrigger value="billing" className="gap-2">
+          <TabsTrigger value="billing" className="gap-2 data-[state=active]:bg-primary data-[state=active]:text-white h-10 rounded-lg">
             <CreditCard className="h-4 w-4" />
             <span className="hidden sm:inline">Billing</span>
           </TabsTrigger>
@@ -208,102 +303,130 @@ export function SettingsView({ defaultTab = "profile" }: { defaultTab?: "profile
 
         {/* Profile Tab */}
         <TabsContent value="profile" className="space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>Profile Information</CardTitle>
-              <CardDescription>Update your personal information and profile details</CardDescription>
+          <Card className="border border-white/10 bg-[#0A0A0A] rounded-2xl relative overflow-hidden">
+            <div className="absolute top-0 right-0 w-32 h-32 bg-primary/10 rounded-full blur-[60px]" />
+            <CardHeader className="relative z-10">
+              <CardTitle className="text-white">Profile Information</CardTitle>
+              <CardDescription className="text-muted-foreground">Update your personal information and profile details</CardDescription>
             </CardHeader>
-            <CardContent className="space-y-6">
-              <div className="flex items-center gap-6">
-                <Avatar className="h-24 w-24">
+            <CardContent className="space-y-8 relative z-10">
+              <div className="flex items-center gap-8">
+                <Avatar className="h-28 w-28 border-2 border-white/10 shadow-xl">
                   <AvatarImage src={profileQuery.data?.avatar || "/placeholder.svg"} />
-                  <AvatarFallback className="bg-emerald-500/20 text-2xl text-emerald-500">
+                  <AvatarFallback className="bg-[#151515] text-3xl text-primary font-bold">
                     {user?.name?.charAt(0).toUpperCase()}
                   </AvatarFallback>
                 </Avatar>
                 <div>
+                  <Input
+                    ref={avatarInputRef}
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    disabled={uploadAvatarMutation.isPending}
+                    onChange={(e) => {
+                      const f = e.target.files?.[0] ?? null
+                      e.currentTarget.value = ""
+                      if (!f) return
+                      uploadAvatarMutation.mutate(f)
+                    }}
+                  />
                   <Button
                     variant="outline"
-                    className="gap-2 bg-transparent"
-                    onClick={() =>
-                      toast({
-                        title: "Upload photo",
-                        description: "Profile photo uploads aren’t enabled in this deployment yet.",
-                      })
-                    }
+                    className="gap-2 bg-white/5 border-white/10 text-white hover:bg-white/10 hover:text-white mb-2"
+                    disabled={uploadAvatarMutation.isPending}
+                    onClick={() => avatarInputRef.current?.click()}
                   >
-                    <Upload className="h-4 w-4" />
-                    Upload Photo
+                    {uploadAvatarMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />}
+                    {uploadAvatarMutation.isPending ? "Uploading..." : "Upload Photo"}
                   </Button>
-                  <p className="mt-2 text-xs text-muted-foreground">JPG, PNG or GIF. Max size 2MB.</p>
+                  <p className="text-xs text-muted-foreground">JPG, PNG or GIF. Max size 2MB.</p>
                 </div>
               </div>
 
-              <Separator />
+              <Separator className="bg-white/5" />
 
-              <div className="grid gap-4 sm:grid-cols-2">
+              <div className="grid gap-6 sm:grid-cols-2">
                 <div className="space-y-2">
-                  <Label htmlFor="name">Full Name</Label>
-                  <Input id="name" value={name} onChange={(e) => setName(e.target.value)} />
+                  <Label htmlFor="name" className="text-white">Full Name</Label>
+                  <Input
+                    id="name"
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    className="bg-white/5 border-white/10 text-white focus-visible:ring-primary/50"
+                  />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="email">Email</Label>
-                  <Input id="email" type="email" value={email} disabled />
+                  <Label htmlFor="email" className="text-white">Email</Label>
+                  <Input
+                    id="email"
+                    type="email"
+                    value={email}
+                    disabled
+                    className="bg-white/5 border-white/10 text-muted-foreground cursor-not-allowed"
+                  />
                   <p className="text-xs text-muted-foreground">Email changes are not supported yet.</p>
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="phone">Phone Number</Label>
+                  <Label htmlFor="phone" className="text-white">Phone Number</Label>
                   <Input
                     id="phone"
                     type="tel"
                     placeholder="+1 (555) 000-0000"
                     value={phone}
                     onChange={(e) => setPhone(e.target.value)}
+                    className="bg-white/5 border-white/10 text-white focus-visible:ring-primary/50 placeholder:text-muted-foreground/50"
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="company">Company</Label>
+                  <Label htmlFor="company" className="text-white">Company</Label>
                   <Input
                     id="company"
                     placeholder="Acme Corp"
                     value={company}
                     onChange={(e) => setCompany(e.target.value)}
+                    className="bg-white/5 border-white/10 text-white focus-visible:ring-primary/50 placeholder:text-muted-foreground/50"
                   />
                 </div>
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="bio">Bio</Label>
+                <Label htmlFor="bio" className="text-white">Bio</Label>
                 <textarea
                   id="bio"
                   rows={4}
-                  className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                  className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white placeholder:text-muted-foreground/50 focus-visible:outline-none focus:ring-2 focus:ring-primary/50"
                   placeholder="Tell us about yourself..."
                   value={bio}
                   onChange={(e) => setBio(e.target.value)}
                 />
               </div>
 
-              <Button onClick={handleSave} disabled={isSaving} className="gap-2 bg-emerald-600 hover:bg-emerald-500">
+              <Button
+                onClick={handleSave}
+                disabled={isSaving}
+                className="gap-2 bg-primary hover:bg-red-600 text-white font-bold shadow-lg shadow-red-500/20 px-8"
+              >
                 <Save className="h-4 w-4" />
                 {isSaving ? "Saving..." : "Save Changes"}
               </Button>
             </CardContent>
           </Card>
 
-          <Card>
+          <Card className="border border-white/10 bg-[#0A0A0A] rounded-2xl relative overflow-hidden">
             <CardHeader>
-              <CardTitle>Account Type</CardTitle>
-              <CardDescription>Your current account status and verification level</CardDescription>
+              <CardTitle className="text-white">Account Type</CardTitle>
+              <CardDescription className="text-muted-foreground">Your current account status and verification level</CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="flex items-center justify-between rounded-lg border border-border bg-muted/30 p-4">
+              <div className="flex items-center justify-between rounded-xl border border-white/10 bg-white/5 p-6">
                 <div>
-                  <div className="font-semibold">Individual Investor</div>
+                  <div className="font-bold text-white text-lg">Individual Investor</div>
                   <div className="text-sm text-muted-foreground">Standard investment limits apply</div>
                 </div>
                 <Button
                   variant="outline"
+                  className="border-white/10 bg-transparent text-white hover:bg-white/10 hover:text-white"
                   onClick={() =>
                     toast({
                       title: "Upgrade",
@@ -314,6 +437,170 @@ export function SettingsView({ defaultTab = "profile" }: { defaultTab?: "profile
                   Upgrade to Institutional
                 </Button>
               </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* KYC Tab */}
+        <TabsContent value="kyc" className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle>KYC Verification</CardTitle>
+              <CardDescription>Upload identification documents to verify your account</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="flex items-center justify-between rounded-lg border border-border bg-muted/30 p-4">
+                <div>
+                  <div className="font-semibold">Verification status</div>
+                  <div className="text-sm text-muted-foreground">
+                    {kycStatus === "APPROVED"
+                      ? "Verified — full access enabled."
+                      : kycStatus === "PENDING"
+                        ? "Under review — we’ll notify you once complete."
+                        : kycStatus === "REJECTED"
+                          ? "Rejected — please resubmit clear documents."
+                          : "Not started — please submit documents."}
+                  </div>
+                </div>
+                {kycStatusBadge}
+              </div>
+
+              {kycStatus === "REJECTED" && (
+                <Alert variant="destructive">
+                  <AlertDescription>Your previous submission was rejected. Please upload new documents.</AlertDescription>
+                </Alert>
+              )}
+
+              {kycStatus === "PENDING" && (
+                <Alert className="bg-amber-500/10 border-amber-500/20">
+                  <AlertDescription className="text-amber-500">
+                    Your documents are being reviewed. You can still resubmit if you need to correct something.
+                  </AlertDescription>
+                </Alert>
+              )}
+
+              <Card className="border-2 p-4">
+                <div className="font-medium">Upload documents</div>
+                <div className="text-sm text-muted-foreground mt-1">
+                  Accepted formats: JPG, PNG, PDF (Max 5MB)
+                </div>
+
+                {kycError && (
+                  <Alert variant="destructive" className="mt-4">
+                    <AlertDescription>{kycError}</AlertDescription>
+                  </Alert>
+                )}
+
+                <div className="mt-4 space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="kyc-id">Government-Issued ID</Label>
+                    <div className="flex items-center gap-4">
+                      <Input
+                        id="kyc-id"
+                        type="file"
+                        accept="image/*,.pdf"
+                        disabled={kycFilePickDisabled || uploadKycMutation.isPending}
+                        onChange={(e) => {
+                          const f = e.target.files?.[0] ?? null
+                          if (f && f.size > 5 * 1024 * 1024) return setKycError("File size must be less than 5MB")
+                          if (f && !f.type.startsWith("image/") && f.type !== "application/pdf") return setKycError("File must be an image or PDF")
+                          setKycError("")
+                          setIdFile(f)
+                        }}
+                        className="flex-1"
+                      />
+                      {idFile && (
+                        <Badge variant="outline" className="gap-2">
+                          <FileText className="h-3 w-3" />
+                          {idFile.name}
+                        </Badge>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="kyc-address">Proof of Address</Label>
+                    <div className="flex items-center gap-4">
+                      <Input
+                        id="kyc-address"
+                        type="file"
+                        accept="image/*,.pdf"
+                        disabled={kycFilePickDisabled || uploadKycMutation.isPending}
+                        onChange={(e) => {
+                          const f = e.target.files?.[0] ?? null
+                          if (f && f.size > 5 * 1024 * 1024) return setKycError("File size must be less than 5MB")
+                          if (f && !f.type.startsWith("image/") && f.type !== "application/pdf") return setKycError("File must be an image or PDF")
+                          setKycError("")
+                          setAddressFile(f)
+                        }}
+                        className="flex-1"
+                      />
+                      {addressFile && (
+                        <Badge variant="outline" className="gap-2">
+                          <FileText className="h-3 w-3" />
+                          {addressFile.name}
+                        </Badge>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="pt-2">
+                    <Button
+                      className="bg-emerald-600 hover:bg-emerald-500"
+                      disabled={kycSubmitDisabled || uploadKycMutation.isPending || !idFile || !addressFile}
+                      onClick={() => uploadKycMutation.mutate()}
+                    >
+                      {uploadKycMutation.isPending ? (
+                        <>
+                          <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                          Uploading…
+                        </>
+                      ) : (
+                        <>
+                          <Upload className="h-4 w-4 mr-2" />
+                          Submit Documents
+                        </>
+                      )}
+                    </Button>
+                  </div>
+                </div>
+              </Card>
+
+              <Card className="border-2 p-4">
+                <div className="font-medium">Submitted documents</div>
+                <div className="text-sm text-muted-foreground mt-1">Visible to you and the admin review team.</div>
+
+                {kycDocsQuery.isLoading ? (
+                  <div className="mt-4 text-sm text-muted-foreground">Loading documents…</div>
+                ) : kycDocsQuery.isError ? (
+                  <div className="mt-4 text-sm text-muted-foreground">Unable to load documents.</div>
+                ) : (kycDocsQuery.data?.length ?? 0) === 0 ? (
+                  <div className="mt-4 text-sm text-muted-foreground">No documents uploaded yet.</div>
+                ) : (
+                  <div className="mt-4 space-y-2">
+                    {(kycDocsQuery.data ?? []).map((d) => (
+                      <div key={d.id} className="flex items-start justify-between gap-4 rounded-lg border border-border p-3">
+                        <div className="min-w-0">
+                          <div className="font-medium truncate">{d.name}</div>
+                          <div className="text-xs text-muted-foreground">
+                            {d.type} • {new Date(d.createdAt).toLocaleString()}
+                          </div>
+                          <a className="text-sm text-primary underline underline-offset-4" href={d.url} target="_blank" rel="noreferrer">
+                            Open
+                          </a>
+                        </div>
+                        <div className="shrink-0">
+                          {d.verified ? (
+                            <Badge className="bg-emerald-600">Verified</Badge>
+                          ) : (
+                            <Badge variant="outline">Unverified</Badge>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </Card>
             </CardContent>
           </Card>
         </TabsContent>

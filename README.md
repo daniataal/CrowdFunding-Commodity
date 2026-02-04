@@ -89,12 +89,15 @@ A production-grade, end-to-end commodity crowdfunding platform built with Next.j
 
 1. **Build and run with Docker Compose**
    ```bash
-   docker-compose up -d
+   docker-compose up -d --build
    ```
+   The application will start at http://localhost:3000.
+   - Database migrations run automatically on startup.
+   - Data and uploads are persisted in Docker volumes.
 
-2. **Run database migrations**
+2. **Stop the application**
    ```bash
-   docker exec -it commodity-app /app/node_modules/.bin/prisma migrate deploy
+   docker-compose down
    ```
 
 ## Kubernetes Deployment

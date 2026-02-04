@@ -45,22 +45,22 @@ export default function ForgotPasswordPage() {
   if (success) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-background px-4">
-        <Card className="w-full max-w-md border-2">
+        <Card className="w-full max-w-md border border-white/10 bg-card/40 backdrop-blur">
           <CardHeader className="space-y-1">
-            <CardTitle className="text-2xl font-bold">Check your email</CardTitle>
+            <CardTitle className="text-2xl font-bold text-white">Check your email</CardTitle>
             <CardDescription>We've sent a password reset link to {email}</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="flex flex-col items-center justify-center space-y-4 py-8">
-              <div className="h-16 w-16 rounded-full bg-emerald-500/10 flex items-center justify-center">
-                <Mail className="h-8 w-8 text-emerald-500" />
+              <div className="h-16 w-16 rounded-full bg-primary/10 flex items-center justify-center">
+                <Mail className="h-8 w-8 text-primary" />
               </div>
               <p className="text-center text-sm text-muted-foreground">
                 If an account exists with that email, you'll receive a password reset link shortly.
               </p>
             </div>
             <Link href="/login">
-              <Button className="w-full bg-emerald-600 hover:bg-emerald-700">Back to Sign In</Button>
+              <Button className="w-full bg-primary hover:bg-red-600 text-white font-bold">Back to Sign In</Button>
             </Link>
           </CardContent>
         </Card>
@@ -70,31 +70,32 @@ export default function ForgotPasswordPage() {
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-background px-4">
-      <Card className="w-full max-w-md border-2">
+      <Card className="w-full max-w-md border border-white/10 bg-card/40 backdrop-blur">
         <CardHeader className="space-y-1">
-          <CardTitle className="text-2xl font-bold">Reset Password</CardTitle>
+          <CardTitle className="text-2xl font-bold text-white">Reset Password</CardTitle>
           <CardDescription>Enter your email to receive a password reset link</CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
             {error && (
-              <Alert variant="destructive">
+              <Alert variant="destructive" className="bg-destructive/10 border-destructive/20 text-destructive">
                 <AlertDescription>{error}</AlertDescription>
               </Alert>
             )}
             <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
+              <Label htmlFor="email" className="text-white">Email</Label>
               <Input
                 id="email"
                 type="email"
                 placeholder="name@example.com"
+                className="bg-card/50 border-input focus:border-primary/50"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
                 disabled={isLoading}
               />
             </div>
-            <Button type="submit" className="w-full bg-emerald-600 hover:bg-emerald-700" disabled={isLoading}>
+            <Button type="submit" className="w-full bg-primary hover:bg-red-600 text-white font-bold" disabled={isLoading}>
               {isLoading ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -106,7 +107,7 @@ export default function ForgotPasswordPage() {
             </Button>
           </form>
           <div className="mt-4 text-center text-sm">
-            <Link href="/login" className="text-primary hover:underline">
+            <Link href="/login" className="text-primary hover:underline hover:text-red-400 text-sm font-medium">
               Back to Sign In
             </Link>
           </div>

@@ -4,10 +4,20 @@ import { auth } from "@/auth"
 import { prisma } from "@/lib/prisma"
 import { z } from "zod"
 import { revalidatePath } from "next/cache"
+import {
+  createBalancedLedgerEntry,
+  getOrCreateCommodityEscrowAccount,
+  getOrCreatePlatformFeeIncomeAccount,
+  getOrCreateUserWalletAccount,
+} from "@/lib/ledger"
+import { runIdempotent, sha256Base64Url } from "@/lib/idempotency"
+import { LEGAL_VERSIONS } from "@/lib/legal"
 
 const investSchema = z.object({
   commodityId: z.string(),
   amount: z.number().positive("Amount must be positive"),
+  ackRisk: z.boolean(),
+  ackTerms: z.boolean(),
 })
 
 export async function investInCommodity(formData: FormData) {
@@ -20,23 +30,34 @@ export async function investInCommodity(formData: FormData) {
     const rawData = {
       commodityId: formData.get("commodityId") as string,
       amount: Number.parseFloat(formData.get("amount") as string),
+      ackRisk: String(formData.get("ackRisk")) === "true",
+      ackTerms: String(formData.get("ackTerms")) === "true",
     }
 
     const validatedData = investSchema.parse(rawData)
+    const ipAddress = (formData.get("ipAddress") as string | null) ?? null
+    const userAgent = (formData.get("userAgent") as string | null) ?? null
+    const idempotencyKey = (formData.get("idempotencyKey") as string | null) ?? null
 
     // Get user with current balance
     const user = await prisma.user.findUnique({
       where: { id: session.user.id },
-      select: { walletBalance: true },
+      select: { walletBalance: true, kycStatus: true, walletFrozen: true },
     })
 
     if (!user) {
       return { error: "User not found" }
     }
 
-    // Check if user has sufficient balance
-    if (Number(user.walletBalance) < validatedData.amount) {
-      return { error: "Insufficient balance" }
+    // Compliance gating
+    if (user.kycStatus !== "APPROVED") {
+      return { error: "KYC approval is required before investing" }
+    }
+    if ((user as any).walletFrozen) {
+      return { error: "Wallet is frozen. Please contact support." }
+    }
+    if (!validatedData.ackRisk || !validatedData.ackTerms) {
+      return { error: "Risk Disclosure and Terms acceptance are required" }
     }
 
     // Get commodity
@@ -52,6 +73,20 @@ export async function investInCommodity(formData: FormData) {
       return { error: "Commodity is not accepting investments" }
     }
 
+    const minInvestment = Number((commodity as any).minInvestment ?? 1000)
+    const maxInvestment = (commodity as any).maxInvestment === null ? null : Number((commodity as any).maxInvestment)
+    const platformFeeBps = Number((commodity as any).platformFeeBps ?? 150)
+
+    if (validatedData.amount < minInvestment) {
+      return { error: `Minimum investment is $${minInvestment.toLocaleString()}` }
+    }
+    if (maxInvestment !== null && validatedData.amount > maxInvestment) {
+      return { error: `Maximum investment is $${maxInvestment.toLocaleString()}` }
+    }
+
+    const fee = (Number(validatedData.amount) * platformFeeBps) / 10000
+    const totalDebit = Number(validatedData.amount) + fee
+
     // Check if investment would exceed required amount
     const newCurrentAmount = Number(commodity.currentAmount) + validatedData.amount
     if (newCurrentAmount > Number(commodity.amountRequired)) {
@@ -59,16 +94,33 @@ export async function investInCommodity(formData: FormData) {
     }
 
     // Start transaction
-    const result = await prisma.$transaction(async (tx) => {
-      // Deduct from wallet
-      const updatedUser = await tx.user.update({
-        where: { id: session.user.id },
+    const exec = async (tx: any) => {
+      const [wallet, escrow, feeIncome] = await Promise.all([
+        getOrCreateUserWalletAccount(tx, session.user.id),
+        getOrCreateCommodityEscrowAccount(tx, validatedData.commodityId),
+        getOrCreatePlatformFeeIncomeAccount(tx),
+      ])
+
+      // Deduct from wallet atomically
+      const { count } = await tx.user.updateMany({
+        where: {
+          id: session.user.id,
+          walletBalance: { gte: totalDebit },
+        },
         data: {
           walletBalance: {
-            decrement: validatedData.amount,
+            decrement: totalDebit,
           },
         },
       })
+
+      if (count === 0) {
+        throw new Error("Insufficient balance")
+      }
+
+      // No need to fetch updatedUser since we don't use it elsewhere in exec logic except to return?
+      // exec returns { investment, updatedCommodity }. It doesn't return updatedUser.
+      // So we are good.
 
       // Update commodity funding
       const updatedCommodity = await tx.commodity.update({
@@ -104,15 +156,38 @@ export async function investInCommodity(formData: FormData) {
       })
 
       // Create transaction record
-      await tx.transaction.create({
+      const walletTx = await tx.transaction.create({
         data: {
           userId: session.user.id,
           commodityId: validatedData.commodityId,
           type: "INVESTMENT",
-          amount: -validatedData.amount, // Negative for outflow
+          amount: -totalDebit, // Negative for outflow (principal + fee)
           status: "COMPLETED",
           description: `Investment in ${commodity.name}`,
+          metadata: {
+            principal: validatedData.amount,
+            fee,
+            feeBps: platformFeeBps,
+          },
         },
+      })
+
+      await createBalancedLedgerEntry(tx, {
+        type: "INVESTMENT",
+        description: `Investment in ${commodity.name}`,
+        userId: session.user.id,
+        commodityId: validatedData.commodityId,
+        transactionId: walletTx.id,
+        metadata: {
+          principal: validatedData.amount,
+          fee,
+          feeBps: platformFeeBps,
+        },
+        lines: [
+          { accountId: wallet.id, debit: totalDebit },
+          { accountId: escrow.id, credit: validatedData.amount },
+          { accountId: feeIncome.id, credit: fee },
+        ],
       })
 
       // Create audit log
@@ -125,18 +200,95 @@ export async function investInCommodity(formData: FormData) {
           changes: {
             commodityId: validatedData.commodityId,
             amount: validatedData.amount,
+            ackRisk: validatedData.ackRisk,
+            ackTerms: validatedData.ackTerms,
+            minInvestment,
+            maxInvestment,
+            fee,
+            feeBps: platformFeeBps,
           },
         },
       })
 
+      // Persist compliance consents (audit-grade).
+      await tx.userConsent.upsert({
+        where: {
+          userId_commodityId_type_version: {
+            userId: session.user.id,
+            commodityId: validatedData.commodityId,
+            type: "RISK_DISCLOSURE",
+            version: LEGAL_VERSIONS.riskDisclosure,
+          },
+        },
+        create: {
+          userId: session.user.id,
+          commodityId: validatedData.commodityId,
+          type: "RISK_DISCLOSURE",
+          version: LEGAL_VERSIONS.riskDisclosure,
+          ipAddress,
+          userAgent,
+          context: { ack: true },
+        },
+        update: { ipAddress, userAgent },
+      })
+      await tx.userConsent.upsert({
+        where: {
+          userId_commodityId_type_version: {
+            userId: session.user.id,
+            commodityId: validatedData.commodityId,
+            type: "TERMS_OF_SERVICE",
+            version: LEGAL_VERSIONS.termsOfService,
+          },
+        },
+        create: {
+          userId: session.user.id,
+          commodityId: validatedData.commodityId,
+          type: "TERMS_OF_SERVICE",
+          version: LEGAL_VERSIONS.termsOfService,
+          ipAddress,
+          userAgent,
+          context: { ack: true },
+        },
+        update: { ipAddress, userAgent },
+      })
+
       return { investment, updatedCommodity }
-    })
+    }
+
+    const result = idempotencyKey
+      ? await runIdempotent({
+        userId: session.user.id,
+        scope: `invest:${validatedData.commodityId}`,
+        key: idempotencyKey,
+        requestHash: sha256Base64Url(
+          JSON.stringify({
+            commodityId: validatedData.commodityId,
+            amount: validatedData.amount,
+            ackRisk: validatedData.ackRisk,
+            ackTerms: validatedData.ackTerms,
+          })
+        ),
+        run: exec,
+        response: (v) => ({
+          investmentId: v.investment.id,
+          commodityId: v.updatedCommodity.id,
+          newCurrentAmount: Number(v.updatedCommodity.currentAmount),
+        }),
+      })
+      : { ok: true as const, value: await prisma.$transaction(exec) }
+
+    if (!result.ok) {
+      return { error: result.error }
+    }
+
+    const finalValue = result.value as any
+    if (finalValue && "error" in finalValue) return { error: finalValue.error }
 
     revalidatePath("/")
     revalidatePath("/marketplace")
     revalidatePath("/wallet")
 
-    return { success: true, data: result }
+    return { success: true, data: finalValue }
   } catch (error) {
     if (error instanceof z.ZodError) {
       return { error: error.errors[0].message }

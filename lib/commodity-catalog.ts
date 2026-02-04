@@ -3,23 +3,30 @@ export type CommodityTemplate = {
   name: string
   type: "Agriculture" | "Energy" | "Metals"
   icon:
-    | "coffee"
-    | "wheat"
-    | "fuel"
-    | "boxes"
-    | "leaf"
-    | "gold"
-    | "silver"
-    | "diesel"
-    | "titanium"
-    | "palladium"
-    | "copper"
+  | "coffee"
+  | "wheat"
+  | "fuel"
+  | "boxes"
+  | "leaf"
+  | "gold"
+  | "silver"
+  | "diesel"
+  | "titanium"
+  | "palladium"
+  | "copper"
   // Optional sane defaults to speed up listing creation
   risk?: "Low" | "Medium" | "High"
   targetApy?: number
   duration?: number
   insuranceValue?: number
   transportMethod?: string
+  // Metals-specific optional defaults
+  metalForm?: string
+  purityPercent?: number
+  karat?: number
+  grossWeightTroyOz?: number
+  refineryName?: string
+  refineryLocation?: string
 }
 
 export const COMMODITY_TEMPLATES: CommodityTemplate[] = [
@@ -69,7 +76,7 @@ export const COMMODITY_TEMPLATES: CommodityTemplate[] = [
   },
   {
     key: "gold",
-    name: "Gold (Au) Bullion",
+    name: "Gold",
     type: "Metals",
     icon: "gold",
     risk: "Medium",
@@ -77,10 +84,16 @@ export const COMMODITY_TEMPLATES: CommodityTemplate[] = [
     duration: 60,
     insuranceValue: 2500000,
     transportMethod: "Secured Vault Transfer",
+    metalForm: "BULLION",
+    purityPercent: 99.99,
+    karat: 24,
+    grossWeightTroyOz: 1000,
+    refineryName: "Valcambi",
+    refineryLocation: "Switzerland",
   },
   {
     key: "silver",
-    name: "Silver (Ag) Bars",
+    name: "Silver",
     type: "Metals",
     icon: "silver",
     risk: "Medium",
@@ -88,6 +101,25 @@ export const COMMODITY_TEMPLATES: CommodityTemplate[] = [
     duration: 60,
     insuranceValue: 1200000,
     transportMethod: "Secured Vault Transfer",
+    metalForm: "BULLION",
+    purityPercent: 99.9,
+    grossWeightTroyOz: 5000,
+    refineryName: "Metalor",
+    refineryLocation: "Switzerland",
+  },
+  {
+    key: "diamonds",
+    name: "Diamonds",
+    type: "Metals",
+    icon: "boxes",
+    risk: "High",
+    targetApy: 24.0,
+    duration: 90,
+    insuranceValue: 3000000,
+    transportMethod: "Secured Vault Transfer",
+    metalForm: "ROUGH_DIAMONDS",
+    refineryName: "Diamond Sorting Facility",
+    refineryLocation: "Antwerp, Belgium",
   },
   {
     key: "diesel",

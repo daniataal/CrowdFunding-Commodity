@@ -2,6 +2,7 @@ services:
   postgres:
     image: postgres:16-alpine
     container_name: commodity-postgres
+    restart: always
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: commodity_password
@@ -19,6 +20,7 @@ services:
   redis:
     image: redis:7-alpine
     container_name: commodity-redis
+    restart: always
     ports:
       - "6379:6379"
     volumes:
@@ -34,28 +36,28 @@ services:
       context: .
       dockerfile: Dockerfile
     container_name: commodity-app
+    restart: always
     environment:
       DATABASE_URL: postgresql://postgres:commodity_password@postgres:5432/commodity_crowdfunding?schema=public
+      # You should override these in specific deployment environments
       AUTH_SECRET: ${AUTH_SECRET:-change-me-in-production}
-      NEXTAUTH_URL: http://localhost:3000
-      # Auth.js v5: allow localhost/compose host headers when running with NODE_ENV=production
+      NEXTAUTH_URL: ${NEXTAUTH_URL:-http://localhost:3000}
       AUTH_TRUST_HOST: "true"
       NODE_ENV: production
     ports:
       - "3000:3000"
+    volumes:
+      - uploads:/app/public/uploads
     depends_on:
       postgres:
         condition: service_healthy
       redis:
         condition: service_healthy
-    # IMPORTANT: This image uses Next.js "standalone" output (minimal runtime deps).
-    # That output does NOT include the Prisma Client generator code, so running
-    # `prisma generate` at container startup will fail. Generate happens at build time.
-    # No migrations are committed yet, so `migrate deploy` won't create tables.
-    # For local/dev, ensure schema exists first.
-    command: sh -c "/app/node_modules/.bin/prisma db push --skip-generate && /app/node_modules/.bin/prisma migrate deploy && node server.js"
+    # Initialize DB schema if needed on startup
+    command: sh -c "/app/node_modules/.bin/prisma migrate deploy && node server.js"
 
 volumes:
   postgres_data:
   redis_data:
+  uploads:
 

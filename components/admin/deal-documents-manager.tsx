@@ -132,88 +132,91 @@ export function DealDocumentsManager({ commodityId, isAdmin }: { commodityId: st
     <div className="space-y-4">
       <div className="flex items-start justify-between gap-4">
         <div>
-          <div className="text-lg font-semibold">Documents</div>
+          <div className="text-lg font-semibold text-foreground">Documents</div>
           <div className="text-sm text-muted-foreground">{summary}</div>
         </div>
       </div>
 
       {isAdmin && (
-        <Card className="p-4 border-2">
-          <div className="font-medium mb-3">Add document</div>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <Label>Type</Label>
-              <Select value={docType} onValueChange={(v) => setDocType(v as DocumentType)}>
-                <SelectTrigger className="mt-2">
-                  <SelectValue placeholder="Select type" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="BILL_OF_LADING">Bill of Lading</SelectItem>
-                  <SelectItem value="INSURANCE_CERTIFICATE">Insurance Certificate</SelectItem>
-                  <SelectItem value="QUALITY_CERTIFICATION">Quality Certification</SelectItem>
-                  <SelectItem value="COMMODITY_CONTRACT">Commodity Contract</SelectItem>
-                  <SelectItem value="OTHER">Other</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
+        <Card className="p-6 border-border bg-card relative overflow-hidden shadow-sm">
+          <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-full blur-[60px] pointer-events-none" />
+          <div className="relative z-10">
+            <div className="font-medium mb-4 text-foreground">Add document</div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <Label>Type</Label>
+                <Select value={docType} onValueChange={(v) => setDocType(v as DocumentType)}>
+                  <SelectTrigger className="mt-2 bg-background border-border">
+                    <SelectValue placeholder="Select type" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="BILL_OF_LADING">Bill of Lading</SelectItem>
+                    <SelectItem value="INSURANCE_CERTIFICATE">Insurance Certificate</SelectItem>
+                    <SelectItem value="QUALITY_CERTIFICATION">Quality Certification</SelectItem>
+                    <SelectItem value="COMMODITY_CONTRACT">Commodity Contract</SelectItem>
+                    <SelectItem value="OTHER">Other</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
 
-            <div>
-              <Label>Name (optional)</Label>
-              <Input className="mt-2" value={name} onChange={(e) => setName(e.target.value)} placeholder="e.g. bill-of-lading.pdf" />
-            </div>
+              <div>
+                <Label>Name (optional)</Label>
+                <Input className="mt-2 bg-background border-border" value={name} onChange={(e) => setName(e.target.value)} placeholder="e.g. bill-of-lading.pdf" />
+              </div>
 
-            <div className="md:col-span-2">
-              <Label>Upload file (recommended)</Label>
-              <Input
-                className="mt-2"
-                type="file"
-                onChange={(e) => setFile(e.target.files?.[0] ?? null)}
-              />
-              <div className="text-xs text-muted-foreground mt-1">
-                Stored locally under <code className="bg-muted px-1 rounded">/public/uploads/commodities</code> for dev. Use S3 in production.
+              <div className="md:col-span-2">
+                <Label>Upload file (recommended)</Label>
+                <Input
+                  className="mt-2 bg-background border-border"
+                  type="file"
+                  onChange={(e) => setFile(e.target.files?.[0] ?? null)}
+                />
+                <div className="text-xs text-muted-foreground mt-1">
+                  Stored locally under <code className="bg-muted px-1 rounded">/public/uploads/commodities</code> for dev. Use S3 in production.
+                </div>
+              </div>
+
+              <div className="md:col-span-2">
+                <Label>Or link by URL</Label>
+                <Input className="mt-2 bg-background border-border" value={url} onChange={(e) => setUrl(e.target.value)} placeholder="https://..." />
               </div>
             </div>
 
-            <div className="md:col-span-2">
-              <Label>Or link by URL</Label>
-              <Input className="mt-2" value={url} onChange={(e) => setUrl(e.target.value)} placeholder="https://..." />
+            <div className="mt-6">
+              <Button
+                className="bg-primary hover:bg-primary/90 text-primary-foreground font-bold shadow-lg shadow-primary/20"
+                onClick={() => uploadMutation.mutate()}
+                disabled={uploadMutation.isPending}
+              >
+                {uploadMutation.isPending ? "Adding..." : "Add Document"}
+              </Button>
             </div>
-          </div>
-
-          <div className="mt-4">
-            <Button
-              className="bg-emerald-600 hover:bg-emerald-700 text-white"
-              onClick={() => uploadMutation.mutate()}
-              disabled={uploadMutation.isPending}
-            >
-              {uploadMutation.isPending ? "Adding..." : "Add Document"}
-            </Button>
           </div>
         </Card>
       )}
 
       {docsQuery.isLoading ? (
-        <Card className="p-4 border-2 text-sm text-muted-foreground">Loading documents…</Card>
+        <Card className="p-4 border-border bg-card text-sm text-muted-foreground">Loading documents…</Card>
       ) : docs.length === 0 ? (
-        <Card className="p-4 border-2 text-sm text-muted-foreground">No documents yet.</Card>
+        <Card className="p-4 border-border bg-card text-sm text-muted-foreground">No documents yet.</Card>
       ) : (
         <div className="space-y-3">
           {docs.map((d) => {
             const Icon = docIcon(d.type)
             return (
-              <Card key={d.id} className="p-4 border-2">
+              <Card key={d.id} className="p-4 border-border bg-card shadow-sm hover:shadow-md transition-all">
                 <div className="flex items-start justify-between gap-4">
                   <div className="flex items-start gap-3 min-w-0">
                     <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
                       <Icon className="h-5 w-5 text-primary" />
                     </div>
                     <div className="min-w-0">
-                      <div className="font-semibold truncate">{d.name}</div>
+                      <div className="font-semibold truncate text-foreground">{d.name}</div>
                       <div className="text-sm text-muted-foreground">
                         {typeLabels[d.type]} • {new Date(d.createdAt).toLocaleString()}
                       </div>
                       <a
-                        className="text-sm text-primary underline underline-offset-4 inline-flex items-center gap-1 mt-1"
+                        className="text-sm text-primary hover:underline underline-offset-4 inline-flex items-center gap-1 mt-1 font-medium"
                         href={d.url}
                         target="_blank"
                         rel="noreferrer"
@@ -225,9 +228,9 @@ export function DealDocumentsManager({ commodityId, isAdmin }: { commodityId: st
 
                   <div className="flex items-center gap-2 shrink-0">
                     {d.verified ? (
-                      <Badge className="bg-emerald-600">Verified</Badge>
+                      <Badge className="bg-emerald-600/20 text-emerald-500 border-emerald-600/30">Verified</Badge>
                     ) : (
-                      <Badge variant="outline">Unverified</Badge>
+                      <Badge variant="outline" className="text-muted-foreground border-border">Unverified</Badge>
                     )}
 
                     {isAdmin && (
@@ -235,6 +238,7 @@ export function DealDocumentsManager({ commodityId, isAdmin }: { commodityId: st
                         <Button
                           variant="outline"
                           size="sm"
+                          className="bg-transparent border-border hover:bg-muted text-foreground"
                           onClick={() => verifyMutation.mutate({ docId: d.id, verified: !d.verified })}
                           disabled={verifyMutation.isPending}
                         >
@@ -243,7 +247,7 @@ export function DealDocumentsManager({ commodityId, isAdmin }: { commodityId: st
 
                         <AlertDialog>
                           <AlertDialogTrigger asChild>
-                            <Button variant="outline" size="sm" className="text-red-600">
+                            <Button variant="outline" size="sm" className="bg-red-500/10 border-red-500/20 text-red-500 hover:bg-red-500/20">
                               <Trash2 className="h-4 w-4 mr-1" /> Delete
                             </Button>
                           </AlertDialogTrigger>
@@ -258,7 +262,7 @@ export function DealDocumentsManager({ commodityId, isAdmin }: { commodityId: st
                               <AlertDialogCancel>Cancel</AlertDialogCancel>
                               <AlertDialogAction
                                 onClick={() => deleteMutation.mutate(d.id)}
-                                className="bg-red-600 hover:bg-red-700"
+                                className="bg-red-600 hover:bg-red-700 text-white"
                               >
                                 Delete
                               </AlertDialogAction>

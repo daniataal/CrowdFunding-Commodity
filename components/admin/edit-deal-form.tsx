@@ -22,33 +22,63 @@ export function EditDealForm({
     risk: string
     targetApy: number
     duration: number
+    minInvestment?: number | null
+    maxInvestment?: number | null
+    platformFeeBps?: number | null
     amountRequired: number
     description: string
     origin: string
     destination: string
+    originLat?: number | null
+    originLng?: number | null
+    destLat?: number | null
+    destLng?: number | null
     shipmentId?: string | null
     insuranceValue?: number | null
     transportMethod?: string | null
     riskScore?: number | null
+    maturityDate?: string | null
+    metalForm?: string | null
+    purityPercent?: number | null
+    karat?: number | null
+    grossWeightTroyOz?: number | null
+    refineryName?: string | null
+    refineryLocation?: string | null
   }
 }) {
   const router = useRouter()
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState("")
+  const [isGeocoding, setIsGeocoding] = useState(false)
   const [formData, setFormData] = useState({
     name: initial.name,
     type: initial.type,
     risk: initial.risk,
     targetApy: String(initial.targetApy ?? ""),
     duration: String(initial.duration ?? ""),
+    minInvestment: String(initial.minInvestment ?? 1000),
+    maxInvestment: initial.maxInvestment === null || initial.maxInvestment === undefined ? "" : String(initial.maxInvestment),
+    platformFeeBps: String(initial.platformFeeBps ?? 150),
     amountRequired: String(initial.amountRequired ?? ""),
     description: initial.description,
     origin: initial.origin,
     destination: initial.destination,
+    originLat: initial.originLat === null || initial.originLat === undefined ? "" : String(initial.originLat),
+    originLng: initial.originLng === null || initial.originLng === undefined ? "" : String(initial.originLng),
+    destLat: initial.destLat === null || initial.destLat === undefined ? "" : String(initial.destLat),
+    destLng: initial.destLng === null || initial.destLng === undefined ? "" : String(initial.destLng),
     shipmentId: initial.shipmentId ?? "",
     insuranceValue: initial.insuranceValue ?? "",
     transportMethod: initial.transportMethod ?? "",
     riskScore: initial.riskScore ?? "",
+    maturityDate: initial.maturityDate ? String(initial.maturityDate).slice(0, 10) : "",
+    metalForm: initial.metalForm ?? "",
+    purityPercent: initial.purityPercent === null || initial.purityPercent === undefined ? "" : String(initial.purityPercent),
+    karat: initial.karat === null || initial.karat === undefined ? "" : String(initial.karat),
+    grossWeightTroyOz:
+      initial.grossWeightTroyOz === null || initial.grossWeightTroyOz === undefined ? "" : String(initial.grossWeightTroyOz),
+    refineryName: initial.refineryName ?? "",
+    refineryLocation: initial.refineryLocation ?? "",
   })
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -80,7 +110,8 @@ export function EditDealForm({
 
   return (
     <form onSubmit={handleSubmit}>
-      <Card className="border-2">
+      <Card className="border-border bg-card relative overflow-hidden shadow-sm">
+        <div className="absolute top-0 right-0 w-64 h-64 bg-primary/5 rounded-full blur-[80px] pointer-events-none" />
         <CardHeader>
           <CardTitle>Edit Deal</CardTitle>
           <CardDescription>Update an existing commodity listing</CardDescription>
@@ -95,13 +126,13 @@ export function EditDealForm({
           <div className="grid gap-4 md:grid-cols-2">
             <div className="space-y-2">
               <Label htmlFor="name">Deal Name</Label>
-              <Input id="name" value={formData.name} onChange={(e) => setFormData({ ...formData, name: e.target.value })} />
+              <Input id="name" value={formData.name} onChange={(e) => setFormData({ ...formData, name: e.target.value })} className="bg-background border-border" />
             </div>
 
             <div className="space-y-2">
               <Label>Commodity Type</Label>
               <Select value={formData.type} onValueChange={(value) => setFormData({ ...formData, type: value })}>
-                <SelectTrigger>
+                <SelectTrigger className="bg-background border-border">
                   <SelectValue placeholder="Select type" />
                 </SelectTrigger>
                 <SelectContent>
@@ -115,7 +146,7 @@ export function EditDealForm({
             <div className="space-y-2">
               <Label>Risk Level</Label>
               <Select value={formData.risk} onValueChange={(value) => setFormData({ ...formData, risk: value })}>
-                <SelectTrigger>
+                <SelectTrigger className="bg-background border-border">
                   <SelectValue placeholder="Select risk" />
                 </SelectTrigger>
                 <SelectContent>
@@ -133,6 +164,7 @@ export function EditDealForm({
                 type="number"
                 value={formData.targetApy}
                 onChange={(e) => setFormData({ ...formData, targetApy: e.target.value })}
+                className="bg-background border-border"
               />
             </div>
 
@@ -143,6 +175,7 @@ export function EditDealForm({
                 type="number"
                 value={formData.duration}
                 onChange={(e) => setFormData({ ...formData, duration: e.target.value })}
+                className="bg-background border-border"
               />
             </div>
 
@@ -153,6 +186,56 @@ export function EditDealForm({
                 type="number"
                 value={formData.amountRequired}
                 onChange={(e) => setFormData({ ...formData, amountRequired: e.target.value })}
+                className="bg-background border-border"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="minInvestment">Minimum Investment ($)</Label>
+              <Input
+                id="minInvestment"
+                type="number"
+                step="0.01"
+                value={formData.minInvestment}
+                onChange={(e) => setFormData({ ...formData, minInvestment: e.target.value })}
+                className="bg-background border-border"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="maxInvestment">Maximum Investment ($)</Label>
+              <Input
+                id="maxInvestment"
+                type="number"
+                step="0.01"
+                value={formData.maxInvestment as any}
+                onChange={(e) => setFormData({ ...formData, maxInvestment: e.target.value })}
+                placeholder="(optional)"
+                className="bg-background border-border"
+              />
+              <div className="text-xs text-muted-foreground">Leave blank for no maximum per investor.</div>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="platformFeeBps">Platform Fee (bps)</Label>
+              <Input
+                id="platformFeeBps"
+                type="number"
+                value={formData.platformFeeBps}
+                onChange={(e) => setFormData({ ...formData, platformFeeBps: e.target.value })}
+                className="bg-background border-border"
+              />
+              <div className="text-xs text-muted-foreground">Basis points. 150 = 1.50%.</div>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="maturityDate">Maturity Date</Label>
+              <Input
+                id="maturityDate"
+                type="date"
+                value={formData.maturityDate as any}
+                onChange={(e) => setFormData({ ...formData, maturityDate: e.target.value })}
+                className="bg-background border-border"
               />
             </div>
           </div>
@@ -164,13 +247,14 @@ export function EditDealForm({
               value={formData.description}
               onChange={(e) => setFormData({ ...formData, description: e.target.value })}
               rows={4}
+              className="bg-background border-border"
             />
           </div>
 
           <div className="grid gap-4 md:grid-cols-2">
             <div className="space-y-2">
               <Label htmlFor="origin">Origin</Label>
-              <Input id="origin" value={formData.origin} onChange={(e) => setFormData({ ...formData, origin: e.target.value })} />
+              <Input id="origin" value={formData.origin} onChange={(e) => setFormData({ ...formData, origin: e.target.value })} className="bg-background border-border" />
             </div>
             <div className="space-y-2">
               <Label htmlFor="destination">Destination</Label>
@@ -178,6 +262,161 @@ export function EditDealForm({
                 id="destination"
                 value={formData.destination}
                 onChange={(e) => setFormData({ ...formData, destination: e.target.value })}
+                className="bg-background border-border"
+              />
+            </div>
+          </div>
+
+          {formData.type === "Metals" && (
+            <div className="grid gap-4 md:grid-cols-2">
+              <div className="md:col-span-2">
+                <div className="text-sm font-semibold">Precious metals specs</div>
+                <div className="text-xs text-muted-foreground">Bullion vs doré, purity/karat, and destination refinery.</div>
+              </div>
+
+              <div className="space-y-2">
+                <Label>Form</Label>
+                <Select value={formData.metalForm} onValueChange={(v) => setFormData({ ...formData, metalForm: v })}>
+                  <SelectTrigger className="bg-background border-border">
+                    <SelectValue placeholder="Select form" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="BULLION">Bullion</SelectItem>
+                    <SelectItem value="DORE">Doré</SelectItem>
+                    <SelectItem value="SCRAP">Scrap</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="purityPercent">Purity (%)</Label>
+                <Input
+                  id="purityPercent"
+                  type="number"
+                  step="0.01"
+                  value={formData.purityPercent as any}
+                  onChange={(e) => setFormData({ ...formData, purityPercent: e.target.value })}
+                  className="bg-background border-border"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="karat">Karat (optional)</Label>
+                <Input id="karat" type="number" value={formData.karat as any} onChange={(e) => setFormData({ ...formData, karat: e.target.value })} className="bg-background border-border" />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="grossWeightTroyOz">Gross weight (troy oz)</Label>
+                <Input
+                  id="grossWeightTroyOz"
+                  type="number"
+                  step="0.0001"
+                  value={formData.grossWeightTroyOz as any}
+                  onChange={(e) => setFormData({ ...formData, grossWeightTroyOz: e.target.value })}
+                  className="bg-background border-border"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="refineryName">Destination refinery</Label>
+                <Input id="refineryName" value={formData.refineryName} onChange={(e) => setFormData({ ...formData, refineryName: e.target.value })} className="bg-background border-border" />
+              </div>
+
+              <div className="space-y-2 md:col-span-2">
+                <Label htmlFor="refineryLocation">Refinery location</Label>
+                <Input
+                  id="refineryLocation"
+                  value={formData.refineryLocation}
+                  onChange={(e) => setFormData({ ...formData, refineryLocation: e.target.value })}
+                  className="bg-background border-border"
+                />
+              </div>
+            </div>
+          )}
+
+          <div className="rounded-lg border border-border bg-muted/20 p-3 flex items-center justify-between gap-3">
+            <div className="text-sm">
+              <div className="font-medium">Coordinates</div>
+              <div className="text-xs text-muted-foreground">Auto-fill from origin/destination names.</div>
+            </div>
+            <Button
+              type="button"
+              variant="outline"
+              className="bg-transparent border-border hover:bg-muted text-foreground"
+              disabled={isLoading || isGeocoding || !formData.origin.trim() || !formData.destination.trim()}
+              onClick={async () => {
+                setIsGeocoding(true)
+                setError("")
+                try {
+                  const [oRes, dRes] = await Promise.all([
+                    fetch(`/api/geocode?query=${encodeURIComponent(formData.origin.trim())}`),
+                    fetch(`/api/geocode?query=${encodeURIComponent(formData.destination.trim())}`),
+                  ])
+                  const oJson = await oRes.json()
+                  const dJson = await dRes.json()
+                  if (!oRes.ok) throw new Error(oJson.error || "Failed to geocode origin")
+                  if (!dRes.ok) throw new Error(dJson.error || "Failed to geocode destination")
+                  setFormData((prev) => ({
+                    ...prev,
+                    originLat: String(oJson.data.lat),
+                    originLng: String(oJson.data.lng),
+                    destLat: String(dJson.data.lat),
+                    destLng: String(dJson.data.lng),
+                  }))
+                } catch (e) {
+                  setError((e as Error).message)
+                } finally {
+                  setIsGeocoding(false)
+                }
+              }}
+            >
+              {isGeocoding ? "Geocoding..." : "Auto-fill coordinates"}
+            </Button>
+          </div>
+
+          <div className="grid gap-4 md:grid-cols-2">
+            <div className="space-y-2">
+              <Label htmlFor="originLat">Origin Lat</Label>
+              <Input
+                id="originLat"
+                type="number"
+                step="0.0001"
+                value={formData.originLat as any}
+                onChange={(e) => setFormData({ ...formData, originLat: e.target.value })}
+                className="bg-background border-border"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="originLng">Origin Lng</Label>
+              <Input
+                id="originLng"
+                type="number"
+                step="0.0001"
+                value={formData.originLng as any}
+                onChange={(e) => setFormData({ ...formData, originLng: e.target.value })}
+                className="bg-background border-border"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="destLat">Destination Lat</Label>
+              <Input
+                id="destLat"
+                type="number"
+                step="0.0001"
+                value={formData.destLat as any}
+                onChange={(e) => setFormData({ ...formData, destLat: e.target.value })}
+                className="bg-background border-border"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="destLng">Destination Lng</Label>
+              <Input
+                id="destLng"
+                type="number"
+                step="0.0001"
+                value={formData.destLng as any}
+                onChange={(e) => setFormData({ ...formData, destLng: e.target.value })}
+                className="bg-background border-border"
               />
             </div>
           </div>
@@ -189,6 +428,7 @@ export function EditDealForm({
                 id="shipmentId"
                 value={formData.shipmentId as any}
                 onChange={(e) => setFormData({ ...formData, shipmentId: e.target.value })}
+                className="bg-background border-border"
               />
             </div>
             <div className="space-y-2">
@@ -198,6 +438,7 @@ export function EditDealForm({
                 type="number"
                 value={formData.insuranceValue as any}
                 onChange={(e) => setFormData({ ...formData, insuranceValue: e.target.value })}
+                className="bg-background border-border"
               />
             </div>
             <div className="space-y-2">
@@ -206,6 +447,7 @@ export function EditDealForm({
                 id="transportMethod"
                 value={formData.transportMethod as any}
                 onChange={(e) => setFormData({ ...formData, transportMethod: e.target.value })}
+                className="bg-background border-border"
               />
             </div>
             <div className="space-y-2">
@@ -215,11 +457,12 @@ export function EditDealForm({
                 type="number"
                 value={formData.riskScore as any}
                 onChange={(e) => setFormData({ ...formData, riskScore: e.target.value })}
+                className="bg-background border-border"
               />
             </div>
           </div>
 
-          <Button type="submit" disabled={isLoading} className="bg-emerald-600 hover:bg-emerald-700 text-white">
+          <Button type="submit" disabled={isLoading} className="bg-primary hover:bg-primary/90 text-primary-foreground font-bold shadow-lg shadow-primary/20">
             {isLoading ? (
               <>
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />

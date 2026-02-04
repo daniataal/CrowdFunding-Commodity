@@ -39,6 +39,9 @@ enum CommodityStatus {
   FUNDING
   ACTIVE
   IN_TRANSIT
+  ARRIVED
+  INSPECTED
+  RELEASED
   SETTLED
   CANCELLED
 }
@@ -59,6 +62,35 @@ enum TransactionStatus {
   CANCELLED
 }
 
+enum LedgerAccountType {
+  ASSET
+  LIABILITY
+  INCOME
+  EXPENSE
+  EQUITY
+}
+
+enum LedgerEntryType {
+  DEPOSIT
+  WITHDRAWAL
+  INVESTMENT
+  PAYOUT
+  REFUND
+  ADJUSTMENT
+}
+
+enum IdempotencyStatus {
+  IN_PROGRESS
+  COMPLETED
+  FAILED
+}
+
+enum ShipmentEventType {
+  DEPARTED
+  IN_TRANSIT
+  ARRIVED
+}
+
 enum DocumentType {
   BILL_OF_LADING
   INSURANCE_CERTIFICATE
@@ -69,6 +101,34 @@ enum DocumentType {
   OTHER
 }
 
+enum ConsentType {
+  RISK_DISCLOSURE
+  TERMS_OF_SERVICE
+}
+
+enum AlertSeverity {
+  INFO
+  WARNING
+  CRITICAL
+}
+
+enum AlertType {
+  SHIPMENT_DELAY
+  KYC_PENDING_TOO_LONG
+  WALLET_ANOMALY
+}
+
+enum ApprovalStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+enum AdminApprovalAction {
+  DISTRIBUTE_PAYOUTS
+  WALLET_ADJUSTMENT
+}
+
 model User {
   id            String    @id @default(cuid())
   email         String    @unique
@@ -77,6 +137,10 @@ model User {
   role          UserRole  @default(USER)
   kycStatus     KycStatus @default(NOT_STARTED) @map("kyc_status")
   walletBalance Decimal   @default(0) @map("wallet_balance") @db.Decimal(12, 2)
+  walletFrozen  Boolean   @default(false) @map("wallet_frozen")
+  walletFrozenAt DateTime? @map("wallet_frozen_at")
+  disabled      Boolean   @default(false)
+  disabledAt    DateTime? @map("disabled_at")
   avatar        String?
   phone         String?
   company       String?
@@ -97,8 +161,108 @@ model User {
   transactions  Transaction[]
   documents     Document[]
   auditLogs     AuditLog[]
+  ledgerAccounts LedgerAccount[]
+  ledgerEntries  LedgerEntry[]
+  idempotencyKeys IdempotencyKey[]
+  consents      UserConsent[]
 
   @@map("users")
+}
+
+model LedgerAccount {
+  id          String            @id @default(cuid())
+  key         String            @unique @default(cuid())
+  type        LedgerAccountType
+  name        String
+  currency    String            @default("USD")
+  userId      String?           @map("user_id")
+  commodityId String?           @map("commodity_id")
+  createdAt   DateTime          @default(now()) @map("created_at")
+  updatedAt   DateTime          @updatedAt @map("updated_at")
+
+  user        User?             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  commodity   Commodity?        @relation(fields: [commodityId], references: [id], onDelete: Cascade)
+  lines       LedgerLine[]
+
+  @@index([userId])
+  @@index([commodityId])
+  @@map("ledger_accounts")
+}
+
+model LedgerEntry {
+  id            String          @id @default(cuid())
+  type          LedgerEntryType
+  currency      String          @default("USD")
+  description   String
+  userId        String?         @map("user_id")
+  commodityId   String?         @map("commodity_id")
+  transactionId String?         @map("transaction_id")
+  idempotencyKeyId String?      @map("idempotency_key_id")
+  metadata      Json?
+  createdAt     DateTime        @default(now()) @map("created_at")
+
+  user          User?           @relation(fields: [userId], references: [id], onDelete: SetNull)
+  commodity     Commodity?      @relation(fields: [commodityId], references: [id], onDelete: SetNull)
+  transaction   Transaction?    @relation(fields: [transactionId], references: [id], onDelete: SetNull)
+  idempotencyKey IdempotencyKey? @relation(fields: [idempotencyKeyId], references: [id], onDelete: SetNull)
+  lines         LedgerLine[]
+
+  @@index([userId])
+  @@index([commodityId])
+  @@index([transactionId])
+  @@map("ledger_entries")
+}
+
+model LedgerLine {
+  id        String        @id @default(cuid())
+  entryId   String        @map("entry_id")
+  accountId String        @map("account_id")
+  debit     Decimal       @default(0) @db.Decimal(12, 2)
+  credit    Decimal       @default(0) @db.Decimal(12, 2)
+
+  entry     LedgerEntry   @relation(fields: [entryId], references: [id], onDelete: Cascade)
+  account   LedgerAccount @relation(fields: [accountId], references: [id], onDelete: Cascade)
+
+  @@index([entryId])
+  @@index([accountId])
+  @@map("ledger_lines")
+}
+
+model IdempotencyKey {
+  id           String            @id @default(cuid())
+  userId       String            @map("user_id")
+  key          String
+  scope        String
+  status       IdempotencyStatus @default(IN_PROGRESS)
+  requestHash  String?
+  responseJson Json?
+  error        String?
+  createdAt    DateTime          @default(now()) @map("created_at")
+  updatedAt    DateTime          @updatedAt @map("updated_at")
+
+  user         User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  ledgerEntries LedgerEntry[]
+
+  @@unique([userId, scope, key])
+  @@index([userId, status])
+  @@map("idempotency_keys")
+}
+
+model ShipmentEvent {
+  id          String           @id @default(cuid())
+  commodityId String           @map("commodity_id")
+  type        ShipmentEventType
+  occurredAt  DateTime         @map("occurred_at")
+  description String
+  source      String           @default("SIMULATED")
+  raw         Json?
+  createdAt   DateTime         @default(now()) @map("created_at")
+
+  commodity   Commodity        @relation(fields: [commodityId], references: [id], onDelete: Cascade)
+
+  @@index([commodityId, occurredAt])
+  @@unique([commodityId, type, occurredAt])
+  @@map("shipment_events")
 }
 
 model Commodity {
@@ -109,6 +273,13 @@ model Commodity {
   risk            RiskLevel
   targetApy       Decimal         @map("target_apy") @db.Decimal(5, 2)
   duration        Int             // days
+  minInvestment   Decimal         @default(1000) @map("min_investment") @db.Decimal(12, 2)
+  maxInvestment   Decimal?        @map("max_investment") @db.Decimal(12, 2)
+  platformFeeBps  Int             @default(150) @map("platform_fee_bps") // 150 = 1.50%
+  originLat       Float?          @map("origin_lat")
+  originLng       Float?          @map("origin_lng")
+  destLat         Float?          @map("dest_lat")
+  destLng         Float?          @map("dest_lng")
   amountRequired  Decimal         @map("amount_required") @db.Decimal(12, 2)
   currentAmount   Decimal         @default(0) @map("current_amount") @db.Decimal(12, 2)
   description     String          @db.Text
@@ -120,14 +291,81 @@ model Commodity {
   transportMethod String?         @map("transport_method")
   maturityDate    DateTime?       @map("maturity_date")
   riskScore       Decimal?        @map("risk_score") @db.Decimal(3, 2)
+  metalForm       String?         @map("metal_form")
+  purityPercent   Float?          @map("purity_percent")
+  karat           Int?            @map("karat")
+  grossWeightTroyOz Float?        @map("gross_weight_troy_oz")
+  refineryName    String?         @map("refinery_name")
+  refineryLocation String?        @map("refinery_location")
   createdAt       DateTime        @default(now()) @map("created_at")
   updatedAt       DateTime        @updatedAt @map("updated_at")
 
   investments     Investment[]
   documents       Document[]
   transactions    Transaction[]
+  shipmentEvents  ShipmentEvent[]
+  ledgerEntries   LedgerEntry[]
+  ledgerAccounts  LedgerAccount[]
+  consents        UserConsent[]
 
   @@map("commodities")
+}
+
+model UserConsent {
+  id          String      @id @default(cuid())
+  userId      String      @map("user_id")
+  commodityId String?     @map("commodity_id")
+  type        ConsentType
+  version     String
+  acceptedAt  DateTime    @default(now()) @map("accepted_at")
+  ipAddress   String?     @map("ip_address")
+  userAgent   String?     @map("user_agent")
+  context     Json?
+
+  user        User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  commodity   Commodity?  @relation(fields: [commodityId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, commodityId, type, version])
+  @@index([userId, type])
+  @@index([commodityId])
+  @@map("user_consents")
+}
+
+model SystemAlert {
+  id         String        @id @default(cuid())
+  key        String        @unique
+  severity   AlertSeverity
+  type       AlertType
+  title      String
+  message    String        @db.Text
+  entityType String?       @map("entity_type")
+  entityId   String?       @map("entity_id")
+  metadata   Json?
+  createdAt  DateTime      @default(now()) @map("created_at")
+  resolvedAt DateTime?     @map("resolved_at")
+
+  @@index([resolvedAt])
+  @@index([type, createdAt])
+  @@map("system_alerts")
+}
+
+model AdminApprovalRequest {
+  id          String             @id @default(cuid())
+  action      AdminApprovalAction
+  status      ApprovalStatus     @default(PENDING)
+  entityType  String?            @map("entity_type")
+  entityId    String?            @map("entity_id")
+  payload     Json
+  requestedBy String             @map("requested_by")
+  approvedBy  String?            @map("approved_by")
+  approvedAt  DateTime?          @map("approved_at")
+  rejectedBy  String?            @map("rejected_by")
+  rejectedAt  DateTime?          @map("rejected_at")
+  createdAt   DateTime           @default(now()) @map("created_at")
+
+  @@index([status, createdAt])
+  @@index([action, createdAt])
+  @@map("admin_approval_requests")
 }
 
 model Investment {
@@ -165,6 +403,7 @@ model Transaction {
 
   user          User              @relation(fields: [userId], references: [id], onDelete: Cascade)
   commodity     Commodity?        @relation(fields: [commodityId], references: [id], onDelete: SetNull)
+  ledgerEntries LedgerEntry[]
 
   @@index([userId])
   @@index([commodityId])

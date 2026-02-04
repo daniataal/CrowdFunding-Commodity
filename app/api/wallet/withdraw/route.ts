@@ -6,6 +6,7 @@ import { z } from "zod"
 const schema = z.object({
   amount: z.number().positive(),
   description: z.string().optional(),
+  idempotencyKey: z.string().optional(),
 })
 
 export async function POST(request: NextRequest) {
@@ -16,10 +17,13 @@ export async function POST(request: NextRequest) {
 
   const body = await request.json()
   const validated = schema.parse(body)
+  const headerKey = request.headers.get("Idempotency-Key") || request.headers.get("X-Idempotency-Key")
+  const idempotencyKey = headerKey ?? validated.idempotencyKey
 
   const fd = new FormData()
   fd.set("amount", String(validated.amount))
   if (validated.description) fd.set("description", validated.description)
+  if (idempotencyKey) fd.set("idempotencyKey", idempotencyKey)
 
   const result = await withdrawFunds(fd)
   if ("error" in result) {

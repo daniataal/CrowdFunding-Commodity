@@ -65,6 +65,7 @@ RUN mkdir -p /app/node_modules/.bin \
   && ln -sf /prisma-cli/node_modules/.bin/prisma /app/node_modules/.bin/prisma
 
 # Set correct permissions (must be done as root before switching users)
+RUN mkdir -p /app/public/uploads
 RUN chown -R nextjs:nodejs /app /prisma-cli
 
 USER nextjs

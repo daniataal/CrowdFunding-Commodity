@@ -1,0 +1,61 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: commodity-postgres
+    restart: always
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: commodity_password
+      POSTGRES_DB: commodity_crowdfunding
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    container_name: commodity-redis
+    restart: always
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  app:
+    # Uses the pre-built image from Docker Hub registry
+    image: ${DOCKER_IMAGE_NAME:-myuser/commodity-crowdfunding}:latest
+    container_name: commodity-app
+    restart: always
+    environment:
+      DATABASE_URL: postgresql://postgres:commodity_password@postgres:5432/commodity_crowdfunding?schema=public
+      # Secrets should be passed via .env file on the server
+      AUTH_SECRET: ${AUTH_SECRET}
+      NEXTAUTH_URL: ${NEXTAUTH_URL}
+      AUTH_TRUST_HOST: "true"
+      NODE_ENV: production
+    ports:
+      - "3000:3000"
+    volumes:
+      - uploads:/app/public/uploads
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    # Run migrations on start
+    command: sh -c "/app/node_modules/.bin/prisma migrate deploy && node server.js"
+
+volumes:
+  postgres_data:
+  redis_data:
+  uploads:

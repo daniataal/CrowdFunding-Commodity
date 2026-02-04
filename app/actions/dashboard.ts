@@ -50,7 +50,7 @@ export async function getPortfolioSummary() {
 
     for (const investment of investments) {
       const commodity = investment.commodity
-      
+
       // If commodity is settled, use actual return
       if (commodity.status === "SETTLED" && investment.actualReturn) {
         totalProfit += Number(investment.actualReturn)
@@ -127,7 +127,7 @@ export async function getPerformanceData() {
     // Get historical portfolio values (simplified - in production, store historical snapshots)
     // For now, we'll calculate current value and create a mock historical trend
     const summary = await getPortfolioSummary()
-    
+
     if (!summary.success || "error" in summary) {
       return { error: "Failed to calculate performance" }
     }
@@ -142,9 +142,10 @@ export async function getPerformanceData() {
       const date = new Date()
       date.setMonth(date.getMonth() - i)
       const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}`
-      
-      // Simulate growth (simplified)
-      const growthFactor = 1 + (months - i) * 0.03
+
+      // Simulate growth: older points (higher i) should be lower.
+      // i = months ago. i=6 (oldest), i=0 (today).
+      const growthFactor = 1 + i * 0.03
       const portfolioValue = currentValue / growthFactor
       const marketValue = portfolioValue * 0.95 // Market slightly underperforms
 
