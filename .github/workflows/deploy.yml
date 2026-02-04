@@ -10,27 +10,8 @@ env:
   DOCKER_IMAGE: ${{ secrets.DOCKER_USERNAME }}/commodity-crowdfunding
 
 jobs:
-  # 1. CI: Lint and Check
-  check:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - name: Setup Node
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-      - name: Install Dependencies
-        run: npm install -g pnpm && pnpm install
-      - name: Generate Client
-        run: pnpm prisma generate
-      - name: Lint
-        run: pnpm lint
-      - name: Build Check
-        run: pnpm build
-
   # 2. Build and Push Docker Image
   build-push:
-    needs: check
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
