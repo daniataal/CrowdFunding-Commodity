@@ -32,16 +32,15 @@ services:
       retries: 5
 
   app:
-    build:
-      context: .
-      dockerfile: Dockerfile
+    # Uses the pre-built image from Docker Hub registry
+    image: ${DOCKER_IMAGE_NAME:-myuser/commodity-crowdfunding}:latest
     container_name: commodity-app
     restart: always
     environment:
       DATABASE_URL: postgresql://postgres:commodity_password@postgres:5432/commodity_crowdfunding?schema=public
-      # You should override these in specific deployment environments
-      AUTH_SECRET: ${AUTH_SECRET:-change-me-in-production}
-      NEXTAUTH_URL: ${NEXTAUTH_URL:-http://localhost:3000}
+      # Secrets should be passed via .env file on the server
+      AUTH_SECRET: ${AUTH_SECRET}
+      NEXTAUTH_URL: ${NEXTAUTH_URL}
       AUTH_TRUST_HOST: "true"
       NODE_ENV: production
     ports:
@@ -53,11 +52,10 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
-    # Initialize DB schema if needed on startup
+    # Run migrations on start
     command: sh -c "/app/node_modules/.bin/prisma migrate deploy && node server.js"
 
 volumes:
   postgres_data:
   redis_data:
   uploads:
-
