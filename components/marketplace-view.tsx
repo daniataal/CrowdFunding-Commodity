@@ -170,7 +170,7 @@ export function MarketplaceView({
                         commodity.risk === "Low"
                           ? "border-green-500/30 text-green-500 bg-green-500/5"
                           : commodity.risk === "Medium"
-                            ? "border-orange-500/30 text-orange-500 bg-orange-500/5"
+                            ? "border-accent/30 text-accent bg-accent/5"
                             : "border-primary/30 text-primary bg-primary/5"
                       }
                     >

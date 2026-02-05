@@ -58,7 +58,7 @@ export function OnboardingTour({ onComplete, onSkip }: OnboardingTourProps) {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-sm">
-      <Card className="relative w-full max-w-2xl border-2 border-emerald-500/20 shadow-xl">
+      <Card className="relative w-full max-w-2xl border-2 border-primary/20 shadow-xl">
         <Button
           variant="ghost"
           size="icon"
@@ -73,9 +73,8 @@ export function OnboardingTour({ onComplete, onSkip }: OnboardingTourProps) {
             {steps.map((_, idx) => (
               <div
                 key={idx}
-                className={`h-2 flex-1 rounded-full transition-colors ${
-                  idx <= currentStep ? "bg-emerald-500" : "bg-muted"
-                }`}
+                className={`h-2 flex-1 rounded-full transition-colors ${idx <= currentStep ? "bg-primary" : "bg-muted"
+                  }`}
               />
             ))}
           </div>
@@ -94,7 +93,7 @@ export function OnboardingTour({ onComplete, onSkip }: OnboardingTourProps) {
               <Button variant="outline" onClick={onSkip} className="bg-transparent">
                 Skip Tour
               </Button>
-              <Button onClick={handleNext} className="gap-2 bg-emerald-600 hover:bg-emerald-500">
+              <Button onClick={handleNext} className="gap-2 bg-primary hover:bg-primary/90">
                 {currentStep < steps.length - 1 ? (
                   <>
                     Next <ArrowRight className="h-4 w-4" />

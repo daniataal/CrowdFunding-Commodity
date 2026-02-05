@@ -52,7 +52,7 @@ export default function PublicMarketplacePage() {
             <Button asChild variant="outline" className="bg-transparent">
               <Link href="/login">Login</Link>
             </Button>
-            <Button asChild className="bg-emerald-600 hover:bg-emerald-700 text-white">
+            <Button asChild className="bg-primary hover:bg-primary/90 text-primary-foreground">
               <Link href="/register">Create account</Link>
             </Button>
           </div>
@@ -67,9 +67,8 @@ export default function PublicMarketplacePage() {
                   <button
                     key={t}
                     onClick={() => setFilterType(t)}
-                    className={`w-full text-left px-3 py-2 rounded-lg text-sm transition-colors ${
-                      filterType === t ? "bg-primary text-primary-foreground" : "hover:bg-muted"
-                    }`}
+                    className={`w-full text-left px-3 py-2 rounded-lg text-sm transition-colors ${filterType === t ? "bg-primary text-primary-foreground" : "hover:bg-muted"
+                      }`}
                   >
                     {t}
                   </button>
@@ -84,9 +83,8 @@ export default function PublicMarketplacePage() {
                   <button
                     key={r}
                     onClick={() => setFilterRisk(r)}
-                    className={`w-full text-left px-3 py-2 rounded-lg text-sm transition-colors ${
-                      filterRisk === r ? "bg-primary text-primary-foreground" : "hover:bg-muted"
-                    }`}
+                    className={`w-full text-left px-3 py-2 rounded-lg text-sm transition-colors ${filterRisk === r ? "bg-primary text-primary-foreground" : "hover:bg-muted"
+                      }`}
                   >
                     {r}
                   </button>
@@ -108,8 +106,8 @@ export default function PublicMarketplacePage() {
                 <Link key={c.id} href={`/marketplace/${c.id}`} className="block">
                   <Card className="p-6 border-2 bg-card/50 backdrop-blur hover:border-primary/50 transition-colors">
                     <div className="flex items-start justify-between mb-4">
-                      <div className="h-12 w-12 rounded-lg bg-amber-500/10 flex items-center justify-center">
-                        <Boxes className="h-6 w-6 text-amber-500" />
+                      <div className="h-12 w-12 rounded-lg bg-accent/10 flex items-center justify-center">
+                        <Boxes className="h-6 w-6 text-accent" />
                       </div>
                       <Badge variant="outline">{c.risk} Risk</Badge>
                     </div>
@@ -119,7 +117,7 @@ export default function PublicMarketplacePage() {
 
                     <div className="mt-4 grid grid-cols-3 gap-4">
                       <div>
-                        <div className="flex items-center text-emerald-500 mb-1">
+                        <div className="flex items-center text-primary mb-1">
                           <TrendingUp className="h-3 w-3 mr-1" />
                           <span className="text-xs font-medium">APY</span>
                         </div>
@@ -154,7 +152,7 @@ export default function PublicMarketplacePage() {
                     </div>
 
                     <div className="mt-4">
-                      <Button className="w-full bg-emerald-600 hover:bg-emerald-700 text-white">View Deal</Button>
+                      <Button className="w-full bg-primary hover:bg-primary/90 text-primary-foreground">View Deal</Button>
                     </div>
                   </Card>
                 </Link>

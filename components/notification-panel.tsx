@@ -28,15 +28,15 @@ export function NotificationPanel() {
   const getIcon = (type: NotificationItem["type"]) => {
     switch (type) {
       case "dividend":
-        return <DollarSign className="h-4 w-4 text-emerald-500" />
+        return <DollarSign className="h-4 w-4 text-accent" />
       case "shipment":
-        return <Package className="h-4 w-4 text-blue-500" />
+        return <Package className="h-4 w-4 text-primary" />
       case "investment":
-        return <TrendingUp className="h-4 w-4 text-purple-500" />
+        return <TrendingUp className="h-4 w-4 text-primary" />
       case "alert":
-        return <AlertTriangle className="h-4 w-4 text-amber-500" />
+        return <AlertTriangle className="h-4 w-4 text-accent" />
       case "system":
-        return <Settings className="h-4 w-4 text-slate-500" />
+        return <Settings className="h-4 w-4 text-muted-foreground" />
     }
   }
 
@@ -100,7 +100,7 @@ export function NotificationPanel() {
         <Button variant="ghost" size="icon" className="relative">
           <Bell className="h-5 w-5" />
           {unreadCount > 0 && (
-            <Badge className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 p-0 text-xs text-white">
+            <Badge className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-primary p-0 text-xs text-primary-foreground">
               {unreadCount}
             </Badge>
           )}
@@ -117,7 +117,7 @@ export function NotificationPanel() {
               variant="ghost"
               size="sm"
               onClick={() => markAllAsReadMutation.mutate()}
-              className="h-8 text-xs"
+              className="h-8 text-xs text-primary hover:text-primary/80"
               disabled={markAllAsReadMutation.isPending}
             >
               Mark all read
@@ -139,14 +139,14 @@ export function NotificationPanel() {
               {notifications.map((notification) => (
                 <div
                   key={notification.id}
-                  className={`group relative p-4 transition-colors hover:bg-muted/50 ${!notification.read ? "bg-emerald-500/5" : ""}`}
+                  className={`group relative p-4 transition-colors hover:bg-muted/50 ${!notification.read ? "bg-primary/5" : ""}`}
                 >
                   <div className="flex gap-3">
                     <div className="mt-0.5">{getIcon(notification.type)}</div>
                     <div className="flex-1 space-y-1">
                       <div className="flex items-start justify-between gap-2">
                         <p className="text-sm font-medium leading-tight">{notification.title}</p>
-                        {!notification.read && <div className="h-2 w-2 flex-shrink-0 rounded-full bg-emerald-500" />}
+                        {!notification.read && <div className="h-2 w-2 flex-shrink-0 rounded-full bg-primary" />}
                       </div>
                       <p className="text-sm text-muted-foreground">{notification.message}</p>
                       <p className="text-xs text-muted-foreground">{formatTimestamp(notification.timestamp)}</p>
@@ -167,7 +167,7 @@ export function NotificationPanel() {
                     <Button
                       variant="ghost"
                       size="icon"
-                      className="h-6 w-6 text-red-500 hover:text-red-400"
+                      className="h-6 w-6 text-destructive hover:text-destructive/80"
                       onClick={() => deleteNotificationMutation.mutate(notification.id)}
                       disabled={deleteNotificationMutation.isPending}
                     >

@@ -208,7 +208,7 @@ export function DealDetailView({ commodity }: { commodity: MarketplaceCommodity 
         <TabsContent value="financials" className="space-y-6 mt-6 animate-in fade-in slide-in-from-bottom-2 duration-300">
           <Card className="p-6 border border-white/10 bg-[#0A0A0A] rounded-2xl">
             <h3 className="font-semibold mb-6 flex items-center text-white text-lg">
-              <span className="text-amber-500 mr-2">$</span> Cost Breakdown
+              <span className="text-accent mr-2">$</span> Cost Breakdown
             </h3>
             <div className="space-y-5">
               <div className="flex justify-between items-center text-sm">
@@ -217,7 +217,7 @@ export function DealDetailView({ commodity }: { commodity: MarketplaceCommodity 
               </div>
               <div className="flex justify-between items-center text-sm">
                 <span className="text-muted-foreground">Already Funded</span>
-                <span className="font-bold text-emerald-500 text-base">${commodity.currentAmount.toLocaleString()}</span>
+                <span className="font-bold text-primary text-base">${commodity.currentAmount.toLocaleString()}</span>
               </div>
               <div className="flex justify-between items-center text-sm">
                 <span className="text-muted-foreground">Remaining</span>
@@ -261,8 +261,8 @@ export function DealDetailView({ commodity }: { commodity: MarketplaceCommodity 
             )}
 
             {isAuthed && !kycApproved && (
-              <Alert className="mb-4 border-amber-500/50 bg-amber-500/10 relative z-10">
-                <AlertDescription className="text-amber-500">
+              <Alert className="mb-4 border-accent/50 bg-accent/10 relative z-10">
+                <AlertDescription className="text-accent">
                   KYC approval is required before investing.
                 </AlertDescription>
               </Alert>
