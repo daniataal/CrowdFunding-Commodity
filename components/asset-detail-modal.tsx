@@ -186,9 +186,9 @@ export function AssetDetailModal({ commodity, open, onOpenChange }: AssetDetailM
             <div className="py-8 text-sm text-muted-foreground text-center">Select a marketplace deal to view details.</div>
           ) : showSuccess ? (
             <div className="flex flex-col items-center justify-center py-16 text-center space-y-8 relative overflow-hidden">
-              <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-64 h-64 bg-emerald-500/10 rounded-full blur-[80px] pointer-events-none" />
-              <div className="h-24 w-24 rounded-full bg-emerald-500/10 flex items-center justify-center animate-in zoom-in duration-500 border border-emerald-500/20 shadow-[0_0_30px_rgba(16,185,129,0.2)]">
-                <Shield className="h-12 w-12 text-emerald-500" />
+              <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-64 h-64 bg-primary/10 rounded-full blur-[80px] pointer-events-none" />
+              <div className="h-24 w-24 rounded-full bg-primary/10 flex items-center justify-center animate-in zoom-in duration-500 border border-primary/20 shadow-[0_0_30px_rgba(239,68,68,0.2)]">
+                <Shield className="h-12 w-12 text-primary" />
               </div>
               <div className="space-y-2 relative z-10">
                 <h2 className="text-4xl font-bold text-white tracking-tight">Investment Confirmed!</h2>
@@ -204,7 +204,7 @@ export function AssetDetailModal({ commodity, open, onOpenChange }: AssetDetailM
                 </div>
                 <div className="flex justify-between text-sm mb-3">
                   <span className="text-muted-foreground">Ownership</span>
-                  <span className="font-bold text-emerald-500">
+                  <span className="font-bold text-accent">
                     {((Number(investAmount) / commodity.amountRequired) * 100).toFixed(4)}%
                   </span>
                 </div>
@@ -218,7 +218,7 @@ export function AssetDetailModal({ commodity, open, onOpenChange }: AssetDetailM
                 <Button className="flex-1 bg-transparent border border-white/10 hover:bg-white/5 text-white" variant="outline" onClick={resetModal}>
                   Close
                 </Button>
-                <Button className="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white shadow-lg shadow-emerald-500/20" onClick={resetModal}>
+                <Button className="flex-1 bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg shadow-primary/20" onClick={resetModal}>
                   View Portfolio
                 </Button>
               </div>
