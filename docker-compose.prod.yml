@@ -44,8 +44,9 @@ services:
       NEXTAUTH_URL: ${NEXTAUTH_URL}
       AUTH_TRUST_HOST: "true"
       NODE_ENV: production
-    # ports:
-    #   - "3000:3000" # Exposed via Caddy instead
+    ports:
+      - "3000:3000" # Keep exposed for debugging/direct access
+      # - "3000:3000" # Exposed via Caddy instead
     volumes:
       - uploads:/app/public/uploads
     depends_on:
