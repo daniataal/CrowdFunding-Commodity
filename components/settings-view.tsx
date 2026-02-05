@@ -218,9 +218,9 @@ export function SettingsView({
   const kycStatusBadge = useMemo(() => {
     const cls =
       kycStatus === "APPROVED"
-        ? "border-emerald-500/50 text-emerald-500"
+        ? "border-primary/50 text-primary"
         : kycStatus === "PENDING"
-          ? "border-amber-500/50 text-amber-500"
+          ? "border-accent/50 text-accent"
           : kycStatus === "REJECTED"
             ? "border-red-500/50 text-red-500"
             : "border-slate-500/30 text-muted-foreground"
@@ -405,7 +405,7 @@ export function SettingsView({
               <Button
                 onClick={handleSave}
                 disabled={isSaving}
-                className="gap-2 bg-primary hover:bg-red-600 text-white font-bold shadow-lg shadow-red-500/20 px-8"
+                className="gap-2 bg-primary hover:bg-primary/90 text-primary-foreground font-bold shadow-lg shadow-primary/20 px-8"
               >
                 <Save className="h-4 w-4" />
                 {isSaving ? "Saving..." : "Save Changes"}
@@ -472,8 +472,8 @@ export function SettingsView({
               )}
 
               {kycStatus === "PENDING" && (
-                <Alert className="bg-amber-500/10 border-amber-500/20">
-                  <AlertDescription className="text-amber-500">
+                <Alert className="bg-accent/10 border-accent/20">
+                  <AlertDescription className="text-accent">
                     Your documents are being reviewed. You can still resubmit if you need to correct something.
                   </AlertDescription>
                 </Alert>
@@ -546,7 +546,7 @@ export function SettingsView({
 
                   <div className="pt-2">
                     <Button
-                      className="bg-emerald-600 hover:bg-emerald-500"
+                      className="bg-primary hover:bg-primary/90"
                       disabled={kycSubmitDisabled || uploadKycMutation.isPending || !idFile || !addressFile}
                       onClick={() => uploadKycMutation.mutate()}
                     >
@@ -591,7 +591,7 @@ export function SettingsView({
                         </div>
                         <div className="shrink-0">
                           {d.verified ? (
-                            <Badge className="bg-emerald-600">Verified</Badge>
+                            <Badge className="bg-primary">Verified</Badge>
                           ) : (
                             <Badge variant="outline">Unverified</Badge>
                           )}
@@ -641,7 +641,7 @@ export function SettingsView({
                 />
               </div>
               <Button
-                className="bg-emerald-600 hover:bg-emerald-500"
+                className="bg-primary hover:bg-primary/90"
                 onClick={handleChangePassword}
                 disabled={changePasswordMutation.isPending}
               >
@@ -666,8 +666,8 @@ export function SettingsView({
                 <Switch checked={twoFactorEnabled} onCheckedChange={setTwoFactorEnabled} />
               </div>
               {twoFactorEnabled && (
-                <div className="rounded-lg border border-emerald-500/20 bg-emerald-500/10 p-4">
-                  <div className="mb-2 flex items-center gap-2 text-sm font-medium text-emerald-500">
+                <div className="rounded-lg border border-primary/20 bg-primary/10 p-4">
+                  <div className="mb-2 flex items-center gap-2 text-sm font-medium text-primary">
                     <Shield className="h-4 w-4" />
                     2FA Enabled
                   </div>
@@ -716,7 +716,7 @@ export function SettingsView({
                       {currentSessionQuery.data?.ip ? ` • ${currentSessionQuery.data.ip}` : ""}
                     </div>
                   </div>
-                  <div className="text-xs text-emerald-500">Active now</div>
+                  <div className="text-xs text-primary">Active now</div>
                 </div>
               )}
             </CardContent>
@@ -780,7 +780,7 @@ export function SettingsView({
           </Card>
 
           <div>
-            <Button onClick={handleSave} disabled={isSaving} className="bg-emerald-600 hover:bg-emerald-500">
+            <Button onClick={handleSave} disabled={isSaving} className="bg-primary hover:bg-primary/90">
               {isSaving ? "Saving..." : "Save Notification Settings"}
             </Button>
           </div>
@@ -842,7 +842,7 @@ export function SettingsView({
                 </Select>
               </div>
 
-              <Button onClick={handleSave} className="bg-emerald-600 hover:bg-emerald-500">
+              <Button onClick={handleSave} className="bg-primary hover:bg-primary/90">
                 Save Preferences
               </Button>
             </CardContent>
@@ -894,9 +894,9 @@ export function SettingsView({
 
                     const statusColor =
                       t.status === "COMPLETED"
-                        ? "text-emerald-500"
+                        ? "text-primary"
                         : t.status === "PENDING"
-                          ? "text-amber-500"
+                          ? "text-accent"
                           : "text-red-500"
 
                     return (
