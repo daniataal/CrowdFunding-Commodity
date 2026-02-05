@@ -21,7 +21,7 @@ export function PublicHeader() {
             </Link>
           </div>
 
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-2 sm:gap-4">
             <nav className="hidden md:flex gap-1">
               <Button asChild variant="ghost" className="text-sm font-medium text-muted-foreground hover:text-white">
                 <Link href="/how-it-works">How it Works</Link>
@@ -31,10 +31,10 @@ export function PublicHeader() {
               </Button>
             </nav>
             <div className="mx-2 h-4 w-px bg-white/10 hidden sm:block" />
-            <Button asChild variant="ghost" className="text-white hover:bg-white/10">
+            <Button asChild variant="ghost" className="text-white hover:bg-white/10 px-2 sm:px-4">
               <Link href="/login">Login</Link>
             </Button>
-            <Button asChild className="bg-primary hover:bg-red-600 text-white shadow-[0_0_15px_rgba(239,68,68,0.4)] hover:shadow-[0_0_25px_rgba(239,68,68,0.6)] rounded-full px-6 font-bold transition-all">
+            <Button asChild className="bg-primary hover:bg-red-600 text-white shadow-[0_0_15px_rgba(239,68,68,0.4)] hover:shadow-[0_0_25px_rgba(239,68,68,0.6)] rounded-full px-4 sm:px-6 font-bold transition-all text-sm sm:text-base whitespace-nowrap">
               <Link href="/register">Get Started</Link>
             </Button>
           </div>

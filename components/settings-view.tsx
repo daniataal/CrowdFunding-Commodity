@@ -100,6 +100,47 @@ export function SettingsView({
     },
   })
 
+  const billingMethodsQuery = useQuery({
+    queryKey: ["billing", "methods"],
+    queryFn: async () => {
+      const res = await fetch("/api/user/billing/methods")
+      const json = await res.json()
+      if (!res.ok) throw new Error(json.error || "Failed to load payment methods")
+      return json.data as { id: string; type: string; last4: string; brand: string; expiry: string }[]
+    },
+  })
+
+  const [addCardOpen, setAddCardOpen] = useState(false)
+  const [cardNumber, setCardNumber] = useState("")
+  const [cardExpiry, setCardExpiry] = useState("")
+  const [cardCvc, setCardCvc] = useState("")
+  const [cardName, setCardName] = useState("")
+
+  const addCardMutation = useMutation({
+    mutationFn: async () => {
+      const res = await fetch("/api/user/billing/methods", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ number: cardNumber, expiry: cardExpiry, cvc: cardCvc, name: cardName }),
+      })
+      const json = await res.json()
+      if (!res.ok) throw new Error(json.error || "Failed to add card")
+      return json.data
+    },
+    onSuccess: async () => {
+      setAddCardOpen(false)
+      setCardNumber("")
+      setCardExpiry("")
+      setCardCvc("")
+      setCardName("")
+      await qc.invalidateQueries({ queryKey: ["billing", "methods"] })
+      toast({ title: "Card added", description: "Your payment method has been saved." })
+    },
+    onError: (e) => {
+      toast({ title: "Failed to add card", description: (e as Error).message, variant: "destructive" })
+    },
+  })
+
   useEffect(() => {
     const p = profileQuery.data
     if (!p) return
@@ -311,9 +352,9 @@ export function SettingsView({
             </CardHeader>
             <CardContent className="space-y-8 relative z-10">
               <div className="flex items-center gap-8">
-                <Avatar className="h-28 w-28 border-2 border-white/10 shadow-xl">
+                <Avatar className="h-28 w-28 border border-border shadow-xl">
                   <AvatarImage src={profileQuery.data?.avatar || "/placeholder.svg"} />
-                  <AvatarFallback className="bg-[#151515] text-3xl text-primary font-bold">
+                  <AvatarFallback className="bg-muted text-3xl text-primary font-bold">
                     {user?.name?.charAt(0).toUpperCase()}
                   </AvatarFallback>
                 </Avatar>
@@ -479,7 +520,7 @@ export function SettingsView({
                 </Alert>
               )}
 
-              <Card className="border-2 p-4">
+              <Card className="border border-border p-4">
                 <div className="font-medium">Upload documents</div>
                 <div className="text-sm text-muted-foreground mt-1">
                   Accepted formats: JPG, PNG, PDF (Max 5MB)
@@ -566,7 +607,7 @@ export function SettingsView({
                 </div>
               </Card>
 
-              <Card className="border-2 p-4">
+              <Card className="border border-border p-4">
                 <div className="font-medium">Submitted documents</div>
                 <div className="text-sm text-muted-foreground mt-1">Visible to you and the admin review team.</div>
 
@@ -856,13 +897,95 @@ export function SettingsView({
               <CardTitle>Payment Methods</CardTitle>
               <CardDescription>Manage your saved payment methods</CardDescription>
             </CardHeader>
-            <CardContent className="space-y-3">
-              <div className="rounded-lg border border-border bg-muted/30 p-4 text-sm text-muted-foreground">
-                Payment methods are not configured for this deployment yet.
-              </div>
-              <Button variant="outline" className="w-full bg-transparent" disabled>
-                Add Payment Method
-              </Button>
+            <CardContent className="space-y-4">
+              {billingMethodsQuery.isLoading ? (
+                <div className="text-sm text-muted-foreground">Loading payment methods...</div>
+              ) : billingMethodsQuery.isError ? (
+                <div className="text-sm text-destructive">Failed to load payment methods.</div>
+              ) : (billingMethodsQuery.data?.length ?? 0) === 0 ? (
+                <div className="rounded-lg border border-border bg-muted/30 p-4 text-sm text-muted-foreground text-center">
+                  No payment methods saved.
+                </div>
+              ) : (
+                <div className="grid gap-4 md:grid-cols-2">
+                  {billingMethodsQuery.data?.map((method) => (
+                    <div key={method.id} className="flex items-center justify-between rounded-xl border border-border bg-card p-4 shadow-sm">
+                      <div className="flex items-center gap-4">
+                        <div className="h-10 w-10 rounded-full bg-white/5 flex items-center justify-center border border-white/10">
+                          <CreditCard className="h-5 w-5 text-primary" />
+                        </div>
+                        <div>
+                          <p className="font-medium capitalize">{method.brand} •••• {method.last4}</p>
+                          <p className="text-xs text-muted-foreground">Expires {method.expiry}</p>
+                        </div>
+                      </div>
+                      <Button variant="ghost" size="sm" className="text-muted-foreground hover:text-destructive">
+                        Remove
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {!addCardOpen ? (
+                <Button variant="outline" className="w-full border-dashed border-border bg-muted/10 hover:bg-muted/20 text-muted-foreground hover:text-primary" onClick={() => setAddCardOpen(true)}>
+                  + Add Payment Method
+                </Button>
+              ) : (
+                <div className="rounded-xl border border-border bg-card p-4 space-y-4 animate-in fade-in slide-in-from-top-2">
+                  <div className="flex justify-between items-center">
+                    <h4 className="font-semibold text-sm">Add New Card</h4>
+                    <Button variant="ghost" size="sm" onClick={() => setAddCardOpen(false)}>Cancel</Button>
+                  </div>
+                  <div className="grid gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="cardName">Cardholder Name</Label>
+                      <Input
+                        id="cardName"
+                        placeholder="John Doe"
+                        value={cardName}
+                        onChange={(e) => setCardName(e.target.value)}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="cardNumber">Card Number</Label>
+                      <Input
+                        id="cardNumber"
+                        placeholder="0000 0000 0000 0000"
+                        value={cardNumber}
+                        onChange={(e) => setCardNumber(e.target.value)}
+                      />
+                    </div>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="cardExpiry">Expiry (MM/YY)</Label>
+                        <Input
+                          id="cardExpiry"
+                          placeholder="MM/YY"
+                          value={cardExpiry}
+                          onChange={(e) => setCardExpiry(e.target.value)}
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="cardCvc">CVC</Label>
+                        <Input
+                          id="cardCvc"
+                          placeholder="123"
+                          value={cardCvc}
+                          onChange={(e) => setCardCvc(e.target.value)}
+                        />
+                      </div>
+                    </div>
+                  </div>
+                  <Button
+                    className="w-full bg-primary hover:bg-primary/90"
+                    onClick={() => addCardMutation.mutate()}
+                    disabled={addCardMutation.isPending}
+                  >
+                    {addCardMutation.isPending ? "Adding..." : "Save Card"}
+                  </Button>
+                </div>
+              )}
             </CardContent>
           </Card>
 

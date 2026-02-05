@@ -164,7 +164,8 @@ model User {
   ledgerAccounts LedgerAccount[]
   ledgerEntries  LedgerEntry[]
   idempotencyKeys IdempotencyKey[]
-  consents      UserConsent[]
+  consents        UserConsent[]
+  paymentMethods  PaymentMethod[]
 
   @@map("users")
 }
@@ -471,5 +472,22 @@ model Notification {
   @@index([read])
   @@index([createdAt])
   @@map("notifications")
+}
+
+model PaymentMethod {
+  id        String   @id @default(cuid())
+  userId    String   @map("user_id")
+  type      String   // "card", "bank"
+  last4     String
+  brand     String?  // "visa", "mastercard"
+  expiry    String?  // "MM/YY"
+  isDefault Boolean  @default(false) @map("is_default")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("payment_methods")
 }
 

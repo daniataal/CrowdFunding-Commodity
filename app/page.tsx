@@ -261,6 +261,18 @@ export default function CommodityPlatform() {
                 )
               })}
               <div className="border-t border-border pt-2">
+                {(effectiveRole === "ADMIN" || effectiveRole === "AUDITOR") && (
+                  <button
+                    onClick={() => {
+                      router.push("/admin")
+                      setMobileMenuOpen(false)
+                    }}
+                    className="flex w-full items-center gap-2 rounded-lg px-4 py-2 transition-colors hover:bg-muted"
+                  >
+                    <ShieldIcon className="h-4 w-4" />
+                    <span className="font-medium">{effectiveRole === "ADMIN" ? "Admin Portal" : "Audit Portal"}</span>
+                  </button>
+                )}
                 <button
                   onClick={() => {
                     setCurrentView("help")
