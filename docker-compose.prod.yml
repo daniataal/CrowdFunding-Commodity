@@ -44,8 +44,8 @@ services:
       NEXTAUTH_URL: ${NEXTAUTH_URL}
       AUTH_TRUST_HOST: "true"
       NODE_ENV: production
-    ports:
-      - "3000:3000"
+    # ports:
+    #   - "3000:3000" # Exposed via Caddy instead
     volumes:
       - uploads:/app/public/uploads
     depends_on:
@@ -56,7 +56,27 @@ services:
     # Run migrations on start (using db push for schema sync without migrations)
     command: sh -c "/app/node_modules/.bin/prisma db push --skip-generate && node server.js"
 
+
+  caddy:
+    image: caddy:2-alpine
+    container_name: commodity-caddy
+    restart: always
+    ports:
+      - "80:80"
+      - "443:443"
+    environment:
+      - DOMAIN_NAME=${DOMAIN_NAME}
+      - ACME_EMAIL=${ACME_EMAIL}
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      - app
+
 volumes:
   postgres_data:
   redis_data:
   uploads:
+  caddy_data:
+  caddy_config:
