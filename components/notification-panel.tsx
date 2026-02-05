@@ -106,7 +106,7 @@ export function NotificationPanel() {
           )}
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="w-96 p-0">
+      <DropdownMenuContent align="end" className="w-96 p-0 border border-border bg-card shadow-xl">
         <div className="flex items-center justify-between border-b border-border p-4">
           <div>
             <h3 className="font-semibold">Notifications</h3>

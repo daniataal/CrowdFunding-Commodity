@@ -1,7 +1,8 @@
 import { auth } from "@/auth"
 import { prisma } from "@/lib/prisma"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Users, Package, DollarSign, TrendingUp } from "lucide-react"
+import { Users, Package, DollarSign, TrendingUp, ArrowRight, ShieldCheck, Activity } from "lucide-react"
+import Link from "next/link"
 
 export const dynamic = "force-dynamic"
 
@@ -45,32 +46,40 @@ export default async function AdminDashboard() {
 
   const stats = [
     {
-      title: "Total Users",
-      value: totalUsers,
-      description: `${pendingKyc} pending KYC`,
-      icon: Users,
-      color: "text-blue-500",
+      title: "Total Volume",
+      value: `$${(Math.abs(Number(totalVolume._sum.amount ?? 0)) / 1000).toFixed(0)}k`,
+      description: "Total capital deployed",
+      icon: DollarSign,
+      color: "text-accent",
+      bg: "bg-accent/10",
+      border: "border-accent/20",
     },
     {
       title: "Active Deals",
       value: activeDeals,
-      description: "Currently funding or active",
+      description: "Currently live on market",
       icon: Package,
-      color: "text-emerald-500",
+      color: "text-primary",
+      bg: "bg-primary/10",
+      border: "border-primary/20",
     },
     {
       title: "Total Investments",
       value: totalInvestments,
-      description: "All time",
+      description: "Successful transactions",
       icon: TrendingUp,
-      color: "text-amber-500",
+      color: "text-emerald-500",
+      bg: "bg-emerald-500/10",
+      border: "border-emerald-500/20",
     },
     {
-      title: "Platform Volume",
-      value: `$${(Math.abs(Number(totalVolume._sum.amount ?? 0)) / 1000).toFixed(0)}k`,
-      description: "Total investment volume",
-      icon: DollarSign,
-      color: "text-purple-500",
+      title: "Total Users",
+      value: totalUsers,
+      description: `${pendingKyc} pending KYC review`,
+      icon: Users,
+      color: "text-blue-500",
+      bg: "bg-blue-500/10",
+      border: "border-blue-500/20",
     },
   ]
 
@@ -84,44 +93,44 @@ export default async function AdminDashboard() {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         {stats.map((stat) => {
           const Icon = stat.icon
-          // Map colors to tailwind classes safely if needed, or use inline styles for dynamic bg
-          let bgGlow = "bg-primary/5"
-          let iconColor = "text-primary"
-
-          if (stat.color.includes("blue")) { bgGlow = "bg-blue-500/10"; iconColor = "text-blue-500"; }
-          if (stat.color.includes("emerald")) { bgGlow = "bg-emerald-500/10"; iconColor = "text-emerald-500"; }
-          if (stat.color.includes("amber")) { bgGlow = "bg-amber-500/10"; iconColor = "text-amber-500"; }
-          if (stat.color.includes("purple")) { bgGlow = "bg-purple-500/10"; iconColor = "text-purple-500"; }
-
           return (
-            <Card key={stat.title} className="border-border bg-card p-6 relative overflow-hidden group hover:shadow-sm transition-all">
-              <div className={`absolute top-0 right-0 w-24 h-24 rounded-full blur-[50px] transition-all group-hover:bg-opacity-20 ${bgGlow.replace('/5', '/10')}`} />
+            <Card key={stat.title} className={`border bg-card p-6 relative overflow-hidden group hover:shadow-lg transition-all duration-300 ${stat.border}`}>
+              <div className={`absolute top-0 right-0 w-32 h-32 rounded-full blur-[60px] opacity-20 -mr-10 -mt-10 transition-all group-hover:opacity-40 ${stat.bg.replace('/10', '/30')}`} />
+
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 p-0 mb-4 relative z-10">
-                <CardTitle className="text-sm font-medium text-muted-foreground">{stat.title}</CardTitle>
-                <div className={`p-2 rounded-lg ${bgGlow}`}>
-                  <Icon className={`h-4 w-4 ${iconColor}`} />
+                <CardTitle className="text-sm font-medium text-muted-foreground uppercase tracking-wider">{stat.title}</CardTitle>
+                <div className={`p-2.5 rounded-xl ${stat.bg}`}>
+                  <Icon className={`h-5 w-5 ${stat.color}`} />
                 </div>
               </CardHeader>
               <CardContent className="p-0 relative z-10">
-                <div className="text-3xl font-bold text-foreground">{stat.value}</div>
-                <p className="text-xs text-muted-foreground mt-1">{stat.description}</p>
+                <div className={`text-4xl font-bold ${stat.color} mb-1`}>{stat.value}</div>
+                <p className="text-xs text-muted-foreground">{stat.description}</p>
               </CardContent>
             </Card>
           )
         })}
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        <Card className="border-border bg-card rounded-2xl relative overflow-hidden shadow-sm">
-          <CardHeader>
-            <CardTitle className="text-foreground">Recent Activity</CardTitle>
-            <CardDescription className="text-muted-foreground">Latest platform events</CardDescription>
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <Card className="lg:col-span-2 border-border bg-card rounded-2xl relative overflow-hidden shadow-sm">
+          <CardHeader className="flex flex-row items-center justify-between">
+            <div>
+              <CardTitle className="text-foreground">System Activity</CardTitle>
+              <CardDescription className="text-muted-foreground">Recent platform events and logs</CardDescription>
+            </div>
+            <Activity className="h-5 w-5 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              {/* Recent activity will be populated here */}
-              <div className="p-8 text-center border border-dashed border-border rounded-xl bg-muted/10">
-                <p className="text-sm text-muted-foreground">Activity feed coming soon...</p>
+              <div className="flex flex-col items-center justify-center py-12 text-center border-2 border-dashed border-border/50 rounded-xl bg-muted/5">
+                <div className="h-12 w-12 rounded-full bg-muted/10 flex items-center justify-center mb-4">
+                  <Activity className="h-6 w-6 text-muted-foreground" />
+                </div>
+                <h3 className="font-semibold text-foreground">Activity Feed</h3>
+                <p className="text-sm text-muted-foreground max-w-sm mt-2">
+                  Real-time system logging and activity tracking is being configured. Check back soon for updates.
+                </p>
               </div>
             </div>
           </CardContent>
@@ -132,38 +141,57 @@ export default async function AdminDashboard() {
             <CardTitle className="text-foreground">Quick Actions</CardTitle>
             <CardDescription className="text-muted-foreground">Common administrative tasks</CardDescription>
           </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              {isAdmin && (
-                <a href="/admin/deals/new" className="block group">
-                  <div className="p-5 rounded-xl border border-border bg-muted/10 hover:bg-muted/20 hover:border-primary/50 transition-all cursor-pointer flex items-center justify-between">
-                    <div>
-                      <div className="font-bold text-foreground group-hover:text-primary transition-colors">Create New Deal</div>
-                      <p className="text-sm text-muted-foreground">Add a new commodity listing</p>
-                    </div>
-                    <div className="h-8 w-8 rounded-full bg-muted/20 flex items-center justify-center group-hover:bg-primary/20 transition-colors">
-                      <Package className="h-4 w-4 text-foreground group-hover:text-primary" />
-                    </div>
+          <CardContent className="space-y-4">
+            {isAdmin && (
+              <Link href="/admin/deals/new" className="block group">
+                <div className="p-4 rounded-xl border border-border bg-muted/5 hover:bg-primary/5 hover:border-primary/20 transition-all cursor-pointer flex items-center gap-4">
+                  <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center group-hover:bg-primary/20 transition-colors">
+                    <Package className="h-5 w-5 text-primary" />
                   </div>
-                </a>
-              )}
-
-              <a href="/admin/users?filter=kyc_pending" className="block group">
-                <div className="p-5 rounded-xl border border-border bg-muted/10 hover:bg-muted/20 hover:border-amber-500/50 transition-all cursor-pointer flex items-center justify-between">
-                  <div>
-                    <div className="font-bold text-foreground group-hover:text-amber-500 transition-colors">Review KYC Applications</div>
-                    <p className="text-sm text-muted-foreground">{pendingKyc} pending reviews</p>
+                  <div className="flex-1">
+                    <div className="font-semibold text-foreground group-hover:text-primary transition-colors">New Deal</div>
+                    <p className="text-xs text-muted-foreground">Create commodity listing</p>
                   </div>
-                  <div className="h-8 w-8 rounded-full bg-muted/20 flex items-center justify-center group-hover:bg-amber-500/20 transition-colors">
-                    <Users className="h-4 w-4 text-foreground group-hover:text-amber-500" />
-                  </div>
+                  <ArrowRight className="h-4 w-4 text-muted-foreground group-hover:text-primary transition-colors" />
                 </div>
-              </a>
-            </div>
+              </Link>
+            )}
+
+            <Link href="/admin/users" className="block group">
+              <div className="p-4 rounded-xl border border-border bg-muted/5 hover:bg-accent/5 hover:border-accent/20 transition-all cursor-pointer flex items-center gap-4">
+                <div className="h-10 w-10 rounded-lg bg-accent/10 flex items-center justify-center group-hover:bg-accent/20 transition-colors">
+                  <ShieldCheck className="h-5 w-5 text-accent" />
+                </div>
+                <div className="flex-1">
+                  <div className="flex items-center gap-2">
+                    <div className="font-semibold text-foreground group-hover:text-accent transition-colors">KYC Reviews</div>
+                    {pendingKyc > 0 && (
+                      <span className="px-1.5 py-0.5 rounded-full bg-accent text-[10px] font-bold text-black leading-none">
+                        {pendingKyc}
+                      </span>
+                    )}
+                  </div>
+                  <p className="text-xs text-muted-foreground">Process user verifications</p>
+                </div>
+                <ArrowRight className="h-4 w-4 text-muted-foreground group-hover:text-accent transition-colors" />
+              </div>
+            </Link>
+
+            <Link href="/admin/system" className="block group">
+              <div className="p-4 rounded-xl border border-border bg-muted/5 hover:bg-blue-500/5 hover:border-blue-500/20 transition-all cursor-pointer flex items-center gap-4">
+                <div className="h-10 w-10 rounded-lg bg-blue-500/10 flex items-center justify-center group-hover:bg-blue-500/20 transition-colors">
+                  <Activity className="h-5 w-5 text-blue-500" />
+                </div>
+                <div className="flex-1">
+                  <div className="font-semibold text-foreground group-hover:text-blue-500 transition-colors">System Health</div>
+                  <p className="text-xs text-muted-foreground">View platform status</p>
+                </div>
+                <ArrowRight className="h-4 w-4 text-muted-foreground group-hover:text-blue-500 transition-colors" />
+              </div>
+            </Link>
           </CardContent>
         </Card>
       </div>
     </div>
   )
 }
-

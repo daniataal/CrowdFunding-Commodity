@@ -800,7 +800,7 @@ export function SettingsView({
                   <SelectTrigger id="currency">
                     <SelectValue />
                   </SelectTrigger>
-                  <SelectContent>
+                  <SelectContent className="border border-border bg-card shadow-xl">
                     <SelectItem value="USD">USD - US Dollar</SelectItem>
                     <SelectItem value="EUR">EUR - Euro</SelectItem>
                     <SelectItem value="GBP">GBP - British Pound</SelectItem>
@@ -815,7 +815,7 @@ export function SettingsView({
                   <SelectTrigger id="timezone">
                     <SelectValue />
                   </SelectTrigger>
-                  <SelectContent>
+                  <SelectContent className="border border-border bg-card shadow-xl">
                     <SelectItem value="America/New_York">Eastern Time (ET)</SelectItem>
                     <SelectItem value="America/Chicago">Central Time (CT)</SelectItem>
                     <SelectItem value="America/Denver">Mountain Time (MT)</SelectItem>
@@ -832,7 +832,7 @@ export function SettingsView({
                   <SelectTrigger id="language">
                     <SelectValue />
                   </SelectTrigger>
-                  <SelectContent>
+                  <SelectContent className="border border-border bg-card shadow-xl">
                     <SelectItem value="en">English</SelectItem>
                     <SelectItem value="es">Español</SelectItem>
                     <SelectItem value="fr">Français</SelectItem>

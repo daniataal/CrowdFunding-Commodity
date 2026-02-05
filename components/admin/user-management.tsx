@@ -58,9 +58,9 @@ const typeLabels: Record<DocumentType, string> = {
 function kycBadge(status: KycStatus) {
   const cls =
     status === "APPROVED"
-      ? "border-emerald-500/50 text-emerald-500"
+      ? "border-primary/50 text-primary"
       : status === "PENDING"
-        ? "border-amber-500/50 text-amber-500"
+        ? "border-accent/50 text-accent"
         : status === "REJECTED"
           ? "border-red-500/50 text-red-500"
           : "border-slate-500/30 text-muted-foreground"
@@ -502,7 +502,7 @@ export function UserManagement({ isAdmin }: { isAdmin: boolean }) {
                         Disabled
                       </Badge>
                     ) : (
-                      <Badge variant="outline" className="border-emerald-500/20 text-emerald-500 bg-emerald-500/5">
+                      <Badge variant="outline" className="border-primary/20 text-primary bg-primary/5">
                         Active
                       </Badge>
                     )}
@@ -531,7 +531,7 @@ export function UserManagement({ isAdmin }: { isAdmin: boolean }) {
 
                           <AlertDialog>
                             <AlertDialogTrigger asChild>
-                              <Button size="sm" variant="outline" className="bg-transparent border-amber-500/20 text-amber-500 hover:bg-amber-500/10">
+                              <Button size="sm" variant="outline" className="bg-transparent border-accent/20 text-accent hover:bg-accent/10">
                                 <KeyRound className="h-4 w-4 mr-1" />
                                 Reset PW
                               </Button>
@@ -547,7 +547,7 @@ export function UserManagement({ isAdmin }: { isAdmin: boolean }) {
                                 <AlertDialogCancel>Cancel</AlertDialogCancel>
                                 <AlertDialogAction
                                   onClick={() => resetPasswordMutation.mutate(u.id)}
-                                  className="bg-amber-600 hover:bg-amber-700 text-white"
+                                  className="bg-accent hover:bg-accent/90 text-black"
                                 >
                                   Reset
                                 </AlertDialogAction>
@@ -557,7 +557,7 @@ export function UserManagement({ isAdmin }: { isAdmin: boolean }) {
 
                           <AlertDialog>
                             <AlertDialogTrigger asChild>
-                              <Button size="sm" variant="outline" className={`bg-transparent ${u.disabled ? "border-emerald-500/20 text-emerald-500 hover:bg-emerald-500/10" : "border-red-500/20 text-red-500 hover:bg-red-500/10"}`}>
+                              <Button size="sm" variant="outline" className={`bg-transparent ${u.disabled ? "border-primary/20 text-primary hover:bg-primary/10" : "border-red-500/20 text-red-500 hover:bg-red-500/10"}`}>
                                 {u.disabled ? <UserCheck className="h-4 w-4 mr-1" /> : <UserX className="h-4 w-4 mr-1" />}
                                 {u.disabled ? "Enable" : "Disable"}
                               </Button>
@@ -575,7 +575,7 @@ export function UserManagement({ isAdmin }: { isAdmin: boolean }) {
                                 <AlertDialogCancel>Cancel</AlertDialogCancel>
                                 <AlertDialogAction
                                   onClick={() => disableMutation.mutate({ userId: u.id, disabled: !u.disabled })}
-                                  className={u.disabled ? "bg-emerald-600 hover:bg-emerald-700 text-white" : "bg-red-600 hover:bg-red-700 text-white"}
+                                  className={u.disabled ? "bg-primary hover:bg-primary/90 text-primary-foreground" : "bg-red-600 hover:bg-red-700 text-white"}
                                 >
                                   {u.disabled ? "Enable" : "Disable"}
                                 </AlertDialogAction>
@@ -642,7 +642,7 @@ export function UserManagement({ isAdmin }: { isAdmin: boolean }) {
                           Disabled
                         </Badge>
                       ) : (
-                        <Badge variant="outline" className="border-emerald-500/20 text-emerald-500 bg-emerald-500/5">
+                        <Badge variant="outline" className="border-primary/20 text-primary bg-primary/5">
                           Active
                         </Badge>
                       )}
@@ -658,7 +658,7 @@ export function UserManagement({ isAdmin }: { isAdmin: boolean }) {
                           {(detailQuery.data as any).walletFrozen ? (
                             <span className="text-red-500 flex items-center gap-1"><ShieldX className="h-4 w-4" /> Frozen</span>
                           ) : (
-                            <span className="text-emerald-500 flex items-center gap-1"><ShieldCheck className="h-4 w-4" /> Active</span>
+                            <span className="text-primary flex items-center gap-1"><ShieldCheck className="h-4 w-4" /> Active</span>
                           )}
                         </div>
                       </div>
@@ -686,7 +686,7 @@ export function UserManagement({ isAdmin }: { isAdmin: boolean }) {
                       <Button
                         variant="outline"
                         size="sm"
-                        className={(detailQuery.data as any).walletFrozen ? "bg-emerald-500/10 border-emerald-500/20 text-emerald-500 hover:bg-emerald-500/20" : "bg-red-500/10 border-red-500/20 text-red-500 hover:bg-red-500/20"}
+                        className={(detailQuery.data as any).walletFrozen ? "bg-primary/10 border-primary/20 text-primary hover:bg-primary/20" : "bg-red-500/10 border-red-500/20 text-red-500 hover:bg-red-500/20"}
                         onClick={() => {
                           if (!selectedId) return
                           updateMutation.mutate({
@@ -717,7 +717,7 @@ export function UserManagement({ isAdmin }: { isAdmin: boolean }) {
                       <Button
                         variant="outline"
                         size="sm"
-                        className="bg-amber-500/10 border-amber-500/20 text-amber-500 hover:bg-amber-500/20"
+                        className="bg-accent/10 border-accent/20 text-accent hover:bg-accent/20"
                         onClick={() => selectedId && resetPasswordMutation.mutate(selectedId)}
                         disabled={resetPasswordMutation.isPending}
                       >
@@ -728,7 +728,7 @@ export function UserManagement({ isAdmin }: { isAdmin: boolean }) {
                       <Button
                         variant="outline"
                         size="sm"
-                        className={detailQuery.data.disabled ? "bg-emerald-500/10 border-emerald-500/20 text-emerald-500 hover:bg-emerald-500/20" : "bg-red-500/10 border-red-500/20 text-red-500 hover:bg-red-500/20"}
+                        className={detailQuery.data.disabled ? "bg-primary/10 border-primary/20 text-primary hover:bg-primary/20" : "bg-red-500/10 border-red-500/20 text-red-500 hover:bg-red-500/20"}
                         onClick={() =>
                           selectedId && disableMutation.mutate({ userId: selectedId, disabled: !detailQuery.data.disabled })
                         }
@@ -812,7 +812,7 @@ export function UserManagement({ isAdmin }: { isAdmin: boolean }) {
 
                                 <div className="flex items-center gap-2 shrink-0">
                                   {d.verified ? (
-                                    <Badge className="bg-emerald-600/20 text-emerald-500 border-emerald-600/30">Verified</Badge>
+                                    <Badge className="bg-primary/20 text-primary border-primary/30">Verified</Badge>
                                   ) : (
                                     <Badge variant="outline" className="border-border text-muted-foreground">Unverified</Badge>
                                   )}

@@ -1,7 +1,7 @@
 import { auth } from "@/auth"
 import { redirect } from "next/navigation"
 import Link from "next/link"
-import { LayoutDashboard, Package, Users, BarChart3, Settings, LogOut } from "lucide-react"
+import { LayoutDashboard, Package, Users, BarChart3, Settings, LogOut, ArrowLeft } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { signOut } from "@/auth"
 import { prisma } from "@/lib/prisma"
@@ -59,7 +59,7 @@ export default async function AdminLayout({
             <div className="pt-4 border-t border-border mt-4 space-y-2">
               <Button asChild variant="ghost" className="w-full justify-start gap-3 text-muted-foreground hover:text-foreground hover:bg-muted transition-all h-11 rounded-xl">
                 <Link href="/">
-                  <Settings className="h-4 w-4" />
+                  <ArrowLeft className="h-4 w-4" />
                   Back to App
                 </Link>
               </Button>
