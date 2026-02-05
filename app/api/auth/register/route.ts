@@ -42,6 +42,22 @@ export async function POST(request: NextRequest) {
       },
     })
 
+    // Prepare and send welcome email
+    // We import dynamically to avoid loading React/Email stuff if not needed
+    try {
+      const { sendEmail } = await import("@/lib/email")
+      const { WelcomeEmail } = await import("@/components/emails/welcome")
+
+      await sendEmail({
+        to: user.email,
+        subject: "Welcome to Commodity CrowdFunding",
+        react: WelcomeEmail({ name: user.name }),
+      })
+    } catch (e) {
+      // Don't block registration if email fails
+      console.error("Failed to send welcome email:", e)
+    }
+
     return NextResponse.json({ message: "User created successfully", user }, { status: 201 })
   } catch (error) {
     if (error instanceof z.ZodError) {
