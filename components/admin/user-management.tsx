@@ -237,11 +237,28 @@ export function UserManagement({ isAdmin }: { isAdmin: boolean }) {
       toast({
         title: "Password reset",
         description: data.tempPassword ? `Temporary password: ${data.tempPassword} (copy it now)` : "Password updated.",
+        action: data.tempPassword ? (
+          <Button
+            size="sm"
+            variant="outline"
+            className="border-accent text-accent hover:bg-accent hover:text-black"
+            onClick={() => copyToClipboard(data.tempPassword!)}
+          >
+            Copy
+          </Button>
+        ) : undefined,
+        duration: 10000, // Keep it visible longer
       })
     },
     onError: (e) =>
       toast({ title: "Password reset failed", description: (e as Error).message, variant: "destructive" }),
   })
+
+  // Helper to copy text to clipboard
+  const copyToClipboard = (text: string) => {
+    navigator.clipboard.writeText(text)
+    toast({ title: "Copied!", description: "Password copied to clipboard." })
+  }
 
   const walletAdjustMutation = useMutation({
     mutationFn: async ({

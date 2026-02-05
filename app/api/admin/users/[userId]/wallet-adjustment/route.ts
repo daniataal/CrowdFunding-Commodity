@@ -85,13 +85,13 @@ export async function POST(request: NextRequest, context: { params: Promise<{ us
       lines:
         validated.amount >= 0
           ? [
-              { accountId: adminAdj.id, debit: abs },
-              { accountId: wallet.id, credit: abs },
-            ]
+            { accountId: adminAdj.id, debit: abs },
+            { accountId: wallet.id, credit: abs },
+          ]
           : [
-              { accountId: wallet.id, debit: abs },
-              { accountId: adminAdj.id, credit: abs },
-            ],
+            { accountId: wallet.id, debit: abs },
+            { accountId: adminAdj.id, credit: abs },
+          ],
     })
 
     await tx.auditLog.create({
@@ -112,7 +112,13 @@ export async function POST(request: NextRequest, context: { params: Promise<{ us
     return { transactionId: transaction.id, newBalance: Number(updatedUser.walletBalance) }
   })
 
-  return NextResponse.json({ success: true, data: result })
+  return NextResponse.json({
+    success: true,
+    data: {
+      transactionId: result.transactionId,
+      newBalance: result.newBalance
+    }
+  })
 }
 
 
