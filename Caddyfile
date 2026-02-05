@@ -1,18 +1,21 @@
 {
-	# Disable auto-HTTPS logic that tries to reach out to CAs
-	auto_https disable_redirects
+    # Enable debug logs for troubleshooting
+    debug
 }
 
-https://151.145.85.174 {
-	# Force self-signed certificate
-	tls internal
+# Use the DOMAIN_NAME env var (e.g. 151.145.85.174)
+https://{$DOMAIN_NAME} {
+    # internal = Self-Signed info (for Raw IP support)
+    tls internal
 
-	reverse_proxy app:3000 {
-		header_up Host {upstream_hostport}
-	}
-	
-	header {
-		Strict-Transport-Security "max-age=31536000; includeSubDomains; preload"
-		X-Content-Type-Options "nosniff"
-	}
+    reverse_proxy app:3000
+}
+
+# Fallback/Redirect for standard HTTP
+:80 {
+    # Optional: Redirect to HTTPS if you want to force it
+    # redir https://{host}{uri}
+    
+    # For now, just confirm it works
+    respond "HTTP is running. Access via HTTPS at https://{$DOMAIN_NAME} (Accept Security Warning)"
 }

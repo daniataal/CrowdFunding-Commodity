@@ -47,6 +47,33 @@ VALUES (
 );
 ```
 
+### 2. Configure Environment (`.env`)
+Create or edit the `.env` file on your server:
+
+```env
+# Set this to your VM's Public IP Address
+DOMAIN_NAME=151.145.85.174
+
+# Email for Let's Encrypt (unused for internal IP certs, but good to keep)
+ACME_EMAIL=your-email@example.com
+
+# Auth Configuration
+NEXTAUTH_URL=https://${DOMAIN_NAME}
+AUTH_TRUST_HOST=true
+AUTH_SECRET=changeme_to_something_secure
+DATABASE_URL=postgresql://postgres:commodity_password@postgres:5432/commodity_crowdfunding?schema=public
+```
+
+### 3. Deploy
+```bash
+docker-compose -f docker-compose.prod.yml up -d --build
+```
+
+### 4. Accessing the Site
+*   **HTTPS**: `https://151.145.85.174`
+    *   *Note: You will see a "Not Secure" warning because it is a self-signed certificate on a raw IP. This is normal. Click "Advanced" -> "Proceed".*
+*   **HTTP**: `http://151.145.85.174:3000` (Direct to app, no SSL)
+
 ### 5. Set Auth Secret
 
 Generate a secure secret:
