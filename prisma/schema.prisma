@@ -146,6 +146,7 @@ model User {
   company       String?
   bio           String?
   twoFactorEnabled Boolean @default(false) @map("two_factor_enabled")
+  twoFactorSecret String? @map("two_factor_secret")
   emailNotifications Boolean @default(true) @map("email_notifications")
   pushNotifications Boolean @default(true) @map("push_notifications")
   investmentAlerts Boolean @default(true) @map("investment_alerts")

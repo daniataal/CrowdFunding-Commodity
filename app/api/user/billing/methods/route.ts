@@ -4,10 +4,10 @@ import { prisma } from "@/lib/prisma"
 import { z } from "zod"
 
 const addCardSchema = z.object({
-    number: z.string().min(15).max(19),
-    expiry: z.string().regex(/^\d{2}\/\d{2}$/),
+    number: z.string().min(13).max(19), // Simple length check
+    expiry: z.string().regex(/^\d{2}\/\d{2}$/, "Invalid expiry format (MM/YY)"),
     cvc: z.string().min(3).max(4),
-    name: z.string().min(3),
+    name: z.string().min(1),
 })
 
 export async function GET() {
@@ -18,7 +18,6 @@ export async function GET() {
 
     const methods = await prisma.paymentMethod.findMany({
         where: { userId: session.user.id },
-        orderBy: { createdAt: "desc" },
         select: {
             id: true,
             type: true,
@@ -27,6 +26,7 @@ export async function GET() {
             expiry: true,
             isDefault: true,
         },
+        orderBy: { createdAt: "desc" },
     })
 
     return NextResponse.json({ success: true, data: methods })
@@ -38,31 +38,34 @@ export async function POST(request: NextRequest) {
         return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
-    const body = await request.json()
-    const validated = addCardSchema.safeParse(body)
-    if (!validated.success) {
-        return NextResponse.json({ error: "Invalid card details" }, { status: 400 })
+    try {
+        const body = await request.json()
+        const validated = addCardSchema.parse(body)
+
+        // In a real app, you would send this to Stripe/Provider here.
+        // We will simulate a successful add by storing a "PaymentMethod" record.
+        // We only store non-sensitive info + last 4.
+
+        const last4 = validated.number.slice(-4)
+        // Mock brand detection
+        const brand = validated.number.startsWith("4") ? "visa" : "mastercard"
+
+        const method = await prisma.paymentMethod.create({
+            data: {
+                userId: session.user.id,
+                type: "card",
+                last4,
+                brand,
+                expiry: validated.expiry,
+                isDefault: false, // Could logically make it default if it's the first one
+            },
+        })
+
+        return NextResponse.json({ success: true, data: method })
+    } catch (error) {
+        if (error instanceof z.ZodError) {
+            return NextResponse.json({ error: error.errors[0].message }, { status: 400 })
+        }
+        return NextResponse.json({ error: "Failed to add payment method" }, { status: 500 })
     }
-
-    const { number, expiry } = validated.data
-    const last4 = number.slice(-4)
-    // Mock brand detection
-    const brand = number.startsWith("4") ? "visa" : number.startsWith("5") ? "mastercard" : "other"
-
-    // In a real app, you would send this to Stripe/Payment Provider here
-    // and store the token, NOT the card details.
-    // For this demo, we mock saving a "method" representation.
-
-    const method = await prisma.paymentMethod.create({
-        data: {
-            userId: session.user.id,
-            type: "card",
-            last4,
-            brand,
-            expiry,
-            isDefault: false, // logic to handle setting first as default could be added
-        },
-    })
-
-    return NextResponse.json({ success: true, data: method })
 }

@@ -215,8 +215,8 @@ export function WalletView() {
                   <div className="flex items-center gap-4">
                     <div
                       className={`h-12 w-12 rounded-xl flex items-center justify-center transition-colors ${isPositive
-                          ? "bg-emerald-500/10 group-hover:bg-emerald-500/20"
-                          : "bg-red-500/10 group-hover:bg-red-500/20"
+                        ? "bg-emerald-500/10 group-hover:bg-emerald-500/20"
+                        : "bg-red-500/10 group-hover:bg-red-500/20"
                         }`}
                     >
                       <Icon className={`h-5 w-5 ${isPositive ? "text-emerald-400" : "text-red-400"}`} />
@@ -227,6 +227,10 @@ export function WalletView() {
                         {transaction.type === "INVESTMENT" && "Investment"}
                         {transaction.type === "DEPOSIT" && "Deposit"}
                         {transaction.type === "WITHDRAWAL" && "Withdrawal"}
+                        {transaction.type === "REFUND" && "Refund"}
+                        {transaction.type === "PAYOUT" && "Payout"}
+                        {!["DIVIDEND", "INVESTMENT", "DEPOSIT", "WITHDRAWAL", "REFUND", "PAYOUT"].includes(transaction.type) &&
+                          transaction.type.charAt(0) + transaction.type.slice(1).toLowerCase().replace(/_/g, " ")}
                       </div>
                       {transaction.commodity?.name ? (
                         <p className="text-sm text-muted-foreground">{transaction.commodity.name}</p>

@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Switch } from "@/components/ui/switch"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
@@ -59,6 +60,50 @@ export function SettingsView({
   const [idFile, setIdFile] = useState<File | null>(null)
   const [addressFile, setAddressFile] = useState<File | null>(null)
   const [kycError, setKycError] = useState("")
+
+  // 2FA state
+  const [setup2FAOpen, setSetup2FAOpen] = useState(false)
+  const [qrCodeUrl, setQrCodeUrl] = useState("")
+  const [secret, setSecret] = useState("")
+  const [otpCode, setOtpCode] = useState("")
+
+  const generate2FAMutation = useMutation({
+    mutationFn: async () => {
+      const res = await fetch("/api/auth/2fa/generate")
+      const json = await res.json()
+      if (!res.ok) throw new Error(json.error || "Failed to generate QR")
+      return json.data as { secret: string; qrCodeUrl: string }
+    },
+    onSuccess: (data) => {
+      setSecret(data.secret)
+      setQrCodeUrl(data.qrCodeUrl)
+    },
+  })
+
+  const verify2FAMutation = useMutation({
+    mutationFn: async () => {
+      const res = await fetch("/api/auth/2fa/verify", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ token: otpCode, secret }),
+      })
+      const json = await res.json()
+      if (!res.ok) throw new Error(json.error || "Verification failed")
+      return true
+    },
+    onSuccess: async () => {
+      setSetup2FAOpen(false)
+      setTwoFactorEnabled(true)
+      setOtpCode("")
+      setSecret("")
+      setQrCodeUrl("")
+      await qc.invalidateQueries({ queryKey: ["user", "profile"] })
+      toast({ title: "2FA Enabled", description: "Your account is now secured with 2FA." })
+    },
+    onError: (e) => {
+      toast({ title: "Verification failed", description: (e as Error).message, variant: "destructive" })
+    },
+  })
 
   const profileQuery = useQuery({
     queryKey: ["user", "profile"],
@@ -704,8 +749,19 @@ export function SettingsView({
                     Protect your account with two-factor authentication
                   </div>
                 </div>
-                <Switch checked={twoFactorEnabled} onCheckedChange={setTwoFactorEnabled} />
+                <Switch
+                  checked={twoFactorEnabled}
+                  onCheckedChange={(checked) => {
+                    if (checked) {
+                      setSetup2FAOpen(true)
+                      generate2FAMutation.mutate()
+                    } else {
+                      setTwoFactorEnabled(false)
+                    }
+                  }}
+                />
               </div>
+
               {twoFactorEnabled && (
                 <div className="rounded-lg border border-primary/20 bg-primary/10 p-4">
                   <div className="mb-2 flex items-center gap-2 text-sm font-medium text-primary">
@@ -713,23 +769,64 @@ export function SettingsView({
                     2FA Enabled
                   </div>
                   <p className="text-sm text-muted-foreground">
-                    Your account is protected with authenticator app verification
+                    Your account is protected with authenticator app verification.
                   </p>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="mt-3 bg-transparent"
-                    onClick={() =>
-                      toast({
-                        title: "2FA",
-                        description: "Advanced 2FA management is coming soon. For now, use the toggle and save.",
-                      })
-                    }
-                  >
-                    Manage 2FA Settings
-                  </Button>
                 </div>
               )}
+
+              <Dialog open={setup2FAOpen} onOpenChange={setSetup2FAOpen}>
+                <DialogContent className="bg-[#0A0A0A] border-white/10 sm:max-w-md">
+                  <DialogHeader>
+                    <DialogTitle className="text-white">Set up Two-Factor Authentication</DialogTitle>
+                    <DialogDescription>
+                      Scan the QR code with your authenticator app (Google Authenticator, Authy, etc.)
+                    </DialogDescription>
+                  </DialogHeader>
+
+                  <div className="flex flex-col items-center justify-center py-6 space-y-4">
+                    {generate2FAMutation.isPending ? (
+                      <div className="flex flex-col items-center gap-2 text-muted-foreground">
+                        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                        <p>Generating QR Code...</p>
+                      </div>
+                    ) : (
+                      <>
+                        <div className="bg-white p-2 rounded-xl">
+                          {qrCodeUrl && <img src={qrCodeUrl} alt="2FA QR Code" width={180} height={180} />}
+                        </div>
+                        <div className="text-center text-sm text-muted-foreground">
+                          <p>Or enter this code manually:</p>
+                          <code className="bg-muted px-2 py-1 rounded text-foreground font-mono mt-1 block select-all">
+                            {secret}
+                          </code>
+                        </div>
+                      </>
+                    )}
+                  </div>
+
+                  <div className="space-y-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="otp" className="text-white">Verification Code</Label>
+                      <Input
+                        id="otp"
+                        value={otpCode}
+                        onChange={(e) => setOtpCode(e.target.value)}
+                        placeholder="000 000"
+                        className="text-center text-lg tracking-widest bg-white/5 border-white/10 text-white"
+                        maxLength={6}
+                      />
+                    </div>
+
+                    <Button
+                      className="w-full bg-primary hover:bg-primary/90"
+                      onClick={() => verify2FAMutation.mutate()}
+                      disabled={verify2FAMutation.isPending || otpCode.length < 6}
+                    >
+                      {verify2FAMutation.isPending ? "Verifying..." : "Verify & Enable"}
+                    </Button>
+                  </div>
+                </DialogContent>
+              </Dialog>
               <div className="pt-2">
                 <Button variant="outline" className="bg-transparent" onClick={handleSave} disabled={isSaving}>
                   {isSaving ? "Saving..." : "Save Security Settings"}
