@@ -29,12 +29,23 @@ export async function depositFunds(formData: FormData) {
       return { error: "Unauthorized" }
     }
 
+    const rawValues = {
+      amount: formData.get("amount"),
+      reference: formData.get("reference"),
+    }
+
     const rawData = {
-      amount: Number.parseFloat(formData.get("amount") as string),
-      reference: formData.get("reference") as string | undefined,
+      amount: Number.parseFloat(rawValues.amount as string),
+      reference: (rawValues.reference as string) || undefined,
     }
 
     const validatedData = depositSchema.parse(rawData)
+
+    // Automatically generate reference if missing (for bank transfer matching)
+    if (!validatedData.reference) {
+      validatedData.reference = `DEP-${Date.now().toString(36).toUpperCase()}-${Math.random().toString(36).slice(2, 6).toUpperCase()}`
+    }
+
     const idempotencyKey = (formData.get("idempotencyKey") as string | null) ?? null
 
     if (validatedData.amount > RISK_LIMITS.maxDepositPerTxn) {
@@ -116,17 +127,17 @@ export async function depositFunds(formData: FormData) {
 
     const result = idempotencyKey
       ? await runIdempotent({
-          userId: session.user.id,
-          scope: "wallet:deposit",
-          key: idempotencyKey,
-          requestHash: sha256Base64Url(JSON.stringify({ amount: validatedData.amount, reference: validatedData.reference ?? null })),
-          run: exec,
-          response: (v) => ({
-            transactionId: v.transaction.id,
-            status: v.transaction.status,
-            newBalance: Number(v.updatedUser.walletBalance),
-          }),
-        })
+        userId: session.user.id,
+        scope: "wallet:deposit",
+        key: idempotencyKey,
+        requestHash: sha256Base64Url(JSON.stringify({ amount: validatedData.amount, reference: validatedData.reference ?? null })),
+        run: exec,
+        response: (v) => ({
+          transactionId: v.transaction.id,
+          status: v.transaction.status,
+          newBalance: Number(v.updatedUser.walletBalance),
+        }),
+      })
       : { ok: true as const, value: await prisma.$transaction(exec) }
 
     if (!result.ok) {
@@ -153,9 +164,14 @@ export async function withdrawFunds(formData: FormData) {
       return { error: "Unauthorized" }
     }
 
+    const rawValues = {
+      amount: formData.get("amount"),
+      description: formData.get("description"),
+    }
+
     const rawData = {
-      amount: Number.parseFloat(formData.get("amount") as string),
-      description: formData.get("description") as string | undefined,
+      amount: Number.parseFloat(rawValues.amount as string),
+      description: (rawValues.description as string) || undefined,
     }
 
     const validatedData = withdrawalSchema.parse(rawData)
@@ -251,19 +267,19 @@ export async function withdrawFunds(formData: FormData) {
 
     const result = idempotencyKey
       ? await runIdempotent({
-          userId: session.user.id,
-          scope: "wallet:withdraw",
-          key: idempotencyKey,
-          requestHash: sha256Base64Url(
-            JSON.stringify({ amount: validatedData.amount, description: validatedData.description ?? null })
-          ),
-          run: exec,
-          response: (v) => ({
-            transactionId: v.transaction.id,
-            status: v.transaction.status,
-            newBalance: Number(v.updatedUser.walletBalance),
-          }),
-        })
+        userId: session.user.id,
+        scope: "wallet:withdraw",
+        key: idempotencyKey,
+        requestHash: sha256Base64Url(
+          JSON.stringify({ amount: validatedData.amount, description: validatedData.description ?? null })
+        ),
+        run: exec,
+        response: (v) => ({
+          transactionId: v.transaction.id,
+          status: v.transaction.status,
+          newBalance: Number(v.updatedUser.walletBalance),
+        }),
+      })
       : { ok: true as const, value: await prisma.$transaction(exec) }
 
     if (!result.ok) {
