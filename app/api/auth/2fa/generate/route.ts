@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from "next/server"
 import { auth } from "@/auth"
-// @ts-ignore
-import { authenticator } from "otplib"
+import { generateSecret, generateURI } from "otplib"
 import QRCode from "qrcode"
 
 export async function GET() {
@@ -13,8 +12,8 @@ export async function GET() {
     const userEmail = session.user.email || "User"
     const serviceName = "CommodityPlatform"
 
-    const secret = authenticator.generateSecret()
-    const otpauth = authenticator.keyuri(userEmail, serviceName, secret)
+    const secret = generateSecret()
+    const otpauth = generateURI({ secret, label: userEmail, issuer: serviceName })
 
     try {
         const qrCodeUrl = await QRCode.toDataURL(otpauth)

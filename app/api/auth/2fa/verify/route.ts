@@ -1,8 +1,7 @@
 import { NextRequest, NextResponse } from "next/server"
 import { auth } from "@/auth"
 import { prisma } from "@/lib/prisma"
-// @ts-ignore
-import { authenticator } from "otplib"
+import { verify } from "otplib"
 import { z } from "zod"
 
 const verifySchema = z.object({
@@ -27,7 +26,7 @@ export async function POST(request: NextRequest) {
 
     // Verify the token
     try {
-        const isValid = authenticator.check(token, secret)
+        const isValid = await verify({ token, secret })
         if (!isValid) {
             return NextResponse.json({ error: "Invalid code" }, { status: 400 })
         }
