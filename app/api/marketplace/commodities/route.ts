@@ -53,4 +53,47 @@ export async function GET(request: NextRequest) {
   return NextResponse.json({ success: true, data })
 }
 
+export async function POST(request: NextRequest) {
+  try {
+    const body = await request.json();
+
+    // Basic validation / mapping
+    // We expect the Marketplace to send data matching our schema or close to it
+    const commodity = await prisma.commodity.create({
+      data: {
+        type: body.type || "Metals",
+        name: body.name,
+        icon: body.icon || "gold-bar",
+        risk: body.risk || "Low",
+        targetApy: body.targetApy || 10.0,
+        duration: body.duration || 12,
+        minInvestment: body.minInvestment || 1000,
+        amountRequired: body.amountRequired,
+        currentAmount: 0,
+        description: body.description,
+        origin: body.origin || "Unknown",
+        destination: body.destination || "Dubai",
+        status: "FUNDING",
+        shipmentId: body.shipmentId, // External ID from Marketplace
+
+        // Detailed Metal Ops fields
+        transportMethod: body.transportMethod,
+        metalForm: body.metalForm,
+        purityPercent: body.purityPercent,
+
+        // Defaults
+        platformFeeBps: 150
+      }
+    });
+
+    return NextResponse.json({ success: true, data: commodity });
+  } catch (error) {
+    console.error("Error creating commodity from marketplace:", error);
+    return NextResponse.json(
+      { success: false, error: "Failed to create commodity" },
+      { status: 500 }
+    );
+  }
+}
+
 
