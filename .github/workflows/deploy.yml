@@ -38,14 +38,14 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       
-      - name: Copy Compose File to Server
+      - name: Copy Files to Server
         uses: appleboy/scp-action@v0.1.7
         with:
           host: ${{ secrets.SSH_HOST }}
           username: ${{ secrets.SSH_USERNAME }}
           key: ${{ secrets.SSH_KEY }}
           port: 22
-          source: "docker-compose.prod.yml"
+          source: "docker-compose.prod.yml,Caddyfile"
           target: "~/commodity-crowdfunding"
 
       - name: Deploy via SSH
@@ -71,7 +71,7 @@ jobs:
             mkdir -p ~/commodity-crowdfunding
             cd ~/commodity-crowdfunding
             
-            # Rename prod compose to standard name or use as is
+            # Rename prod compose to standard name
             mv docker-compose.prod.yml docker-compose.yml
 
             # Update/Create .env file
@@ -80,10 +80,12 @@ jobs:
             DATABASE_URL=postgresql://postgres:${{ secrets.POSTGRES_PASSWORD }}@postgres:5432/commodity_crowdfunding?schema=public
             AUTH_SECRET=${{ secrets.AUTH_SECRET }}
             NEXTAUTH_SECRET=${{ secrets.AUTH_SECRET }}
-            NEXTAUTH_URL=secrets.SSH_URL
+            NEXTAUTH_URL=https://${{ secrets.SSH_HOST }}
             POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }}
             NODE_ENV=production
             AUTH_TRUST_HOST=true
+            DOMAIN_NAME=${{ secrets.SSH_HOST }}
+            ACME_EMAIL=admin@${{ secrets.SSH_HOST }}
             EOF
             
             # Pull new images
