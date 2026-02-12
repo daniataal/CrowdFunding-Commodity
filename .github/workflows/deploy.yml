@@ -80,7 +80,7 @@ jobs:
             DATABASE_URL=postgresql://postgres:${{ secrets.POSTGRES_PASSWORD }}@postgres:5432/commodity_crowdfunding?schema=public
             AUTH_SECRET=${{ secrets.AUTH_SECRET }}
             NEXTAUTH_SECRET=${{ secrets.AUTH_SECRET }}
-            NEXTAUTH_URL=https://${{ secrets.SSH_HOST }}
+            NEXTAUTH_URL=https://${{ secrets.SSH_HOST }}/crowdfunding
             POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }}
             NODE_ENV=production
             AUTH_TRUST_HOST=true
