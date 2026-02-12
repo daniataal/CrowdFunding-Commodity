@@ -7,7 +7,6 @@ const nextConfig = {
     unoptimized: true,
   },
   output: "standalone",
-  basePath: "/crowdfunding",
 }
 
 export default nextConfig

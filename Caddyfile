@@ -8,20 +8,10 @@ https://{$DOMAIN_NAME} {
     # internal = Self-Signed info (for Raw IP support)
     tls internal
 
-    # Route /marketplace to the Marketplace Platform (Port 3001)
-    handle /marketplace* {
-        reverse_proxy marketplace_app:3001
-    }
+    # internal = Self-Signed info (for Raw IP support)
+    tls internal
 
-    # Route /crowdfunding to the Crowdfunding App (Port 3000)
-    handle /crowdfunding* {
-        reverse_proxy app:3000
-    }
-
-    # Redirect root to /crowdfunding
-    handle / {
-        redir /crowdfunding
-    }
+    reverse_proxy app:3000
 }
 
 # Fallback/Redirect for standard HTTP
