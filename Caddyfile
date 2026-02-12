@@ -1,13 +1,12 @@
 {
     # Enable debug logs for troubleshooting
     debug
+    # Set default SNI to handle direct IP access
+    default_sni {$DOMAIN_NAME}
 }
 
 # Use the DOMAIN_NAME env var (e.g. 151.145.85.174)
 https://{$DOMAIN_NAME} {
-    # internal = Self-Signed info (for Raw IP support)
-    tls internal
-
     # internal = Self-Signed info (for Raw IP support)
     tls internal
 
