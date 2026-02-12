@@ -12,6 +12,9 @@ const registerSchema = z.object({
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
+    // Enforce lowercase email
+    if (body.email) body.email = body.email.toLowerCase();
+
     const validatedData = registerSchema.parse(body)
 
     // Check if user already exists
