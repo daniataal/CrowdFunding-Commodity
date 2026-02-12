@@ -40,7 +40,26 @@ services:
     # Initialize DB schema if needed on startup
     command: sh -c "/app/node_modules/.bin/prisma db push --skip-generate && node server.js"
 
+  caddy:
+    image: caddy:2-alpine
+    container_name: commodity-caddy
+    restart: always
+    ports:
+      - "80:80"
+      - "443:443"
+    environment:
+      - DOMAIN_NAME=${DOMAIN_NAME}
+      - ACME_EMAIL=${ACME_EMAIL}
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      - app
+
 volumes:
   postgres_data:
   uploads:
+  caddy_data:
+  caddy_config:
 
