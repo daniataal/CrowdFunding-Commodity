@@ -17,70 +17,70 @@ export default function LoginPage() {
   return (
     <div className="flex min-h-screen">
       {/* Left side - Form */}
-      <div className="flex w-full flex-col justify-center bg-background px-8 lg:w-1/2 lg:px-24 xl:px-32">
-        {/* ... header ... */}
+      <div className="flex w-full flex-col justify-center bg-background px-8 lg:w-1/2">
+        <div className="mx-auto w-full max-w-md">
+          <h1 className="mb-2 text-3xl font-bold tracking-tight text-foreground">Welcome back</h1>
+          <p className="mb-6 text-muted-foreground text-base">Sign in to access your commodity investment portfolio</p>
 
-        <h1 className="mb-2 text-3xl font-bold tracking-tight text-foreground">Welcome back</h1>
-        <p className="mb-6 text-muted-foreground text-base">Sign in to access your commodity investment portfolio</p>
-
-        <form action={dispatch} className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="email" className="text-sm font-medium">Email</Label>
-            <Input
-              id="email"
-              type="email"
-              name="email"
-              placeholder="investor@example.com"
-              required
-              className="h-11 border-white/10 bg-white/5 px-4 text-sm transition-all focus:border-primary focus:ring-1 focus:ring-primary placeholder:text-muted-foreground/50"
-            />
-          </div>
-
-          <div className="space-y-2">
-            <div className="flex items-center justify-between">
-              <Label htmlFor="password" className="text-sm font-medium">Password</Label>
-              <Link href="/forgot-password" className="text-sm font-medium text-primary hover:text-primary/80 transition-colors">
-                Forgot password?
-              </Link>
+          <form action={dispatch} className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="email" className="text-sm font-medium">Email</Label>
+              <Input
+                id="email"
+                type="email"
+                name="email"
+                placeholder="investor@example.com"
+                required
+                className="h-11 border-white/10 bg-white/5 px-4 text-sm transition-all focus:border-primary focus:ring-1 focus:ring-primary placeholder:text-muted-foreground/50"
+              />
             </div>
-            <Input
-              id="password"
-              type="password"
-              name="password"
-              placeholder="Enter your password"
-              required
-              className="h-11 border-white/10 bg-white/5 px-4 text-sm transition-all focus:border-primary focus:ring-1 focus:ring-primary placeholder:text-muted-foreground/50"
-            />
-          </div>
 
-          {errorMessage && (
-            <div className="rounded-lg border border-destructive/20 bg-destructive/10 p-3 text-sm text-destructive font-medium">
-              {errorMessage}
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <Label htmlFor="password" className="text-sm font-medium">Password</Label>
+                <Link href="/forgot-password" className="text-sm font-medium text-primary hover:text-primary/80 transition-colors">
+                  Forgot password?
+                </Link>
+              </div>
+              <Input
+                id="password"
+                type="password"
+                name="password"
+                placeholder="Enter your password"
+                required
+                className="h-11 border-white/10 bg-white/5 px-4 text-sm transition-all focus:border-primary focus:ring-1 focus:ring-primary placeholder:text-muted-foreground/50"
+              />
             </div>
-          )}
 
-          <Button
-            type="submit"
-            className="h-11 w-full bg-primary text-base font-bold text-primary-foreground shadow-lg shadow-primary/25 transition-all hover:bg-primary/90 hover:scale-[1.01]"
-            disabled={isPending}
-          >
-            {isPending ? (
-              <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Signing in...
-              </>
-            ) : (
-              "Sign in"
+            {errorMessage && (
+              <div className="rounded-lg border border-destructive/20 bg-destructive/10 p-3 text-sm text-destructive font-medium">
+                {errorMessage}
+              </div>
             )}
-          </Button>
-        </form>
-        {/* ... footer ... */}
-        {/* Footer link */}
-        <div className="mt-8 text-center text-sm text-muted-foreground">
-          {"Don't have an account?"}{" "}
-          <Link href="/register" className="font-bold text-white hover:text-primary transition-colors">
-            Create account
-          </Link>
+
+            <Button
+              type="submit"
+              className="h-11 w-full bg-primary text-base font-bold text-primary-foreground shadow-lg shadow-primary/25 transition-all hover:bg-primary/90 hover:scale-[1.01]"
+              disabled={isPending}
+            >
+              {isPending ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Signing in...
+                </>
+              ) : (
+                "Sign in"
+              )}
+            </Button>
+          </form>
+          {/* ... footer ... */}
+          {/* Footer link */}
+          <div className="mt-8 text-center text-sm text-muted-foreground">
+            {"Don't have an account?"}{" "}
+            <Link href="/register" className="font-bold text-white hover:text-primary transition-colors">
+              Create account
+            </Link>
+          </div>
         </div>
       </div>
 
