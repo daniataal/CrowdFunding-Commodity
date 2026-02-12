@@ -1,6 +1,14 @@
+"use client"
+
 import { useActionState } from "react"
+import { useRouter } from "next/navigation"
+import Link from "next/link"
+import { Loader2, Sparkles, Shield, Zap } from "lucide-react"
+
 import { authenticate } from "@/app/actions/auth"
-// ... imports
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
 
 export default function LoginPage() {
   const router = useRouter()
@@ -67,25 +75,19 @@ export default function LoginPage() {
           </Button>
         </form>
         {/* ... footer ... */}
+        {/* Footer link */}
+        <div className="mt-8 text-center text-sm text-muted-foreground">
+          {"Don't have an account?"}{" "}
+          <Link href="/register" className="font-bold text-white hover:text-primary transition-colors">
+            Create account
+          </Link>
+        </div>
       </div>
-      {/* ... right side ... */}
-    </div>
-  )
-}
 
-<div className="mt-8 text-center text-sm text-muted-foreground">
-  {"Don't have an account?"}{" "}
-  <Link href="/register" className="font-bold text-white hover:text-primary transition-colors">
-    Create account
-  </Link>
-</div>
-        </div >
-      </div >
-
-  {/* Right side - Marketing */ }
-  < div className = "hidden lg:flex relative bg-[#050505] lg:w-1/2 items-center justify-center p-12 overflow-hidden" >
-    {/* Abstract Background Effects */ }
-    < div className = "absolute top-1/4 right-1/4 w-[600px] h-[600px] bg-primary rounded-full blur-[128px] opacity-10 pointer-events-none" ></div >
+      {/* Right side - Marketing */}
+      <div className="hidden lg:flex relative bg-[#050505] lg:w-1/2 items-center justify-center p-12 overflow-hidden">
+        {/* Abstract Background Effects */}
+        <div className="absolute top-1/4 right-1/4 w-[600px] h-[600px] bg-primary rounded-full blur-[128px] opacity-10 pointer-events-none"></div>
         <div className="absolute bottom-1/4 left-1/4 w-[600px] h-[600px] bg-amber-600 rounded-full blur-[128px] opacity-5 pointer-events-none"></div>
         <div className="absolute inset-0 bg-[url('/grid-pattern.svg')] opacity-5"></div>
 
@@ -126,7 +128,7 @@ export default function LoginPage() {
             </div>
           </div>
         </div>
-      </div >
-    </div >
+      </div>
+    </div>
   )
 }
