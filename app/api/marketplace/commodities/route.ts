@@ -42,12 +42,12 @@ export async function GET(request: NextRequest) {
     transportMethod: c.transportMethod,
     riskScore: c.riskScore === null ? null : Number(c.riskScore),
     maturityDate: c.maturityDate ? c.maturityDate.toISOString() : null,
-    metalForm: (c as any).metalForm ?? null,
-    purityPercent: (c as any).purityPercent ?? null,
-    karat: (c as any).karat ?? null,
-    grossWeightTroyOz: (c as any).grossWeightTroyOz ?? null,
-    refineryName: (c as any).refineryName ?? null,
-    refineryLocation: (c as any).refineryLocation ?? null,
+    metalForm: c.metalForm ?? null,
+    purityPercent: c.purityPercent ?? null,
+    karat: c.karat ?? null,
+    grossWeightTroyOz: c.grossWeightTroyOz ?? null,
+    refineryName: c.refineryName ?? null,
+    refineryLocation: c.refineryLocation ?? null,
   }))
 
   return NextResponse.json({ success: true, data })
@@ -56,41 +56,63 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
+    console.log("[Marketplace API] Received commodity creation request:", body);
 
-    // Basic validation / mapping
+    // Map arbitrary strings to enums
+    const typeMap: Record<string, any> = {
+      'gold': 'Metals',
+      'silver': 'Metals',
+      'platinum': 'Metals',
+      'palladium': 'Metals',
+      'bullion': 'Metals',
+      'dore': 'Metals',
+      'oil': 'Energy',
+      'gas': 'Energy',
+      'wheat': 'Agriculture',
+      'corn': 'Agriculture',
+    };
+
+    const type = typeMap[body.type?.toLowerCase()] || (['Agriculture', 'Energy', 'Metals'].includes(body.type) ? body.type : "Metals");
+    const risk = (['Low', 'Medium', 'High'].includes(body.risk) ? body.risk : "Low");
+
     // We expect the Marketplace to send data matching our schema or close to it
     const commodity = await prisma.commodity.create({
       data: {
-        type: body.type || "Metals",
-        name: body.name,
-        icon: body.icon || "gold-bar",
-        risk: body.risk || "Low",
+        type: type as any,
+        name: body.name || `${type} Investment`,
+        icon: body.icon || (type === "Metals" ? "gold-bar" : "package"),
+        risk: risk as any,
         targetApy: body.targetApy || 10.0,
         duration: body.duration || 12,
         minInvestment: body.minInvestment || 1000,
         amountRequired: body.amountRequired,
         currentAmount: 0,
-        description: body.description,
+        description: body.description || "Commodity shipment from DoreMarket",
         origin: body.origin || "Unknown",
         destination: body.destination || "Dubai",
         status: "FUNDING",
-        shipmentId: body.shipmentId, // External ID from Marketplace
+        shipmentId: String(body.shipmentId), // External ID from Marketplace
 
         // Detailed Metal Ops fields
-        transportMethod: body.transportMethod,
-        metalForm: body.metalForm,
-        purityPercent: body.purityPercent,
+        transportMethod: body.transportMethod || "Air Freight",
+        metalForm: body.metalForm || (type === 'Metals' ? 'Dore' : null),
+        purityPercent: body.purityPercent ? Number(body.purityPercent) : null,
 
         // Defaults
         platformFeeBps: 150
       }
     });
 
+    console.log("[Marketplace API] Successfully created commodity:", commodity.id);
     return NextResponse.json({ success: true, data: commodity });
-  } catch (error) {
+  } catch (error: any) {
     console.error("Error creating commodity from marketplace:", error);
     return NextResponse.json(
-      { success: false, error: "Failed to create commodity" },
+      {
+        success: false,
+        error: "Failed to create commodity",
+        details: error?.message || "Unknown error"
+      },
       { status: 500 }
     );
   }
