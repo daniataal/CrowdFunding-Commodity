@@ -58,12 +58,12 @@ const typeLabels: Record<DocumentType, string> = {
 function kycBadge(status: KycStatus) {
   const cls =
     status === "APPROVED"
-      ? "border-primary/50 text-primary"
+      ? "border-primary/30 text-primary"
       : status === "PENDING"
-        ? "border-accent/50 text-accent"
+        ? "border-accent/30 text-accent"
         : status === "REJECTED"
-          ? "border-red-500/50 text-red-500"
-          : "border-slate-500/30 text-muted-foreground"
+          ? "border-red-500/30 text-red-500"
+          : "border-slate-500/20 text-muted-foreground"
   return (
     <Badge variant="outline" className={cls}>
       {status}
@@ -627,7 +627,7 @@ export function UserManagement({ isAdmin }: { isAdmin: boolean }) {
       />
 
       <Sheet open={detailOpen} onOpenChange={(open) => setDetailOpen(open)}>
-        <SheetContent className="w-full sm:max-w-2xl overflow-y-auto">
+        <SheetContent className="w-full sm:max-w-2xl overflow-y-auto border-white/5">
           <SheetHeader>
             <SheetTitle>User details</SheetTitle>
             <SheetDescription>
@@ -645,7 +645,7 @@ export function UserManagement({ isAdmin }: { isAdmin: boolean }) {
             <div className="mt-6 text-sm text-muted-foreground">No user selected.</div>
           ) : (
             <div className="mt-6 space-y-4">
-              <Card className="border-border p-6 bg-card relative overflow-hidden shadow-sm">
+              <Card className="border-white/5 p-6 bg-card relative overflow-hidden shadow-sm">
                 <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-full blur-[60px] pointer-events-none" />
                 <div className="flex items-start justify-between gap-6 relative z-10">
                   <div className="flex-1">
@@ -766,7 +766,7 @@ export function UserManagement({ isAdmin }: { isAdmin: boolean }) {
                 </TabsList>
 
                 <TabsContent value="kyc" className="mt-4 space-y-4">
-                  <Card className="border-border p-6 bg-card shadow-sm">
+                  <Card className="border-white/5 p-6 bg-card shadow-sm">
                     <div className="flex items-start justify-between gap-4">
                       <div>
                         <div className="font-semibold text-foreground">KYC Review</div>

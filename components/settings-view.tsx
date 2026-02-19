@@ -304,12 +304,12 @@ export function SettingsView({
   const kycStatusBadge = useMemo(() => {
     const cls =
       kycStatus === "APPROVED"
-        ? "border-primary/50 text-primary"
+        ? "border-primary/30 text-primary"
         : kycStatus === "PENDING"
-          ? "border-accent/50 text-accent"
+          ? "border-accent/30 text-accent"
           : kycStatus === "REJECTED"
-            ? "border-red-500/50 text-red-500"
-            : "border-slate-500/30 text-muted-foreground"
+            ? "border-red-500/30 text-red-500"
+            : "border-slate-500/20 text-muted-foreground"
     return (
       <Badge variant="outline" className={cls}>
         {kycStatus}
@@ -397,7 +397,7 @@ export function SettingsView({
             </CardHeader>
             <CardContent className="space-y-8 relative z-10">
               <div className="flex items-center gap-8">
-                <Avatar className="h-28 w-28 border border-border shadow-xl">
+                <Avatar className="h-28 w-28 border border-white/5 shadow-xl">
                   <AvatarImage src={profileQuery.data?.avatar || "/placeholder.svg"} />
                   <AvatarFallback className="bg-muted text-3xl text-primary font-bold">
                     {user?.name?.charAt(0).toUpperCase()}
@@ -535,7 +535,7 @@ export function SettingsView({
               <CardDescription>Upload identification documents to verify your account</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="flex items-center justify-between rounded-lg border border-border bg-muted/30 p-4">
+              <div className="flex items-center justify-between rounded-lg border border-white/5 bg-muted/30 p-4">
                 <div>
                   <div className="font-semibold">Verification status</div>
                   <div className="text-sm text-muted-foreground">
@@ -565,7 +565,7 @@ export function SettingsView({
                 </Alert>
               )}
 
-              <Card className="border border-border p-4">
+              <Card className="border border-white/5 p-4">
                 <div className="font-medium">Upload documents</div>
                 <div className="text-sm text-muted-foreground mt-1">
                   Accepted formats: JPG, PNG, PDF (Max 5MB)
@@ -652,7 +652,7 @@ export function SettingsView({
                 </div>
               </Card>
 
-              <Card className="border border-border p-4">
+              <Card className="border border-white/5 p-4">
                 <div className="font-medium">Submitted documents</div>
                 <div className="text-sm text-muted-foreground mt-1">Visible to you and the admin review team.</div>
 
@@ -665,7 +665,7 @@ export function SettingsView({
                 ) : (
                   <div className="mt-4 space-y-2">
                     {(kycDocsQuery.data ?? []).map((d) => (
-                      <div key={d.id} className="flex items-start justify-between gap-4 rounded-lg border border-border p-3">
+                      <div key={d.id} className="flex items-start justify-between gap-4 rounded-lg border border-white/5 p-3">
                         <div className="min-w-0">
                           <div className="font-medium truncate">{d.name}</div>
                           <div className="text-xs text-muted-foreground">
@@ -846,7 +846,7 @@ export function SettingsView({
               ) : currentSessionQuery.isError ? (
                 <div className="text-sm text-muted-foreground">Unable to load session</div>
               ) : (
-                <div className="flex items-center justify-between rounded-lg border border-border p-3">
+                <div className="flex items-center justify-between rounded-lg border border-white/5 p-3">
                   <div>
                     <div className="font-medium">Current Session</div>
                     <div className="text-sm text-muted-foreground">
@@ -938,7 +938,7 @@ export function SettingsView({
                   <SelectTrigger id="currency">
                     <SelectValue />
                   </SelectTrigger>
-                  <SelectContent className="border border-border bg-card shadow-xl">
+                  <SelectContent className="border border-white/5 bg-card shadow-xl">
                     <SelectItem value="USD">USD - US Dollar</SelectItem>
                     <SelectItem value="EUR">EUR - Euro</SelectItem>
                     <SelectItem value="GBP">GBP - British Pound</SelectItem>
@@ -953,7 +953,7 @@ export function SettingsView({
                   <SelectTrigger id="timezone">
                     <SelectValue />
                   </SelectTrigger>
-                  <SelectContent className="border border-border bg-card shadow-xl">
+                  <SelectContent className="border border-white/5 bg-card shadow-xl">
                     <SelectItem value="America/New_York">Eastern Time (ET)</SelectItem>
                     <SelectItem value="America/Chicago">Central Time (CT)</SelectItem>
                     <SelectItem value="America/Denver">Mountain Time (MT)</SelectItem>
@@ -970,7 +970,7 @@ export function SettingsView({
                   <SelectTrigger id="language">
                     <SelectValue />
                   </SelectTrigger>
-                  <SelectContent className="border border-border bg-card shadow-xl">
+                  <SelectContent className="border border-white/5 bg-card shadow-xl">
                     <SelectItem value="en">English</SelectItem>
                     <SelectItem value="es">Español</SelectItem>
                     <SelectItem value="fr">Français</SelectItem>
@@ -1000,13 +1000,13 @@ export function SettingsView({
               ) : billingMethodsQuery.isError ? (
                 <div className="text-sm text-destructive">Failed to load payment methods.</div>
               ) : (billingMethodsQuery.data?.length ?? 0) === 0 ? (
-                <div className="rounded-lg border border-border bg-muted/30 p-4 text-sm text-muted-foreground text-center">
+                <div className="rounded-lg border border-white/5 bg-muted/30 p-4 text-sm text-muted-foreground text-center">
                   No payment methods saved.
                 </div>
               ) : (
                 <div className="grid gap-4 md:grid-cols-2">
                   {billingMethodsQuery.data?.map((method) => (
-                    <div key={method.id} className="flex items-center justify-between rounded-xl border border-border bg-card p-4 shadow-sm">
+                    <div key={method.id} className="flex items-center justify-between rounded-xl border border-white/5 bg-card p-4 shadow-sm">
                       <div className="flex items-center gap-4">
                         <div className="h-10 w-10 rounded-full bg-white/5 flex items-center justify-center border border-white/5">
                           <CreditCard className="h-5 w-5 text-primary" />
@@ -1029,7 +1029,7 @@ export function SettingsView({
                   + Add Payment Method
                 </Button>
               ) : (
-                <div className="rounded-xl border border-border bg-card p-4 space-y-4 animate-in fade-in slide-in-from-top-2">
+                <div className="rounded-xl border border-white/5 bg-card p-4 space-y-4 animate-in fade-in slide-in-from-top-2">
                   <div className="flex justify-between items-center">
                     <h4 className="font-semibold text-sm">Add New Card</h4>
                     <Button variant="ghost" size="sm" onClick={() => setAddCardOpen(false)}>Cancel</Button>
