@@ -197,7 +197,7 @@ export function AssetDetailModal({ commodity, open, onOpenChange }: AssetDetailM
                 </p>
               </div>
 
-              <Card className="w-full max-w-sm p-6 bg-white/5 border border-white/10 backdrop-blur-sm relative z-10">
+              <Card className="w-full max-w-sm p-6 bg-white/5 border border-white/5 backdrop-blur-sm relative z-10">
                 <div className="flex justify-between text-sm mb-3">
                   <span className="text-muted-foreground">Transaction ID</span>
                   <span className="font-mono text-xs text-white/70 bg-white/5 px-2 py-1 rounded">{investMutation.data?.data?.investmentId?.slice(-8) ?? "PENDING"}...</span>
@@ -215,7 +215,7 @@ export function AssetDetailModal({ commodity, open, onOpenChange }: AssetDetailM
               </Card>
 
               <div className="flex gap-4 w-full max-w-xs relative z-10">
-                <Button className="flex-1 bg-transparent border border-white/10 hover:bg-white/5 text-white" variant="outline" onClick={resetModal}>
+                <Button className="flex-1 bg-transparent border border-white/5 hover:bg-white/5 text-white" variant="outline" onClick={resetModal}>
                   Close
                 </Button>
                 <Button className="flex-1 bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg shadow-primary/20" onClick={resetModal}>

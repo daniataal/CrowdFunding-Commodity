@@ -40,7 +40,7 @@ function markerHtml(vehicleType: ShipmentMapInnerProps["vehicleType"], label?: s
 
   const title = label ? String(label).replace(/</g, "&lt;") : ""
   return `<div class="shipment-marker transform transition-all duration-500 ${colorClass}" title="${title}">
-    <div class="shipment-marker__icon bg-[#0A0A0A] p-2 rounded-full border border-white/20 shadow-[0_0_15px_currentColor] backdrop-blur-sm">
+    <div class="shipment-marker__icon bg-[#0A0A0A] p-2 rounded-full border border-white/10 shadow-[0_0_15px_currentColor] backdrop-blur-sm">
       ${iconSvg}
     </div>
   </div>`
@@ -89,7 +89,7 @@ export default function ShipmentMapInner({
   )
 
   return (
-    <div className="w-full overflow-hidden rounded-xl border border-white/10 bg-[#0A0A0A]">
+    <div className="w-full overflow-hidden rounded-xl border border-white/5 bg-[#0A0A0A]">
       <MapContainer
         center={currentPos}
         zoom={3}

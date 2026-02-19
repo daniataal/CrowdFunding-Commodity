@@ -154,15 +154,15 @@ export function SignupForm({ onSwitchToLogin }: SignupFormProps) {
             Get access to curated commodity investment opportunities with full transparency and low minimums.
           </p>
           <div className="grid grid-cols-3 gap-4">
-            <div className="rounded-lg border border-slate-700 bg-slate-800/50 p-4">
+            <div className="rounded-lg border border-border bg-slate-800/50 p-4">
               <div className="mb-1 text-2xl font-bold text-white">$2.4B</div>
               <div className="text-xs text-slate-400">Assets Under Management</div>
             </div>
-            <div className="rounded-lg border border-slate-700 bg-slate-800/50 p-4">
+            <div className="rounded-lg border border-border bg-slate-800/50 p-4">
               <div className="mb-1 text-2xl font-bold text-white">12K+</div>
               <div className="text-xs text-slate-400">Active Investors</div>
             </div>
-            <div className="rounded-lg border border-slate-700 bg-slate-800/50 p-4">
+            <div className="rounded-lg border border-border bg-slate-800/50 p-4">
               <div className="mb-1 text-2xl font-bold text-white">8.4%</div>
               <div className="text-xs text-slate-400">Avg. Annual Return</div>
             </div>

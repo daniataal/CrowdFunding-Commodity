@@ -24,7 +24,7 @@ export function MetalsValueCalculator({
   const estValue = useMemo(() => (Number.isFinite(spotNum) && fineOz > 0 ? fineOz * spotNum : 0), [fineOz, spotNum])
 
   return (
-    <Card className="border border-white/10 p-6 bg-[#0A0A0A] relative overflow-hidden">
+    <Card className="border border-white/5 p-6 bg-[#0A0A0A] relative overflow-hidden">
       <div className="absolute top-0 right-0 w-32 h-32 bg-amber-500/5 rounded-full blur-[60px] pointer-events-none" />
       <div className="font-semibold text-white mb-2 relative z-10">LBMA Spot Value (Estimator)</div>
       <div className="text-sm text-muted-foreground relative z-10">
@@ -39,7 +39,7 @@ export function MetalsValueCalculator({
             value={spot}
             onChange={(e) => setSpot(e.target.value)}
             placeholder="e.g. 2650.50"
-            className="bg-white/5 border-white/10 text-white placeholder:text-muted-foreground/50 h-10"
+            className="bg-white/5 border-white/5 text-white placeholder:text-muted-foreground/50 h-10"
           />
           <div className="text-xs text-muted-foreground leading-relaxed">
             Source: LBMA (use your internal feed / vendor). This UI is an estimator, not a pricing oracle.
@@ -61,7 +61,7 @@ export function MetalsValueCalculator({
               <span className="text-muted-foreground">Fine ounces</span>
               <span className="font-medium text-white">{fineOz.toFixed(4)} oz t</span>
             </div>
-            <div className="pt-3 border-t border-white/10 mt-3 flex justify-between items-center">
+            <div className="pt-3 border-t border-white/5 mt-3 flex justify-between items-center">
               <span className="text-muted-foreground">Estimated value</span>
 
               <span className="font-bold text-amber-500 text-lg">

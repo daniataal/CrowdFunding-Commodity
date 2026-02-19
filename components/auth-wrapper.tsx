@@ -19,7 +19,7 @@ export function AuthWrapper({ children }: AuthWrapperProps) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-background">
         <div className="text-center">
-          <div className="mb-4 h-12 w-12 animate-spin rounded-full border-4 border-slate-700 border-t-emerald-500" />
+          <div className="mb-4 h-12 w-12 animate-spin rounded-full border-4 border-border border-t-emerald-500" />
           <div className="text-muted-foreground">Loading...</div>
         </div>
       </div>

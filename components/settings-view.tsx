@@ -360,7 +360,7 @@ export function SettingsView({
       </div>
 
       <Tabs defaultValue={defaultTab} className="space-y-8">
-        <TabsList className="grid w-full grid-cols-2 lg:grid-cols-6 bg-[#0A0A0A] border border-white/10 p-1 h-auto rounded-xl gap-1">
+        <TabsList className="grid w-full grid-cols-2 lg:grid-cols-6 bg-[#0A0A0A] border border-white/5 p-1 h-auto rounded-xl gap-1">
           <TabsTrigger value="profile" className="gap-2 data-[state=active]:bg-primary data-[state=active]:text-white h-10 rounded-lg">
             <User className="h-4 w-4" />
             <span className="hidden sm:inline">Profile</span>
@@ -389,7 +389,7 @@ export function SettingsView({
 
         {/* Profile Tab */}
         <TabsContent value="profile" className="space-y-6">
-          <Card className="border border-white/10 bg-[#0A0A0A] rounded-2xl relative overflow-hidden">
+          <Card className="border border-white/5 bg-[#0A0A0A] rounded-2xl relative overflow-hidden">
             <div className="absolute top-0 right-0 w-32 h-32 bg-primary/10 rounded-full blur-[60px]" />
             <CardHeader className="relative z-10">
               <CardTitle className="text-white">Profile Information</CardTitle>
@@ -419,7 +419,7 @@ export function SettingsView({
                   />
                   <Button
                     variant="outline"
-                    className="gap-2 bg-white/5 border-white/10 text-white hover:bg-white/10 hover:text-white mb-2"
+                    className="gap-2 bg-white/5 border-white/5 text-white hover:bg-white/10 hover:text-white mb-2"
                     disabled={uploadAvatarMutation.isPending}
                     onClick={() => avatarInputRef.current?.click()}
                   >
@@ -439,7 +439,7 @@ export function SettingsView({
                     id="name"
                     value={name}
                     onChange={(e) => setName(e.target.value)}
-                    className="bg-white/5 border-white/10 text-white focus-visible:ring-primary/50"
+                    className="bg-white/5 border-white/5 text-white focus-visible:ring-primary/50"
                   />
                 </div>
                 <div className="space-y-2">
@@ -449,7 +449,7 @@ export function SettingsView({
                     type="email"
                     value={email}
                     disabled
-                    className="bg-white/5 border-white/10 text-muted-foreground cursor-not-allowed"
+                    className="bg-white/5 border-white/5 text-muted-foreground cursor-not-allowed"
                   />
                   <p className="text-xs text-muted-foreground">Email changes are not supported yet.</p>
                 </div>
@@ -461,7 +461,7 @@ export function SettingsView({
                     placeholder="+1 (555) 000-0000"
                     value={phone}
                     onChange={(e) => setPhone(e.target.value)}
-                    className="bg-white/5 border-white/10 text-white focus-visible:ring-primary/50 placeholder:text-muted-foreground/50"
+                    className="bg-white/5 border-white/5 text-white focus-visible:ring-primary/50 placeholder:text-muted-foreground/50"
                   />
                 </div>
                 <div className="space-y-2">
@@ -471,7 +471,7 @@ export function SettingsView({
                     placeholder="Acme Corp"
                     value={company}
                     onChange={(e) => setCompany(e.target.value)}
-                    className="bg-white/5 border-white/10 text-white focus-visible:ring-primary/50 placeholder:text-muted-foreground/50"
+                    className="bg-white/5 border-white/5 text-white focus-visible:ring-primary/50 placeholder:text-muted-foreground/50"
                   />
                 </div>
               </div>
@@ -481,7 +481,7 @@ export function SettingsView({
                 <textarea
                   id="bio"
                   rows={4}
-                  className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white placeholder:text-muted-foreground/50 focus-visible:outline-none focus:ring-2 focus:ring-primary/50"
+                  className="w-full rounded-xl border border-white/5 bg-white/5 px-4 py-3 text-sm text-white placeholder:text-muted-foreground/50 focus-visible:outline-none focus:ring-2 focus:ring-primary/50"
                   placeholder="Tell us about yourself..."
                   value={bio}
                   onChange={(e) => setBio(e.target.value)}
@@ -499,20 +499,20 @@ export function SettingsView({
             </CardContent>
           </Card>
 
-          <Card className="border border-white/10 bg-[#0A0A0A] rounded-2xl relative overflow-hidden">
+          <Card className="border border-white/5 bg-[#0A0A0A] rounded-2xl relative overflow-hidden">
             <CardHeader>
               <CardTitle className="text-white">Account Type</CardTitle>
               <CardDescription className="text-muted-foreground">Your current account status and verification level</CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="flex items-center justify-between rounded-xl border border-white/10 bg-white/5 p-6">
+              <div className="flex items-center justify-between rounded-xl border border-white/5 bg-white/5 p-6">
                 <div>
                   <div className="font-bold text-white text-lg">Individual Investor</div>
                   <div className="text-sm text-muted-foreground">Standard investment limits apply</div>
                 </div>
                 <Button
                   variant="outline"
-                  className="border-white/10 bg-transparent text-white hover:bg-white/10 hover:text-white"
+                  className="border-white/5 bg-transparent text-white hover:bg-white/10 hover:text-white"
                   onClick={() =>
                     toast({
                       title: "Upgrade",
@@ -775,7 +775,7 @@ export function SettingsView({
               )}
 
               <Dialog open={setup2FAOpen} onOpenChange={setSetup2FAOpen}>
-                <DialogContent className="bg-[#0A0A0A] border-white/10 sm:max-w-md">
+                <DialogContent className="bg-[#0A0A0A] border-white/5 sm:max-w-md">
                   <DialogHeader>
                     <DialogTitle className="text-white">Set up Two-Factor Authentication</DialogTitle>
                     <DialogDescription>
@@ -812,7 +812,7 @@ export function SettingsView({
                         value={otpCode}
                         onChange={(e) => setOtpCode(e.target.value)}
                         placeholder="000 000"
-                        className="text-center text-lg tracking-widest bg-white/5 border-white/10 text-white"
+                        className="text-center text-lg tracking-widest bg-white/5 border-white/5 text-white"
                         maxLength={6}
                       />
                     </div>
@@ -1008,7 +1008,7 @@ export function SettingsView({
                   {billingMethodsQuery.data?.map((method) => (
                     <div key={method.id} className="flex items-center justify-between rounded-xl border border-border bg-card p-4 shadow-sm">
                       <div className="flex items-center gap-4">
-                        <div className="h-10 w-10 rounded-full bg-white/5 flex items-center justify-center border border-white/10">
+                        <div className="h-10 w-10 rounded-full bg-white/5 flex items-center justify-center border border-white/5">
                           <CreditCard className="h-5 w-5 text-primary" />
                         </div>
                         <div>

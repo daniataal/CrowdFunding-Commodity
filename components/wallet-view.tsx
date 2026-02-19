@@ -124,7 +124,7 @@ export function WalletView() {
       </div>
 
       {/* Main Balance Card */}
-      <Card className="relative overflow-hidden border border-white/10 bg-[#0A0A0A] p-8 rounded-2xl">
+      <Card className="relative overflow-hidden border border-white/5 bg-[#0A0A0A] p-8 rounded-2xl">
         {/* Background Decorative Blob */}
         <div className="absolute top-0 right-0 w-[400px] h-[400px] bg-primary/20 rounded-full blur-[100px] pointer-events-none -translate-y-1/2 translate-x-1/2" />
         <div className="absolute bottom-0 left-0 w-[300px] h-[300px] bg-amber-500/10 rounded-full blur-[80px] pointer-events-none translate-y-1/2 -translate-x-1/2" />
@@ -153,7 +153,7 @@ export function WalletView() {
             </Button>
             <Button
               variant="outline"
-              className="h-14 text-base font-bold border-white/10 bg-white/5 hover:bg-white/10 text-white rounded-xl"
+              className="h-14 text-base font-bold border-white/5 bg-white/5 hover:bg-white/10 text-white rounded-xl"
               onClick={() => setWithdrawOpen(true)}
             >
               <Download className="h-5 w-5 mr-2" />
@@ -165,7 +165,7 @@ export function WalletView() {
 
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <Card className="p-8 border border-white/10 bg-[#0A0A0A] rounded-2xl relative overflow-hidden group">
+        <Card className="p-8 border border-white/5 bg-[#0A0A0A] rounded-2xl relative overflow-hidden group">
           <div className="absolute top-0 right-0 w-32 h-32 bg-red-500/20 rounded-full blur-[60px] transition-all duration-500 group-hover:bg-red-500/30" />
           <div className="relative z-10">
             <div className="flex items-center gap-3 mb-2">
@@ -177,7 +177,7 @@ export function WalletView() {
           </div>
         </Card>
 
-        <Card className="p-8 border border-white/10 bg-[#0A0A0A] rounded-2xl relative overflow-hidden group">
+        <Card className="p-8 border border-white/5 bg-[#0A0A0A] rounded-2xl relative overflow-hidden group">
           <div className="absolute top-0 right-0 w-32 h-32 bg-amber-500/20 rounded-full blur-[60px] transition-all duration-500 group-hover:bg-amber-500/30" />
           <div className="relative z-10">
             <div className="flex items-center gap-3 mb-2">
@@ -199,7 +199,7 @@ export function WalletView() {
 
         <div className="space-y-3">
           {txns.length === 0 ? (
-            <div className="text-center py-12 border border-dashed border-white/10 rounded-xl">
+            <div className="text-center py-12 border border-dashed border-white/5 rounded-xl">
               <p className="text-muted-foreground">No transactions yet.</p>
             </div>
           ) : (
@@ -259,7 +259,7 @@ export function WalletView() {
 
       {/* Deposit/Withdraw Dialogs */}
       <Dialog open={depositOpen} onOpenChange={setDepositOpen}>
-        <DialogContent className="bg-[#0A0A0A] border-white/10 sm:max-w-[425px]">
+        <DialogContent className="bg-[#0A0A0A] border-white/5 sm:max-w-[425px]">
           <DialogHeader>
             <DialogTitle className="text-white">Deposit funds</DialogTitle>
             <DialogDescription>Add money to your wallet balance.</DialogDescription>
@@ -277,7 +277,7 @@ export function WalletView() {
                   value={depositAmount}
                   onChange={(e) => setDepositAmount(e.target.value)}
                   placeholder="1000"
-                  className="pl-7 bg-white/5 border-white/10 text-white h-12"
+                  className="pl-7 bg-white/5 border-white/5 text-white h-12"
                 />
               </div>
             </div>
@@ -288,13 +288,13 @@ export function WalletView() {
                 value={depositReference}
                 onChange={(e) => setDepositReference(e.target.value)}
                 placeholder="Bank transfer ref"
-                className="bg-white/5 border-white/10 text-white h-12"
+                className="bg-white/5 border-white/5 text-white h-12"
               />
             </div>
             {depositMutation.error && <div className="text-sm text-red-500 bg-red-500/10 p-3 rounded-lg border border-red-500/20">{(depositMutation.error as Error).message}</div>}
           </div>
           <DialogFooter className="mt-4">
-            <Button variant="outline" onClick={() => setDepositOpen(false)} className="bg-transparent border-white/10 text-white hover:bg-white/10 h-11">
+            <Button variant="outline" onClick={() => setDepositOpen(false)} className="bg-transparent border-white/5 text-white hover:bg-white/10 h-11">
               Cancel
             </Button>
             <Button
@@ -309,7 +309,7 @@ export function WalletView() {
       </Dialog>
 
       <Dialog open={withdrawOpen} onOpenChange={setWithdrawOpen}>
-        <DialogContent className="bg-[#0A0A0A] border-white/10 sm:max-w-[425px]">
+        <DialogContent className="bg-[#0A0A0A] border-white/5 sm:max-w-[425px]">
           <DialogHeader>
             <DialogTitle className="text-white">Withdraw funds</DialogTitle>
             <DialogDescription>Request a withdrawal from your wallet balance.</DialogDescription>
@@ -327,7 +327,7 @@ export function WalletView() {
                   value={withdrawAmount}
                   onChange={(e) => setWithdrawAmount(e.target.value)}
                   placeholder="500"
-                  className="pl-7 bg-white/5 border-white/10 text-white h-12"
+                  className="pl-7 bg-white/5 border-white/5 text-white h-12"
                 />
               </div>
             </div>
@@ -338,13 +338,13 @@ export function WalletView() {
                 value={withdrawDescription}
                 onChange={(e) => setWithdrawDescription(e.target.value)}
                 placeholder="Where to send / notes"
-                className="bg-white/5 border-white/10 text-white h-12"
+                className="bg-white/5 border-white/5 text-white h-12"
               />
             </div>
             {withdrawMutation.error && <div className="text-sm text-red-500 bg-red-500/10 p-3 rounded-lg border border-red-500/20">{(withdrawMutation.error as Error).message}</div>}
           </div>
           <DialogFooter className="mt-4">
-            <Button variant="outline" onClick={() => setWithdrawOpen(false)} className="bg-transparent border-white/10 text-white hover:bg-white/10 h-11">
+            <Button variant="outline" onClick={() => setWithdrawOpen(false)} className="bg-transparent border-white/5 text-white hover:bg-white/10 h-11">
               Cancel
             </Button>
             <Button

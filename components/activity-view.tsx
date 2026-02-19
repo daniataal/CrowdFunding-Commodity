@@ -62,7 +62,7 @@ export function ActivityView() {
         <p className="text-muted-foreground">Track your investments and transactions</p>
       </div>
 
-      <Card className="border border-white/10 bg-[#0A0A0A] rounded-2xl relative overflow-hidden">
+      <Card className="border border-white/5 bg-[#0A0A0A] rounded-2xl relative overflow-hidden">
         <div className="absolute top-0 right-0 w-64 h-64 bg-primary/5 rounded-full blur-[80px]" />
 
         <CardHeader className="relative z-10 border-b border-white/5">
@@ -112,7 +112,7 @@ function ActivityItems({
       {items.map((item) => (
         <div key={item.id} className="relative flex gap-6 pb-8 last:pb-0 group">
           {/* Icon circle */}
-          <div className="relative z-10 flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full border border-white/10 bg-[#0A0A0A] group-hover:bg-white/5 transition-colors shadow-lg shadow-black/50">
+          <div className="relative z-10 flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full border border-white/5 bg-[#0A0A0A] group-hover:bg-white/5 transition-colors shadow-lg shadow-black/50">
             {getIcon(item.type)}
           </div>
 

@@ -206,7 +206,7 @@ export function DealDetailView({ commodity }: { commodity: MarketplaceCommodity 
         </TabsList>
 
         <TabsContent value="financials" className="space-y-6 mt-6 animate-in fade-in slide-in-from-bottom-2 duration-300">
-          <Card className="p-6 border border-white/10 bg-[#0A0A0A] rounded-2xl">
+          <Card className="p-6 border border-white/5 bg-[#0A0A0A] rounded-2xl">
             <h3 className="font-semibold mb-6 flex items-center text-white text-lg">
               <span className="text-accent mr-2">$</span> Cost Breakdown
             </h3>

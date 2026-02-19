@@ -55,7 +55,7 @@ export function PublicLanding() {
                   Start Trading <ArrowRight className="ml-2 h-5 w-5" />
                 </Link>
               </Button>
-              <Button asChild size="lg" variant="outline" className="border-white/10 hover:bg-white/5 hover:text-white rounded-full px-8 h-14 text-lg backdrop-blur-sm">
+              <Button asChild size="lg" variant="outline" className="border-white/5 hover:bg-white/5 hover:text-white rounded-full px-8 h-14 text-lg backdrop-blur-sm">
                 <Link href="/how-it-works">How it Works</Link>
               </Button>
             </div>
@@ -65,7 +65,7 @@ export function PublicLanding() {
             {/* Decorative floaty elements */}
             <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[120%] h-[120%] bg-gradient-to-tr from-primary/10 to-amber-500/10 blur-[80px] rounded-full pointer-events-none" />
 
-            <Card className="border border-white/10 bg-[#0A0A0A]/80 backdrop-blur-xl p-8 hover:bg-[#111] transition-all hover:scale-[1.02] duration-300 shadow-2xl">
+            <Card className="border border-white/5 bg-[#0A0A0A]/80 backdrop-blur-xl p-8 hover:bg-[#111] transition-all hover:scale-[1.02] duration-300 shadow-2xl">
               <div className="flex flex-col gap-4">
                 <div className="h-14 w-14 rounded-2xl bg-primary/10 flex items-center justify-center border border-primary/20">
                   <Shield className="h-7 w-7 text-primary" />
@@ -76,7 +76,7 @@ export function PublicLanding() {
                 </div>
               </div>
             </Card>
-            <Card className="border border-white/10 bg-[#0A0A0A]/80 backdrop-blur-xl p-8 hover:bg-[#111] transition-all hover:scale-[1.02] duration-300 shadow-2xl sm:translate-y-12">
+            <Card className="border border-white/5 bg-[#0A0A0A]/80 backdrop-blur-xl p-8 hover:bg-[#111] transition-all hover:scale-[1.02] duration-300 shadow-2xl sm:translate-y-12">
               <div className="flex flex-col gap-4">
                 <div className="h-14 w-14 rounded-2xl bg-amber-500/10 flex items-center justify-center border border-amber-500/20">
                   <FileText className="h-7 w-7 text-amber-500" />
@@ -88,7 +88,7 @@ export function PublicLanding() {
               </div>
             </Card>
             <Link href="/how-it-works" className="sm:col-span-2 group mt-6 sm:mt-12">
-              <Card className="border border-white/10 bg-[#0A0A0A]/80 backdrop-blur-xl p-6 hover:border-primary/50 transition-all">
+              <Card className="border border-white/5 bg-[#0A0A0A]/80 backdrop-blur-xl p-6 hover:border-primary/50 transition-all">
                 <div className="flex items-center justify-between">
                   <div className="font-bold text-lg text-white group-hover:text-primary transition-colors flex items-center gap-2">
                     See How it Works <ArrowRight className="h-5 w-5 group-hover:translate-x-1 transition-transform" />
@@ -130,7 +130,7 @@ export function PublicLanding() {
               const pct = fundedPct(c.currentAmount, c.amountRequired)
               return (
                 <Link key={c.id} href={`/marketplace/${c.id}`} className="block group h-full">
-                  <Card className="h-full border border-white/10 bg-[#0A0A0A] p-8 hover:border-primary/50 hover:shadow-[0_0_40px_rgba(239,68,68,0.15)] transition-all duration-500 rounded-2xl relative overflow-hidden flex flex-col">
+                  <Card className="h-full border border-white/5 bg-[#0A0A0A] p-8 hover:border-primary/50 hover:shadow-[0_0_40px_rgba(239,68,68,0.15)] transition-all duration-500 rounded-2xl relative overflow-hidden flex flex-col">
                     <div className="absolute top-0 right-0 w-32 h-32 bg-white/5 rounded-full blur-[50px] group-hover:bg-primary/10 transition-colors" />
 
                     <div className="flex items-start justify-between mb-6 relative z-10">
@@ -175,7 +175,7 @@ export function PublicLanding() {
             })}
 
             {!featuredQuery.isLoading && featured.length === 0 && (
-              <Card className="border border-white/10 bg-[#0A0A0A] p-16 md:col-span-3 text-center rounded-2xl">
+              <Card className="border border-white/5 bg-[#0A0A0A] p-16 md:col-span-3 text-center rounded-2xl">
                 <div className="text-2xl font-bold text-white mb-3">No Active Deals</div>
                 <p className="text-muted-foreground text-lg">New opportunities are vetted daily. Join the waitlist to get notified.</p>
               </Card>
@@ -187,24 +187,24 @@ export function PublicLanding() {
         <section className="mt-32 mb-20">
           <h2 className="text-4xl font-bold text-center mb-16 text-white">Join the Smart Money</h2>
           <div className="grid md:grid-cols-2 gap-8">
-            <Card className="p-10 border border-white/5 bg-[#0A0A0A] relative overflow-hidden group hover:border-white/10 transition-colors">
+            <Card className="p-10 border border-white/5 bg-[#0A0A0A] relative overflow-hidden group hover:border-white/5 transition-colors">
               <div className="absolute top-0 left-0 w-1 h-full bg-primary group-hover:shadow-[0_0_15px_rgba(239,68,68,0.5)] transition-shadow"></div>
               <Quote className="h-10 w-10 text-primary/20 mb-6" />
               <p className="text-xl text-gray-300 mb-8 leading-relaxed italic">"CommodityFlow gave us access to an asset class that was previously reserved for billionaires. As a firm, we value the unmatched transparency."</p>
               <div className="flex items-center gap-4">
-                <div className="h-12 w-12 rounded-full bg-white/5 flex items-center justify-center font-bold text-white border border-white/10">SJ</div>
+                <div className="h-12 w-12 rounded-full bg-white/5 flex items-center justify-center font-bold text-white border border-white/5">SJ</div>
                 <div>
                   <div className="font-bold text-white text-lg">Sarah Jenkins</div>
                   <div className="text-xs text-primary font-bold tracking-widest uppercase">Zenith Capital</div>
                 </div>
               </div>
             </Card>
-            <Card className="p-10 border border-white/5 bg-[#0A0A0A] relative overflow-hidden group hover:border-white/10 transition-colors">
+            <Card className="p-10 border border-white/5 bg-[#0A0A0A] relative overflow-hidden group hover:border-white/5 transition-colors">
               <div className="absolute top-0 left-0 w-1 h-full bg-amber-500 group-hover:shadow-[0_0_15px_rgba(245,158,11,0.5)] transition-shadow"></div>
               <Quote className="h-10 w-10 text-amber-500/20 mb-6" />
               <p className="text-xl text-gray-300 mb-8 leading-relaxed italic">"The platform is intuitive and the due diligence materials are comprehensive. I finally feel safe deploying capital effectively."</p>
               <div className="flex items-center gap-4">
-                <div className="h-12 w-12 rounded-full bg-white/5 flex items-center justify-center font-bold text-white border border-white/10">DC</div>
+                <div className="h-12 w-12 rounded-full bg-white/5 flex items-center justify-center font-bold text-white border border-white/5">DC</div>
                 <div>
                   <div className="font-bold text-white text-lg">David Chen</div>
                   <div className="text-xs text-amber-500 font-bold tracking-widest uppercase">Angel Investor</div>
