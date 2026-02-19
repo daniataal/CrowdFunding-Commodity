@@ -96,4 +96,53 @@ export async function POST(request: NextRequest) {
   }
 }
 
+export async function PATCH(request: NextRequest) {
+  try {
+    const body = await request.json();
+    const { shipmentId, status } = body;
+
+    if (!shipmentId || !status) {
+      return NextResponse.json({ success: false, error: "shipmentId and status are required" }, { status: 400 });
+    }
+
+    // Find commodity by shipmentId
+    const commodity = await prisma.commodity.findUnique({
+      where: { shipmentId }
+    });
+
+    if (!commodity) {
+      return NextResponse.json({ success: false, error: "Commodity not found" }, { status: 404 });
+    }
+
+    // Update status
+    const updated = await prisma.commodity.update({
+      where: { shipmentId },
+      data: {
+        status: status as any
+      }
+    });
+
+    // If status is ARRIVED, add a shipment event
+    if (status === "ARRIVED" || status === "SETTLED") {
+      await prisma.shipmentEvent.create({
+        data: {
+          commodityId: updated.id,
+          type: status === "ARRIVED" ? "ARRIVED" : "ARRIVED", // Just use ARRIVED event for now
+          occurredAt: new Date(),
+          description: `Delivery confirmed by Dore & Market. Status updated to ${status}.`,
+          source: "DORE_MARKET"
+        }
+      });
+    }
+
+    return NextResponse.json({ success: true, data: updated });
+  } catch (error) {
+    console.error("Error updating commodity from marketplace:", error);
+    return NextResponse.json(
+      { success: false, error: "Failed to update commodity" },
+      { status: 500 }
+    );
+  }
+}
+
 
