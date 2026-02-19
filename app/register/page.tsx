@@ -62,14 +62,9 @@ export default function RegisterPage() {
       {/* Left side - Form */}
       <div className="flex w-full flex-col justify-center bg-background px-8 lg:w-1/2 lg:px-24 xl:px-32">
         <div className="w-full max-w-md mx-auto lg:mx-0">
-          <div className="mb-10 flex items-center gap-3">
-            <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-primary shadow-lg shadow-primary/30">
-              <TrendingUp className="h-6 w-6 text-primary-foreground" />
-            </div>
-            <div>
-              <span className="text-2xl font-bold tracking-tight text-foreground">CommodityFund</span>
-              <p className="text-xs text-muted-foreground font-medium uppercase tracking-wider">Trade Like a Pro</p>
-            </div>
+          <div className="mb-10 flex flex-col">
+            <h1 className="text-3xl font-black text-[#FF0000] tracking-tighter leading-none mb-1">RESERVEVAULT</h1>
+            <p className="text-[10px] text-white/70 tracking-[0.3em] font-medium uppercase">Invest With Confidence</p>
           </div>
 
           <h1 className="mb-2 text-4xl font-bold tracking-tight text-foreground">Create account</h1>

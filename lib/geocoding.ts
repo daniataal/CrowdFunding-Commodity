@@ -26,7 +26,7 @@ export async function geocodePlace(query: string): Promise<GeocodeResult | null>
   const res = await fetch(url.toString(), {
     headers: {
       // Nominatim requires an identifying UA. Customize as needed.
-      "User-Agent": "CommodityFlow/1.0 (demo; admin-geocoding)",
+      "User-Agent": "RESERVEVAULT/1.0 (demo; admin-geocoding)",
       Accept: "application/json",
     },
     // Keep it simple and fresh. (Server-side caching is handled above.)

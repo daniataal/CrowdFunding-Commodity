@@ -9,9 +9,9 @@ const _inter = Inter({ subsets: ["latin"], variable: "--font-sans" })
 const _sora = Sora({ subsets: ["latin"], variable: "--font-heading" })
 
 export const metadata: Metadata = {
-  title: "CommodityFund | Trade Like a Pro",
+  title: "RESERVEVAULT | Invest With Confidence",
   description:
-    "Premium commodity crowdfunding platform for funding global shipments of Wheat, Copper, Coffee, Oil and more",
+    "Institutional-grade commodity investment platform. Diversify your portfolio with physical assets backed by physical commodities.",
   generator: "v0.app",
   icons: {
     icon: [

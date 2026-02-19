@@ -52,11 +52,9 @@ export function SignupForm({ onSwitchToLogin }: SignupFormProps) {
       {/* Left side - Form */}
       <div className="flex w-full flex-col justify-center px-8 lg:w-1/2 lg:px-16">
         <div className="mx-auto w-full max-w-md">
-          <div className="mb-8 flex items-center gap-2">
-            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-gradient-to-br from-emerald-500 to-emerald-600">
-              <TrendingUp className="h-6 w-6 text-white" />
-            </div>
-            <span className="text-2xl font-bold text-foreground">CommodityFlow</span>
+          <div className="mb-8 flex flex-col">
+            <h1 className="text-3xl font-black text-[#FF0000] tracking-tighter leading-none mb-1">RESERVEVAULT</h1>
+            <p className="text-[10px] text-white/70 tracking-[0.3em] font-medium uppercase">Invest With Confidence</p>
           </div>
 
           <h1 className="mb-2 text-3xl font-bold text-foreground">Create your account</h1>

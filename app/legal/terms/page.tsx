@@ -18,7 +18,7 @@ export default function TermsPage() {
           <section className="space-y-2">
             <h2 className="text-base font-semibold">1. Platform overview</h2>
             <p className="text-muted-foreground">
-              CommodityFlow provides a marketplace to fund commodity-related transactions. Offerings are not bank
+              RESERVEVAULT provides a marketplace to fund commodity-related transactions. Offerings are not bank
               deposits and may be subject to loss of principal.
             </p>
           </section>

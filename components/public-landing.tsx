@@ -190,7 +190,7 @@ export function PublicLanding() {
             <Card className="p-10 border border-white/5 bg-[#0A0A0A] relative overflow-hidden group hover:border-white/5 transition-colors">
               <div className="absolute top-0 left-0 w-1 h-full bg-primary group-hover:shadow-[0_0_15px_rgba(239,68,68,0.5)] transition-shadow"></div>
               <Quote className="h-10 w-10 text-primary/20 mb-6" />
-              <p className="text-xl text-gray-300 mb-8 leading-relaxed italic">"CommodityFlow gave us access to an asset class that was previously reserved for billionaires. As a firm, we value the unmatched transparency."</p>
+              <p className="text-xl text-gray-300 mb-8 leading-relaxed italic">"RESERVEVAULT gave us access to an asset class that was previously reserved for billionaires. As a firm, we value the unmatched transparency."</p>
               <div className="flex items-center gap-4">
                 <div className="h-12 w-12 rounded-full bg-white/5 flex items-center justify-center font-bold text-white border border-white/5">SJ</div>
                 <div>

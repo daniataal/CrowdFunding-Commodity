@@ -40,7 +40,7 @@ export function HowItWorksView() {
                     <Badge variant="outline" className="mb-4 border-emerald-500/30 text-emerald-500">
                         Simple Process
                     </Badge>
-                    <h1 className="text-4xl font-bold tracking-tight mb-4">How CommodityFlow Works</h1>
+                    <h1 className="text-4xl font-bold tracking-tight mb-4">How RESERVEVAULT Works</h1>
                     <p className="text-lg text-muted-foreground">
                         Democratizing access to global trade finance. We bridge the gap between investors looking for yield and commodity traders needing liquidity.
                     </p>

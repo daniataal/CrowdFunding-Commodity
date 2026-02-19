@@ -22,7 +22,7 @@ export default function StatusPage() {
             <main className="mx-auto max-w-3xl px-4 py-16 sm:px-6 lg:px-8">
                 <div className="text-center mb-10">
                     <h1 className="text-3xl font-bold mb-2">System Status</h1>
-                    <p className="text-muted-foreground">Real-time status of CommodityFlow services.</p>
+                    <p className="text-muted-foreground">Real-time status of RESERVEVAULT services.</p>
                 </div>
 
                 <Card className="border-2 p-6 mb-8 bg-emerald-500/5 border-emerald-500/20">

@@ -15,7 +15,7 @@ export function OnboardingTour({ onComplete, onSkip }: OnboardingTourProps) {
 
   const steps = [
     {
-      title: "Welcome to CommodityFlow",
+      title: "Welcome to RESERVEVAULT",
       description: "Your gateway to institutional-grade commodity investments",
       content:
         "Get started with fractional ownership of real commodities backed by physical assets and blockchain transparency.",

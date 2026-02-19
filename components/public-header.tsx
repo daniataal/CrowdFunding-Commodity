@@ -10,14 +10,9 @@ export function PublicHeader() {
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="flex h-16 items-center justify-between">
           <div className="flex items-center gap-3">
-            <Link href="/" className="flex items-center gap-3 transition-opacity hover:opacity-90">
-              <div className="flex h-9 w-9 items-center justify-center rounded bg-primary">
-                <TrendingUp className="h-5 w-5 text-white" />
-              </div>
-              <div>
-                <div className="text-xl font-extrabold leading-none tracking-tight text-white">CommodityFlow</div>
-                <div className="hidden text-[10px] uppercase font-bold tracking-widest text-primary sm:block">Gold Trading Platform</div>
-              </div>
+            <Link href="/" className="flex flex-col transition-opacity hover:opacity-90">
+              <h1 className="text-xl font-black text-[#FF0000] tracking-tighter leading-none mb-1">RESERVEVAULT</h1>
+              <p className="hidden text-[8px] text-white/70 tracking-[0.2em] font-medium uppercase sm:block">Invest With Confidence</p>
             </Link>
           </div>
 
