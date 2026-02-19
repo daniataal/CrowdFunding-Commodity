@@ -122,18 +122,36 @@ export async function investInCommodity(formData: FormData) {
       // exec returns { investment, updatedCommodity }. It doesn't return updatedUser.
       // So we are good.
 
-      // Update commodity funding
+      // Update status if fully funded
+      const isNowFunded = newCurrentAmount >= Number(commodity.amountRequired);
+
       const updatedCommodity = await tx.commodity.update({
         where: { id: validatedData.commodityId },
         data: {
           currentAmount: {
             increment: validatedData.amount,
           },
-          // Update status if fully funded
-          status:
-            newCurrentAmount >= Number(commodity.amountRequired) ? "ACTIVE" : commodity.status,
+          status: isNowFunded ? "ACTIVE" : commodity.status,
         },
       })
+
+      // If fully funded, notify DoreMarket via Webhook
+      if (isNowFunded && updatedCommodity.shipmentId) {
+        const DORE_MARKET_WEBHOOK = process.env.DORE_MARKET_WEBHOOK_URL || "http://localhost:3001/api/webhooks/crowdfunding";
+        console.log(`[Crowdfunding] Commodity ${updatedCommodity.id} (Shipment: ${updatedCommodity.shipmentId}) is FULLY FUNDED. Notifying DoreMarket...`);
+
+        // Fire and forget (or handle errors)
+        fetch(DORE_MARKET_WEBHOOK, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            event: "COMMODITY_FUNDED",
+            shipmentId: updatedCommodity.shipmentId,
+            commodityId: updatedCommodity.id,
+            amount: updatedCommodity.amountRequired
+          })
+        }).catch(err => console.error("[Crowdfunding] Webhook notification failed:", err));
+      }
 
       // Calculate ownership percentage
       const percentage = Number(validatedData.amount) / Number(commodity.amountRequired)
