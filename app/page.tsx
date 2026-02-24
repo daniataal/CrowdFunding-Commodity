@@ -139,7 +139,9 @@ export default function CommodityPlatform() {
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="flex h-16 items-center justify-between">
             <div className="flex flex-col">
-              <h1 className="text-xl font-black text-[#FF0000] tracking-tighter leading-none mb-1">RESERVEVAULT</h1>
+              <h1 className="text-xl font-black tracking-tighter leading-none mb-1">
+                <span className="text-primary">RESERVE</span><span className="text-foreground">VAULT</span>
+              </h1>
               <p className="hidden text-[8px] text-white/70 tracking-[0.2em] font-medium uppercase sm:block">Invest With Confidence</p>
             </div>
 

@@ -9,7 +9,9 @@ export function PublicFooter() {
       <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
         <div className="flex flex-col gap-6 md:flex-row md:items-start md:justify-between">
           <div className="flex flex-col">
-            <h1 className="text-xl font-black text-[#FF0000] tracking-tighter leading-none mb-1">RESERVEVAULT</h1>
+            <h1 className="text-xl font-black tracking-tighter leading-none mb-1">
+              <span className="text-primary">RESERVE</span><span className="text-foreground">VAULT</span>
+            </h1>
             <p className="text-[8px] text-white/70 tracking-[0.2em] font-medium uppercase mb-4">Invest With Confidence</p>
             <div className="text-sm text-muted-foreground max-w-md">
               Fund real-world commodity shipments with institutional-grade transparency and verified lifecycle tracking.

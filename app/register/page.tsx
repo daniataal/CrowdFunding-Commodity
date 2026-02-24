@@ -63,7 +63,9 @@ export default function RegisterPage() {
       <div className="flex w-full flex-col justify-center bg-background px-8 lg:w-1/2 lg:px-24 xl:px-32">
         <div className="w-full max-w-md mx-auto lg:mx-0">
           <div className="mb-10 flex flex-col">
-            <h1 className="text-3xl font-black text-[#FF0000] tracking-tighter leading-none mb-1">RESERVEVAULT</h1>
+            <h1 className="text-3xl font-black tracking-tighter leading-none mb-1">
+              <span className="text-primary">RESERVE</span><span className="text-foreground">VAULT</span>
+            </h1>
             <p className="text-[10px] text-white/70 tracking-[0.3em] font-medium uppercase">Invest With Confidence</p>
           </div>
 
